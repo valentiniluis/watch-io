@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+body {
+  font-family: "Roboto", "Figtree", "DM Sans";
+}
+
+@layer base {
+  body {
+    @apply text-stone-200;
+  }
+
+  button {
+    @apply transition-colors ease-in hover:cursor-pointer disabled:cursor-default;
+  }
+}
+
+@layer components {
+  .movie-list {
+    @apply grid my-16 mx-[12vw] 2xl:mx-[15vw] gap-14 grid-flow-row xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2;
+  }
+
+  .movie-card {
+    @apply bg-slate-800 rounded-2xl text-stone-100;
+
+    & img {
+      @apply rounded-t-2xl h-auto w-full;
+    }
+
+    & .card-title {
+      @apply text-white font-bold text-base line-clamp-1 tracking-wide;
+    }
+
+    & .card-info {
+      @apply mt-2 flex flex-row items-center flex-wrap gap-2;
+    }
+
+    & .rating {
+      @apply flex gap-1 items-center;
+    }
+
+    & .rating p {
+      @apply font-bold text-base;
+    }
+
+    & .release {
+      @apply text-stone-300 text-base;
+    }
+  }
+
+  .recommendations {
+    @apply flex overflow-x-scroll whitespace-nowrap gap-8;
+
+    & li {
+      @apply h-auto min-w-[240px] max-w-[400px];
+    }
+  }
+}
