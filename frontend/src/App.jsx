@@ -1,9 +1,9 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import RootLayout from './components/RootLayout.jsx';
+import RootLayout from './components/layout/RootLayout.jsx';
 import MovieRecommender from './pages/MovieRecommender.jsx';
 import SelectedMovie from './pages/SelectedMovie.jsx';
 
-import { loadSingleMovieData } from './util/moviesLoaders.js';
+import { loadSelectedMovie } from './util/moviesLoaders.js';
 
 const router = createBrowserRouter([
   { 
@@ -11,7 +11,7 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       { index: true, element: <MovieRecommender /> },
-      { path: ':movieId', element: <SelectedMovie />, loader: loadSingleMovieData }
+      { path: ':movieId', element: <SelectedMovie />, loader: loadSelectedMovie }
     ]
   }
 ]);

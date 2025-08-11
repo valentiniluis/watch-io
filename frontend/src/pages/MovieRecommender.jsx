@@ -1,15 +1,9 @@
 import { useEffect, useState } from "react";
-import SearchInput from "../components/SearchInput.jsx";
-import MovieCatalog from "../components/MovieCatalog.jsx";
-import Spinner from "../components/Spinner.jsx";
+import SearchInput from "../components/UI/SearchInput.jsx";
+import MovieCatalog from "../components/movie/MovieCatalog.jsx";
+import Spinner from "../components/UI/Spinner.jsx";
 
 import api from '../api/request.js';
-
-// <button
-//   disabled={!isOptionSelected}
-//   className=" bg-violet-700 text-violet-50 uppercase font-medium text-[.95rem] px-8 py-3 rounded-full hover:bg-violet-600 disabled:bg-stone-600 disabled:text-stone-200">
-//   Confirm
-// </button>
 
 
 export default function MoviePicker() {
@@ -42,10 +36,8 @@ export default function MoviePicker() {
 
   return (
     <section className="flex flex-col items-center justify-center">
+      <h4 className="text-stone-300 font-medium tracking-wide text-xl py-[5vh]">For a Better and More Customized Experience, Log In or Sign Up!</h4>
       <SearchInput onUpdate={setMovieSearched} />
-      <div>
-        <h4 className="text-stone-300 font-medium tracking-wide">For a Better and More Customized Experience, Log In or Sign Up!</h4>
-      </div>
       {content}
     </section>
   );

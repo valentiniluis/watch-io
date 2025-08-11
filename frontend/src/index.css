@@ -6,7 +6,7 @@ body {
 
 @layer base {
   body {
-    @apply text-stone-200;
+    @apply text-stone-200 bg-zinc-900;
   }
 
   button {
@@ -48,10 +48,42 @@ body {
   }
 
   .recommendations {
-    @apply flex overflow-x-scroll whitespace-nowrap gap-8;
+    @apply flex overflow-x-auto whitespace-nowrap gap-8;
 
     & li {
       @apply h-auto min-w-[240px] max-w-[400px];
     }
+  }
+
+  .movie-info-container {
+    @apply flex flex-col-reverse items-center mt-12 justify-center xl:flex-row xl:items-stretch;
+
+    & img {
+      @apply max-h-[500px];
+    }
+
+    & .text-container {
+      @apply w-full mx-20 max-w-[40rem] flex flex-col justify-between;
+    }
+
+    & .movie-name {
+      @apply text-4xl text-center text-stone-100 font-semibold tracking-wide my-8 xl:my-0;
+    }
+
+    & .tagline {
+      @apply text-center font-medium text-xl text-stone-200 mb-10 xl:mb-0;
+    }
+
+    & .additional-info {
+      @apply flex gap-6 justify-center text-stone-300 mb-8 xl:mb-0;
+    }
+  }
+
+  .section-title {
+    @apply text-3xl font-semibold text-stone-100;
+  }
+
+  .small-text {
+    @apply text-stone-300 font-medium mt-4;
   }
 }

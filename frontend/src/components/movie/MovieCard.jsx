@@ -1,6 +1,6 @@
 import star from '/star.svg';
 import noPoster from '/no-movie.png';
-import { getReleaseYear } from '../util/util-functions.js';
+import { getReleaseYear } from '../../util/util-functions.js';
 
 
 export default function MovieCard({ movie }) {
