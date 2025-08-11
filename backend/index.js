@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 const app = express();
 
 require('./util/configEnv')();
@@ -15,4 +16,9 @@ app.use('/movies', movieRoutes);
 
 app.use(errorHandler);
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}...`));
+mongoose
+  .connect(process.env.MONGODB_CONNECTION_URI)
+  .then(() => {
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}...`));
+  })
+  .catch(err => console.log(err));
