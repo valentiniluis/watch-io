@@ -1,24 +1,16 @@
-const tmdbAPI = require('../api/tmdb-api');
-const omdbAPI = require('../api/omdb-api');
+import tmdbAPI from '../api/tmdb-api.js';
+import omdbAPI from '../api/omdb-api.js';
 
-const { getFullPosterPath, getGenreId, getRuntimeString, filterOMDBData } = require('../util/api-util');
+import { discoverMovies, searchMovie, mapPosterPaths, getFullPosterPath, getRuntimeString, filterOMDBData } from '../util/api-util.js';
 
-exports.getSearchedMovies = async (req, res, next) => {
+
+export const getSearchedMovies = async (req, res, next) => {
   const { movie } = req.query;
 
   try {
-    const documentaryId = getGenreId('Documentary');
-    const url = (movie)
-      ? `/search/movie?query=${movie}&page=1`
-      : `/discover/movie?sort_by=vote_average.desc&vote_count.gte=300&without_genres=${documentaryId}`;
-    const response = await tmdbAPI.get(url);
-    const data = response.data;
-    const dataWithPostersPath = {
-      ...data,
-      results: data.results.map(result => ({ ...result, poster_path: getFullPosterPath(result.poster_path) }))
-    };
-
-    res.status(200).json({ success: true, movies: dataWithPostersPath });
+    const movies = (movie) ? await searchMovie(movie) : await discoverMovies();
+    const moviesWithPosters = mapPosterPaths(movies);
+    res.status(200).json({ success: true, movies: moviesWithPosters });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
     next(err);
@@ -26,7 +18,7 @@ exports.getSearchedMovies = async (req, res, next) => {
 }
 
 
-exports.getMovieData = async (req, res, next) => {
+export const getMovieData = async (req, res, next) => {
   const { movieId } = req.params;
   try {
     const urlTMDB = `/movie/${movieId}`;
@@ -53,7 +45,7 @@ exports.getMovieData = async (req, res, next) => {
 }
 
 
-exports.getRecommendations = async (req, res, next) => {
+export const getRecommendations = async (req, res, next) => {
   // frequency counter to find most recommended movie
   const { movieId } = req.params;
   try {

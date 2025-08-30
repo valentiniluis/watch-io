@@ -1,42 +1,42 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { useQuery } from '@tanstack/react-query';
 import SearchInput from "../components/UI/SearchInput.jsx";
 import MovieCatalog from "../components/movie/MovieCatalog.jsx";
 import Spinner from "../components/UI/Spinner.jsx";
-
-import api from '../api/request.js';
+import Auth from "../components/auth/AuthSection.jsx";
+import { fetchMovies } from "../util/query.js";
 
 
 export default function MoviePicker() {
   const [movieSearched, setMovieSearched] = useState('');
-  const [returnedMovies, setReturnedMovies] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState();
 
-  useEffect(() => {
-    async function searchMovie() {
-      setIsLoading(true);
-      try {
-        const queryParam = (movieSearched.length > 0) ? `?movie=${movieSearched}` : '';
-        const response = await api.get('/movies/search' + queryParam);
-        const movies = response.data.movies.results;
-        setReturnedMovies(movies);
-      } catch (err) {
-        setErrorMessage(err.response?.data?.message || 'Failed to load movies');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    searchMovie();
-  }, [movieSearched]);
+  const auth = useSelector(reduxState => reduxState.auth);
+  const isAuth = auth.isLoggedIn;
+
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ['movies', { searchTerm: movieSearched }],
+    queryFn: (obj) => fetchMovies({ ...obj, search: movieSearched }),
+  });
 
   let content;
-  if (isLoading) content = <Spinner />
-  else if (errorMessage) content = <p>{errorMessage}</p>;
-  else content = <MovieCatalog movies={returnedMovies} />
+
+  if (isPending) {
+    content = <Spinner />
+  }
+
+  else if (isError) {
+    console.log(error);
+    content = <p>{error.message}</p>;
+  }
+
+  else if (data) {
+    content = <MovieCatalog movies={data} />;
+  }
 
   return (
     <section className="flex flex-col items-center justify-center">
-      <h4 className="text-stone-300 font-medium tracking-wide text-xl py-[5vh]">For a Better and More Customized Experience, Log In or Sign Up!</h4>
+      {!isAuth ? <Auth /> : <h1>Welcome, {auth.user}!</h1>}
       <SearchInput onUpdate={setMovieSearched} />
       {content}
     </section>

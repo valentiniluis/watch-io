@@ -1,6 +1,5 @@
 import noPoster from '/no-movie.png';
 import MovieRatings from './MovieRatings.jsx';
-import Overview from './Overview.jsx';
 
 
 export default function MovieInfo({ movie }) {
@@ -15,7 +14,7 @@ export default function MovieInfo({ movie }) {
           <h1 className='movie-name'>{title}</h1>
           {tagline && <h4 className='tagline'>{tagline}</h4>}
           {movie.ratings?.length > 0 && <MovieRatings ratings={movie.ratings} />}
-          <Overview className='mb-6'>{overview}</Overview>
+          <p className='text-justify mb-6 text-[.9rem] md:text-[1rem]'>{overview}</p>
           <div className='additional-info'>
             <p>{movie.genres.map(genre => genre.name).join(', ')}</p>
             <p className='tracking-wide'>{movie.year}</p>

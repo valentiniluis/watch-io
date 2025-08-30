@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
-const moviesControllers = require('../controllers/movies');
+import * as moviesControllers from '../controllers/movies.js';
 
 router.get('/search', moviesControllers.getSearchedMovies);
 
@@ -10,4 +10,4 @@ router.get('/:movieId', moviesControllers.getMovieData);
 router.get('/:movieId/recommendations', moviesControllers.getRecommendations);
 
 
-module.exports = router;
+export default router;

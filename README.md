@@ -48,3 +48,7 @@ https://github.com/adrianhajdin/react-movies
 [API do The Movie Database (TMDb)](https://developer.themoviedb.org)
 
 [API do Open Movie Database (OMDb)](https://www.omdbapi.com)
+
+Ícones usados do SVG Repo:
+
+[SVG Repo](https://www.svgrepo.com/)
