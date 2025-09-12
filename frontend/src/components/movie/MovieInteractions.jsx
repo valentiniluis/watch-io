@@ -2,6 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { addInteraction, getInteractions, removeInteraction } from "../../util/movie-query";
 import ToggleInteraction from './ToggleInteraction';
 import queryClient from '../../util/query';
+import Spinner from "../UI/Spinner";
 
 
 const interactionTypes = ['watchlist', 'like', 'not interested'];
@@ -48,25 +49,20 @@ export default function MovieInteractions({ movie, onError }) {
   }
 
   let content;
-  if (interactionDataPending) {
-    content = (
-      <p>Loading movies...</p>
-    );
-  }
+  if (interactionDataPending) content = <Spinner />;
 
-  if (interactionDataIsError) {
+  else if (interactionDataIsError) {
     onError('Failed to fetch your movie interactions');
-    content = (
-      <p>Failed to get movie interactions...</p>
-    );
+    content = <p>Failed to get movie interactions...</p>;
   }
 
-  if (interactionData?.hasInteraction) {
+  else if (interactionData?.hasInteraction) {
     content = (
       <ToggleInteraction active={true} type={interactionData.type} onClick={handleRemoveInteraction} />
     );
   }
-  else {
+
+  else if (!interactionData?.hasInteraction) {
     content = (
       <>
         {interactionTypes.map(type => (

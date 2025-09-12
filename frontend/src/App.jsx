@@ -29,7 +29,7 @@ const router = createBrowserRouter([
         ]
       },
       {
-        path: 'watchlist', children: [
+        path: 'my-area', children: [
           { index: true, element: <MyArea /> },
           { path: ':movieId', element: <SelectedMovie />, loader: loadSelectedMovie }
         ]

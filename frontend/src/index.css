@@ -17,7 +17,7 @@ body {
 
 @layer components {
   .catalog {
-    @apply grid my-16 mx-[12vw] 2xl:mx-[15vw] gap-14 grid-flow-row xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2;
+    @apply grid my-10 mx-[12vw] 2xl:mx-[15vw] gap-14 grid-flow-row xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2;
   }
 
   .movie-card {

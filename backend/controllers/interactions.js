@@ -34,7 +34,6 @@ export const getInteractions = async (req, res, next) => {
 // create interaction between user and movie
 export const postInteraction = async (req, res, next) => {
   const { id: movieId, title, poster_path, year, tmdb_rating } = req.body;
-  console.log(tmdb_rating);
   const { user } = req;
   const { interactionType } = req.params;
 

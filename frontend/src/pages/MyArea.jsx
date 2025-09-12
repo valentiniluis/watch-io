@@ -3,14 +3,15 @@ import { loadInteractedMovies } from "../util/moviesLoaders";
 import Spinner from "../components/UI/Spinner";
 import ErrorPage from "./ErrorPage";
 import MovieCatalog from "../components/movie/MovieCatalog";
+import { useState } from "react";
 
 
 export default function MyArea() {
-  const type = 'watchlist';
+  const [interactionType, setInteractionType] = useState('watchlist');
 
   const { data, isPending, isError, error } = useQuery({
-    queryFn: () => loadInteractedMovies({ type }),
-    queryKey: ['interactions', { type }]
+    queryFn: () => loadInteractedMovies({ interactionType }),
+    queryKey: ['interactions', { interactionType }]
   });
 
   let content;
@@ -22,12 +23,22 @@ export default function MyArea() {
     content = <ErrorPage message={error.message} />
   }
   else if (data) {
-    console.log(data);
+    const buttonClass = 'bg-gray-700 text-xl font-bold tracking-wide px-8 py-4 rounded-t-2xl hover:bg-gray-800';
     content = (
-      <>
-        <h1 className="section-title">My Watchlist</h1>
+      <section id="interacted-movies">
+        <div className="flex gap-2 mx-[12vw] 2xl:mx-[15vw]">
+          <button onClick={() => setInteractionType('watchlist')} className={buttonClass}>
+            Watchlist
+          </button>
+          <button onClick={() => setInteractionType('like')} className={buttonClass}>
+            Liked
+          </button>
+          <button onClick={() => setInteractionType('not interested')} className={buttonClass}>
+            Not Interested
+          </button>
+        </div>
         <MovieCatalog movies={data.interactions} />
-      </>
+      </section>
     );
   }
 

@@ -11,7 +11,8 @@ export default function MovieInfo({ movie }) {
   const [error, setError] = useState();
   const { isLoggedIn } = auth;
 
-  const { title, poster_path, overview, tagline, year, runtime, genres } = movie;
+  // overview ?
+  const { title, poster_path, tagline, year, runtime, genres } = movie;
   const poster = poster_path || noPoster;
 
 
