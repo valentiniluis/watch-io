@@ -9,7 +9,7 @@ export default function MovieRecommendations({ movies }) {
   return (
     <section className='my-12'>
       <h3 className='section-title mb-6'>You May Like</h3>
-      <div className='recommendations'>
+      <div className='movie-list'>
         {movies.map(rec => <MovieCard key={rec.id} movie={rec} />)}
       </div>
     </section>

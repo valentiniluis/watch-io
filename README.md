@@ -37,7 +37,7 @@ Estão sendo usadas as seguintes tecnologias no desenvolvimento do projeto:
 
 ### Banco de Dados
 
-* Pretendo usar MongoDB por meio da biblioteca Mongoose
+* Pretendo usar Postgres por meio da biblioteca pg.
 
 ## Referências
 

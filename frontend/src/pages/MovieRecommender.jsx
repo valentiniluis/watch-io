@@ -5,7 +5,7 @@ import SearchInput from "../components/UI/SearchInput.jsx";
 import MovieCatalog from "../components/movie/MovieCatalog.jsx";
 import Spinner from "../components/UI/Spinner.jsx";
 import Auth from "../components/auth/AuthSection.jsx";
-import { fetchMovies } from "../util/query.js";
+import { fetchMovies } from "../util/movie-query.js";
 
 
 export default function MoviePicker() {
@@ -36,7 +36,7 @@ export default function MoviePicker() {
 
   return (
     <section className="flex flex-col items-center justify-center">
-      {!isAuth ? <Auth /> : <h1>Welcome, {auth.user}!</h1>}
+      {!isAuth && <Auth />}
       <SearchInput onUpdate={setMovieSearched} />
       {content}
     </section>

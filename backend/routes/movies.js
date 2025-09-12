@@ -9,5 +9,4 @@ router.get('/:movieId', moviesControllers.getMovieData);
 
 router.get('/:movieId/recommendations', moviesControllers.getRecommendations);
 
-
 export default router;

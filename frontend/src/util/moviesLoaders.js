@@ -15,6 +15,13 @@ export const loadSelectedMovie = async ({ params }) => {
   };
 }
 
+export const loadInteractedMovies = async ({ interactionType }) => {
+  let url = '/interactions';
+  if (interactionType) url += `?interactionType=${interactionType}`;
+  const loadFn = fetchFn(url);
+  return await loadFn();
+}
+
 const fetchFn = (url) => {
   return async function () {
     try {

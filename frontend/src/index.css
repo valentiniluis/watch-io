@@ -16,7 +16,7 @@ body {
 }
 
 @layer components {
-  .movie-list {
+  .catalog {
     @apply grid my-16 mx-[12vw] 2xl:mx-[15vw] gap-14 grid-flow-row xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2;
   }
 
@@ -48,7 +48,7 @@ body {
     }
   }
 
-  .recommendations {
+  .movie-list {
     @apply flex overflow-x-auto whitespace-nowrap gap-8;
 
     & li {
@@ -57,7 +57,7 @@ body {
   }
 
   .movie-info-container {
-    @apply flex flex-col-reverse items-center mt-12 justify-center xl:flex-row xl:items-stretch;
+    @apply flex flex-col-reverse items-center justify-center xl:flex-row xl:items-stretch;
 
     & img {
       @apply max-h-[500px];
