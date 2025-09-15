@@ -5,11 +5,12 @@ import db from '../model/db.js';
 import { discoverMovies, searchMovie, mapPosterPaths, getFullPosterPath, getRuntimeString, filterOMDBData } from '../util/api-util.js';
 import { getReleaseYear } from '../util/util-functions.js';
 
+
 export const getSearchedMovies = async (req, res, next) => {
-  const { movie } = req.query;
+  const { movie, page } = req.query;
 
   try {
-    const data = (movie) ? await searchMovie(movie) : await discoverMovies();
+    const data = (movie) ? await searchMovie(movie, page) : await discoverMovies(page);
     const movies = data.map(item => ({
       ...item,
       year: getReleaseYear(item.release_date),

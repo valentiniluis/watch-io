@@ -13,9 +13,9 @@ export function mapPosterPaths(movieArray) {
 }
 
 
-export const discoverMovies = async () => {
+export const discoverMovies = async (page=1) => {
   const documentaryId = getGenreId('Documentary');
-  const url = `/discover/movie?sort_by=vote_average.desc&vote_count.gte=300&without_genres=${documentaryId}`
+  const url = `/discover/movie?sort_by=vote_average.desc&vote_count.gte=500&without_genres=${documentaryId}&page=${page}`;
   const response = await tmdbAPI.get(url);
   const data = response.data;
   if (!response.data.results) throw new Error('Failed to load movies');
@@ -23,13 +23,14 @@ export const discoverMovies = async () => {
 }
 
 
-export async function searchMovie(movie) {
-  const url = `/search/movie?query=${movie}&page=1`;
+export async function searchMovie(movie, page=1) {
+  const url = `/search/movie?query=${movie}&page=${page}`;
   const response = await tmdbAPI.get(url);
   const data = response.data;
   if (!data.results) throw new Error('Failed to load movies');
   const movies = [...data.results];
-  movies.sort((a, b) => b?.popularity - a?.popularity);
+  console.log(movies);
+  movies.sort((a, b) => b?.vote_average - a?.vote_average);
   return movies;
 }
 

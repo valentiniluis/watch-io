@@ -1,9 +1,13 @@
 import api from "../api/request";
 
 
-export async function fetchMovies({ search }) {
-  const queryParam = (search.length > 0) ? `?movie=${search}` : '';
-  const response = await api.get('/movies/search' + queryParam);
+export async function fetchMovies({ queryKey }) {
+  const parameters = queryKey[1];
+  console.log(parameters);
+  const { searchTerm, page = 1 } = parameters;
+  let url = `/movies/search?page=${page}`;
+  url += (searchTerm.length > 0) ? `&movie=${searchTerm}` : '';
+  const response = await api.get(url);
   const { movies } = response.data;
   return movies;
 }
