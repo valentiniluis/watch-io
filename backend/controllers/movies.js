@@ -7,18 +7,12 @@ import { getReleaseYear } from '../util/util-functions.js';
 
 
 export const getSearchedMovies = async (req, res, next) => {
+  const { user } = req;
   const { movie, page } = req.query;
 
   try {
-    const data = (movie) ? await searchMovie(movie, page) : await discoverMovies(page);
-    const movies = data.map(item => ({
-      ...item,
-      year: getReleaseYear(item.release_date),
-      tmdb_rating: (item.vote_average) ? item.vote_average.toFixed(1) : 'N/A'
-    }));
-
-    const moviesWithPosters = mapPosterPaths(movies);
-    res.status(200).json({ success: true, movies: moviesWithPosters });
+    const data = (movie) ? await searchMovie(movie, page) : await discoverMovies({ page, user });
+    res.status(200).json({ success: true, movies: data });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
     next(err);

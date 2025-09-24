@@ -1,6 +1,5 @@
-import movieGenres from './movie-genres.json' with { type: 'json' };
-const { genres } = movieGenres;
 import tmdbAPI from '../api/tmdb-api.js';
+import db from '../model/db.js';
 
 
 export function getFullPosterPath(posterPath) {
@@ -13,32 +12,35 @@ export function mapPosterPaths(movieArray) {
 }
 
 
-export const discoverMovies = async (page=1) => {
-  const documentaryId = getGenreId('Documentary');
-  const url = `/discover/movie?sort_by=vote_average.desc&vote_count.gte=500&without_genres=${documentaryId}&page=${page}`;
-  const response = await tmdbAPI.get(url);
-  const data = response.data;
-  if (!response.data.results) throw new Error('Failed to load movies');
-  return data.results;
+// Dados de 6 mil filmes migrados para o postgres, consulta local
+export const discoverMovies = async ({ page = 1, user = {} }) => {
+  const offset_amount = (page - 1) * 20;
+  const { rows: data } = await db.query(`
+    SELECT *
+    FROM watchio.movie AS mov
+    ORDER BY mov.tmdb_rating DESC, mov.title
+    LIMIT 20
+    OFFSET $1;
+    `,
+    [offset_amount]
+  );
+  return data;
 }
 
 
-export async function searchMovie(movie, page=1) {
+export async function searchMovie(movie, page = 1) {
   const url = `/search/movie?query=${movie}&page=${page}`;
   const response = await tmdbAPI.get(url);
   const data = response.data;
   if (!data.results) throw new Error('Failed to load movies');
-  const movies = [...data.results];
-  console.log(movies);
+  const movies = data.results.map(item => ({
+    ...item,
+    year: getReleaseYear(item.release_date),
+    tmdb_rating: (item.vote_average) ? item.vote_average.toFixed(1) : 'N/A'
+  }));
   movies.sort((a, b) => b?.vote_average - a?.vote_average);
-  return movies;
-}
-
-
-export function getGenreId(genre) {
-  const targetGenre = genres.find(current => current.name === genre);
-  if (!targetGenre) return 0;
-  return targetGenre.id;
+  const moviesWithPosters = mapPosterPaths(movies);
+  return moviesWithPosters;
 }
 
 

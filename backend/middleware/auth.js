@@ -19,15 +19,22 @@ export const authenticateJWT = (req, res, next) => {
   next();
 }
 
-// export const optionallyAuthenticateJWT = (req, res, next) => {
-//   const cookies = req.cookies;
-//   const token = cookies.WATCHIO_JWT;
+export const optionallyAuthenticateJWT = (req, res, next) => {
+  const cookies = req.cookies;
+  const token = cookies.WATCHIO_JWT;
 
-//   let decodedToken;
-//   if (token) decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-//   if (!token || !decodedToken) return next();
+  let decodedToken;
+  try {
+    if (token) decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    // se não está autenticado, somente passa para o próximo middleware
+    if (!token || !decodedToken) throw new Error('Not authenticated');
+  }
+  catch {
+    return next();
+  }
 
-//   let userData = { ...decodedToken, id: decodedToken.sub };
-//   req.user = userData;
-//   next();
-// }
+  // se está autenticado, grava os dados do user na request
+  let userData = { ...decodedToken, id: decodedToken.sub };
+  req.user = userData;
+  next();
+}
