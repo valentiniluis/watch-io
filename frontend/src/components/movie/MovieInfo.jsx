@@ -15,7 +15,6 @@ export default function MovieInfo({ movie }) {
   const { title, poster_path, tagline, year, runtime, genres } = movie;
   const poster = poster_path || noPoster;
 
-
   let errorBlock = null;
   if (error) {
     errorBlock = (
@@ -34,7 +33,6 @@ export default function MovieInfo({ movie }) {
           {tagline && <h4 className='tagline'>{tagline}</h4>}
           {movie.ratings?.length > 0 && <MovieRatings ratings={movie.ratings} />}
           {/* <p className='text-justify mb-6 text-[.9rem] md:text-[1rem]'>{overview}</p> */}
-          {/* add new component for interaction buttons => Like, Don't Show and Watchlist */}
           {isLoggedIn && <MovieInteractions movie={movie} onError={setError} />}
           <div className='additional-info mt-8'>
             <p>{genres.map(genre => genre.name).join(', ')}</p>

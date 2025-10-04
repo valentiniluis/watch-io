@@ -24,17 +24,9 @@ export const loadInteractedMovies = async ({ interactionType }) => {
 
 const fetchFn = (url) => {
   return async function () {
-    try {
-      const response = await api.get(url);
-      const data = response.data;
-      if (!data.success) throw new Error(data.status_message);
-      return data;
-    } catch (error) {
-      console.log(error);
-      return {
-        isError: true,
-        message: error.response?.data?.message || "Failed to load data"
-      };
-    }
+    const response = await api.get(url);
+    const data = response.data;
+    if (!data.success) throw new Error(data.status_message);
+    return data;
   }
 }

@@ -7,6 +7,7 @@ import Spinner from "../components/UI/Spinner.jsx";
 import Auth from "../components/auth/AuthSection.jsx";
 import { fetchMovies } from "../util/movie-query.js";
 import Pagination from "../components/UI/Pagination.jsx";
+import ErrorSection from "../components/UI/ErrorSection.jsx";
 
 
 export default function MoviePicker() {
@@ -34,15 +35,16 @@ export default function MoviePicker() {
 
   else if (isError) {
     console.log(error);
-    content = <p>{error.message}</p>;
+    content = <ErrorSection message={error.message || 'Failed to load movies'} />;
   }
 
   else if (data) {
     content = (
-      <>
+      <div className="catalog-container">
         <MovieCatalog movies={data} />
-        <Pagination current={page} max={50} setPage={setPage}/>
-      </>
+        {/* valor 350 hardcoded, mas depende das interações do usuário com os filmes */}
+        <Pagination current={page} max={350} setPage={setPage}/>
+      </div>
     );
   }
 

@@ -3,7 +3,6 @@ import api from "../api/request";
 
 export async function fetchMovies({ queryKey }) {
   const parameters = queryKey[1];
-  console.log(parameters);
   const { searchTerm, page = 1 } = parameters;
   let url = `/movies/search?page=${page}`;
   url += (searchTerm.length > 0) ? `&movie=${searchTerm}` : '';

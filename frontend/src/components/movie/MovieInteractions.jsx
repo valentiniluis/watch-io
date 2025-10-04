@@ -73,7 +73,7 @@ export default function MovieInteractions({ movie, onError }) {
   }
 
   return (
-    <div className="flex justify-center gap-12">
+    <div className="flex flex-col items-center gap-4 md:gap-10 md:flex-row justify-center flex-wrap">
       {content}
     </div>
   );

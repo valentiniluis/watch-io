@@ -4,6 +4,7 @@ import ErrorPage from './ErrorPage.jsx';
 import MovieRecommendations from '../components/movie/MovieRecommendations.jsx';
 import MovieInfo from '../components/movie/MovieInfo.jsx';
 import Spinner from '../components/UI/Spinner.jsx';
+import ErrorSection from '../components/UI/ErrorSection.jsx';
 
 
 export default function SelectedMoviePage() {
@@ -19,7 +20,7 @@ export default function SelectedMoviePage() {
             <>
               <MovieInfo movie={loaded.movieData} />
               <Suspense fallback={<Spinner text="Loading Recommendations..." />} >
-                <Await errorElement={<p>Failed to Load Recommendations.</p>} resolve={recommendations}>
+                <Await errorElement={<ErrorSection message="Failed to Load Recommendations." />} resolve={recommendations}>
                   {({ recommendations }) => <MovieRecommendations movies={recommendations} />}
                 </Await>
               </Suspense>
