@@ -33,11 +33,11 @@ Estão sendo usadas as seguintes tecnologias no desenvolvimento do projeto:
 
 ### Back-End
 
-* Node.js & Express.js: Usados para a criação de uma API REST no back-end, que se comunica com o front-end por meio do formato JSON.
+* Node.js & Express.js: Usados para a criação de uma API REST no back-end, que se comunica com o front-end por meio de requisições HTTP e dados no formato JSON.
 
 ### Banco de Dados
 
-* Pretendo usar Postgres por meio da biblioteca pg.
+* PostgreSQL: banco relacional para representar relacionamentos N:N entre filmes e usuários.
 
 ## Referências
 
@@ -49,6 +49,6 @@ https://github.com/adrianhajdin/react-movies
 
 [API do Open Movie Database (OMDb)](https://www.omdbapi.com)
 
-Ícones usados do SVG Repo:
+Ícones retirados do SVG Repo:
 
 [SVG Repo](https://www.svgrepo.com/)
