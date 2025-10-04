@@ -2,7 +2,7 @@ import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
 import db from '../model/db.js';
 
-import { discoverMovies, searchMovie, mapPosterPaths, getFullPosterPath, getRuntimeString, filterOMDBData } from '../util/api-util.js';
+import { discoverMovies, searchMovie, getFullPosterPath, getRuntimeString, filterOMDBData } from '../util/api-util.js';
 import { getReleaseYear } from '../util/util-functions.js';
 
 
@@ -63,10 +63,11 @@ export const getMovieData = async (req, res, next) => {
 }
 
 
+// frequency counter to find most recommended movie
+// not implementer yet. other approach?
 export const getRecommendations = async (req, res, next) => {
-  // frequency counter to find most recommended movie
-  // not implementer yet. other approach?
   const { movieId } = req.params;
+
   try {
     const urlTMDB = `/movie/${movieId}/recommendations`;
     const responseTMDB = await tmdbAPI.get(urlTMDB);

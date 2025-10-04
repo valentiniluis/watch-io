@@ -11,12 +11,9 @@ export default function Auth() {
 
   const { mutate } = useMutation({
     mutationFn: authUser,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['user'] });
-    },
-    onError: () => {
-      setAuthFail({ show: true, message: "Failed to Authenticate" });
-    }
+    // invalidate all cached data once authetication succeeds (refetch everything)
+    onSuccess: async () => await queryClient.invalidateQueries(),
+    onError: () => setAuthFail({ show: true, message: "Failed to Authenticate" })
   });
 
   async function handleLogin(response) {

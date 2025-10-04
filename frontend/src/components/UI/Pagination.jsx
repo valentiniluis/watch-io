@@ -11,43 +11,38 @@ export default function Pagination({ current, max, setPage }) {
 
   return (
     <div>
-      <ul className="flex text-stone-200 gap-4">
+      <ul className="flex text-stone-200 gap-4 justify-center my-10">
 
-        {
-          (PENULTIMATE >= FIRST) && (
-            <li>
-              <button className={btnClass} onClick={() => setPage(PENULTIMATE)}>{PENULTIMATE}</button>
-            </li>
-          )
-        }
-
-        {
-          (current > FIRST) && (
-            <li>
-              <button className={btnClass} onClick={() => setPage(PREV)}>{PREV}</button>
-            </li>
-          )
-        }
-
-        <li>
-          <button className={btnClass} onClick={() => setPage(current)} disabled>{current}</button>
+        <li className={(PENULTIMATE >= FIRST) ? '' : 'invisible'}>
+          <button className={btnClass} onClick={() => setPage(PENULTIMATE)}>
+            {PENULTIMATE}
+          </button>
         </li>
 
-        {
-          (NEXT <= max) && (
-            <li>
-              <button className={btnClass} onClick={() => setPage(NEXT)}>{NEXT}</button>
-            </li>
-          )
-        }
+        <li className={(current > FIRST) ? '' : 'invisible'}>
+          <button className={btnClass} onClick={() => setPage(PREV)}>
+            {PREV}
+          </button>
+        </li>
 
-        {
-          (SECOND_NEXT <= max) && (
-            <li>
-              <button className={btnClass} onClick={() => setPage(SECOND_NEXT)}>{SECOND_NEXT}</button>
-            </li>
-          )
-        }
+        <li>
+          <button className={btnClass} onClick={() => setPage(current)} disabled>
+            {current}
+          </button>
+        </li>
+
+        <li className={(NEXT <= max) ? '' : 'invisible'}>
+          <button className={btnClass} onClick={() => setPage(NEXT)}>
+            {NEXT}
+          </button>
+        </li>
+
+        <li className={(SECOND_NEXT <= max) ? "" : 'invisible'}>
+          <button className={btnClass} onClick={() => setPage(SECOND_NEXT)}>
+            {SECOND_NEXT}
+          </button>
+        </li>
+        
       </ul>
     </div>
   );

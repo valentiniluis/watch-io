@@ -148,15 +148,13 @@ export const deleteInteraction = async (req, res, next) => {
 
     if (interaction.rows.length === 0) return res.status(400).json({ success: false, message: `User does not have '${interactionType}' interaction with movie` });
 
-    const deleteResult = await db.query(`
+    await db.query(`
       DELETE FROM watchio.interaction AS inter
       WHERE inter.user_id = $1
       AND inter.movie_id = $2
       AND inter.type = $3; `,
       [user.id, movieId, interactionType]
     );
-
-    console.log(deleteResult);
     return res.status(200).json({ success: true, message: `Deleted '${interactionType}' interaction successfully.` });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
