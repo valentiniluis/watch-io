@@ -1,6 +1,14 @@
 import api from "../api/request";
 
 
+export async function getHomepage() {
+  const response = await api.get('/movies/homepage');
+  const data = response.data;
+  if (!data.success) throw new Error(data.message || 'Failed to load homepage');
+  return data;
+}
+
+
 export async function fetchMovies({ queryKey }) {
   const parameters = queryKey[1];
   const { searchTerm, page = 1 } = parameters;
@@ -17,10 +25,12 @@ export async function addInteraction({ movie, type }) {
   return response.data;
 }
 
+
 export async function removeInteraction({ movieId, type }) {
   const response = await api.delete(`/interactions/${type}/${movieId}`);
   return response.data;
 }
+
 
 export async function getInteractions({ queryKey }) {
   const { movieId } = queryKey[1];

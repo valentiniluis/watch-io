@@ -31,7 +31,7 @@ export default function MovieInfo({ movie }) {
         <div className='text-container'>
           <h1 className='movie-name'>{title}</h1>
           {tagline && <h4 className='tagline'>{tagline}</h4>}
-          {movie.ratings?.length > 0 && <MovieRatings ratings={movie.ratings} />}
+          {movie.ratings?.length && <MovieRatings ratings={movie.ratings} />}
           {/* <p className='text-justify mb-6 text-[.9rem] md:text-[1rem]'>{overview}</p> */}
           {isLoggedIn && <MovieInteractions movie={movie} onError={setError} />}
           <div className='additional-info mt-8'>

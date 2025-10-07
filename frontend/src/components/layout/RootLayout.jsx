@@ -25,7 +25,7 @@ export default function RootLayout() {
   return (
     <div className='min-h-dvh'>
       <Header />
-      <main>
+      <main className="max-w-[100vw]">
         <Outlet />
       </main>
     </div>

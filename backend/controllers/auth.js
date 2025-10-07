@@ -52,3 +52,9 @@ export const postLogin = async (req, res, next) => {
     res.status(401).json({ success: false, message: 'Invalid Google Token' });
   }
 }
+
+
+export const postLogout = async (req, res, next) => {
+  res.clearCookie('WATCHIO_JWT', { httpOnly: true });
+  return res.status(200).json({ success: true, message: 'Logout successful' });
+}

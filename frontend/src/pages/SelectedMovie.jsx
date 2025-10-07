@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Await, useLoaderData } from 'react-router-dom';
 import ErrorPage from './ErrorPage.jsx';
-import MovieRecommendations from '../components/movie/MovieRecommendations.jsx';
+import MovieList from '../components/movie/MovieList.jsx';
 import MovieInfo from '../components/movie/MovieInfo.jsx';
 import Spinner from '../components/UI/Spinner.jsx';
 import ErrorSection from '../components/UI/ErrorSection.jsx';
@@ -21,7 +21,7 @@ export default function SelectedMoviePage() {
               <MovieInfo movie={loaded.movieData} />
               <Suspense fallback={<Spinner text="Loading Recommendations..." />} >
                 <Await errorElement={<ErrorSection message="Failed to Load Recommendations." />} resolve={recommendations}>
-                  {({ recommendations }) => <MovieRecommendations movies={recommendations} />}
+                  {({ recommendations }) => <MovieList title="You May Like" fallback="Failed to load recommendations" movies={recommendations} />}
                 </Await>
               </Suspense>
             </>

@@ -52,11 +52,11 @@ body {
   }
 
   .movie-list {
-    @apply flex overflow-y-visible overflow-x-hidden whitespace-nowrap gap-5 py-5 px-3;
+    @apply flex overflow-y-visible overflow-x-hidden max-w-[90vw] whitespace-nowrap gap-5 py-5 px-3;
 
 
     & li {
-      @apply h-auto min-w-[180px] max-w-[280px] w-full;
+      @apply h-auto min-w-[170px] max-w-[200px] w-full;
     }
   }
 

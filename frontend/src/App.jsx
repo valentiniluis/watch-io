@@ -5,7 +5,8 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import store from './store/store.js';
 import queryClient from './util/query.js';
 import RootLayout from './components/layout/RootLayout.jsx';
-import MovieRecommender from './pages/MovieRecommender.jsx';
+import HomePage from './pages/HomePage.jsx';
+import MoviePicker from './pages/MoviePicker.jsx';
 import SelectedMovie from './pages/SelectedMovie.jsx';
 import { loadSelectedMovie } from './util/moviesLoaders.js';
 import MyArea from './pages/MyArea.jsx';
@@ -15,16 +16,16 @@ const router = createBrowserRouter([
     path: '',
     element: <RootLayout />,
     children: [
-      { index: true, loader: () => redirect('/movies') },
+      { index: true, loader: () => redirect('/home') },
       {
-        path: 'movies', children: [
-          { index: true, element: <MovieRecommender /> },
+        path: 'search', children: [
+          { index: true, element: <MoviePicker /> },
           { path: ':movieId', element: <SelectedMovie />, loader: loadSelectedMovie }
         ]
       },
       {
-        path: 'trending', children: [
-          { index: true, element: <></> },
+        path: 'home', children: [
+          { index: true, element: <HomePage /> },
           { path: ':movieId', element: <SelectedMovie />, loader: loadSelectedMovie }
         ]
       },

@@ -2,7 +2,8 @@ import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
 import db from '../model/db.js';
 
-import { discoverMovies, searchMovie, getFullPosterPath, getRuntimeString, filterOMDBData } from '../util/api-util.js';
+import { searchMovie, getFullPosterPath, getRuntimeString, filterOMDBData, discoverMoviesByGenre } from '../util/api-util.js';
+import { discoverMovies } from '../util/db-util.js';
 import { getReleaseYear } from '../util/util-functions.js';
 
 
@@ -62,7 +63,6 @@ export const getMovieData = async (req, res, next) => {
   }
 }
 
-
 // frequency counter to find most recommended movie
 // not implementer yet. other approach?
 export const getRecommendations = async (req, res, next) => {
@@ -72,13 +72,61 @@ export const getRecommendations = async (req, res, next) => {
     const urlTMDB = `/movie/${movieId}/recommendations`;
     const responseTMDB = await tmdbAPI.get(urlTMDB);
     const dataTMDB = { ...responseTMDB.data };
-    dataTMDB.results = dataTMDB.results.map(rec => ({ 
-      ...rec, 
+    dataTMDB.results = dataTMDB.results.map(rec => ({
+      ...rec,
       poster_path: getFullPosterPath(rec.poster_path),
       year: getReleaseYear(rec.release_date),
       tmdb_rating: (rec.vote_average) ? rec.vote_average.toFixed(1) : 'N/A'
     }));
     res.status(200).json({ success: true, recommendations: dataTMDB.results });
+  } catch (err) {
+    if (!err.statusCode) err.statusCode = 500;
+    next(err);
+  }
+}
+
+
+export const getMovieGenres = async (req, res, next) => {
+  const endpoint = '/genre/movie/list';
+
+  try {
+    const response = await tmdbAPI.get(endpoint);
+    const { data } = response;
+    if (!data?.genres) throw new Error('Failed to get movie genres');
+
+    const { genres } = data;
+    res.status(200).json({ success: true, genres });
+  } catch (err) {
+    if (!err.statusCode) err.statusCode = 500;
+    next(err);
+  }
+}
+
+
+export const getHomepage = async (req, res, next) => {
+  const mainGenres = [
+    'Action',
+    'Comedy',
+    'Drama',
+    'Horror',
+    'Romance',
+    'Science Fiction',
+  ];
+
+  const responseData = {};
+
+  try {
+    for (const genre of mainGenres) {
+      try {
+        const movies = await discoverMoviesByGenre(genre);
+        responseData[genre] = movies;
+      } catch (err) {
+        console.log('Failed to fetch sample movies of genre:', genre);
+        console.log(err);
+      }
+    };
+
+    res.status(200).json({ success: true, genres: responseData });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
     next(err);

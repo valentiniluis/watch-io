@@ -6,4 +6,6 @@ const router = express.Router();
 
 router.post('/google', authControllers.postLogin);
 
+router.post('/logout', authControllers.postLogout);
+
 export default router;
