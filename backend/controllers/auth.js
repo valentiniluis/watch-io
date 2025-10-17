@@ -19,7 +19,7 @@ export const postLogin = async (req, res, next) => {
 
     const { rows } = await db.query(`
         SELECT *
-        FROM watchio.user AS us
+        FROM user_account AS us
         WHERE us.email = $1;
       `,
       [payload.email]
@@ -28,7 +28,7 @@ export const postLogin = async (req, res, next) => {
     if (rows.length === 0) {
       await db.query(`
         INSERT INTO
-        watchio.user(id, email, name)
+        user_account(id, email, name)
         VALUES
         ($1, $2, $3);
         `,

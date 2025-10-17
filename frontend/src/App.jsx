@@ -10,6 +10,9 @@ import MoviePicker from './pages/MoviePicker.jsx';
 import SelectedMovie from './pages/SelectedMovie.jsx';
 import { loadSelectedMovie } from './util/moviesLoaders.js';
 import MyArea from './pages/MyArea.jsx';
+import GenresPage from './pages/GenresPage.jsx';
+import { loadHomepage } from './util/moviesLoaders.js';
+
 
 const router = createBrowserRouter([
   {
@@ -25,7 +28,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'home', children: [
-          { index: true, element: <HomePage /> },
+          { index: true, element: <HomePage />, loader: loadHomepage },
           { path: ':movieId', element: <SelectedMovie />, loader: loadSelectedMovie }
         ]
       },
@@ -34,6 +37,10 @@ const router = createBrowserRouter([
           { index: true, element: <MyArea /> },
           { path: ':movieId', element: <SelectedMovie />, loader: loadSelectedMovie }
         ]
+      },
+      {
+        path: 'genres',
+        element: <GenresPage />
       }
     ]
   }

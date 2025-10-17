@@ -8,8 +8,8 @@ export const getInteractions = async (req, res, next) => {
 
   let query = `
     SELECT inter.type, mov.*
-    FROM watchio.interaction AS inter
-    INNER JOIN watchio.movie AS mov
+    FROM interaction AS inter
+    INNER JOIN movie AS mov
     ON inter.movie_id = mov.id
     WHERE inter.user_id = $1
   `;
@@ -43,7 +43,7 @@ export const postInteraction = async (req, res, next) => {
   try {
     const { rows } = await db.query(`
       SELECT 1
-      FROM watchio.movie AS mov
+      FROM movie AS mov
       WHERE mov.id = $1;
     `,
       [movieId]
@@ -52,7 +52,7 @@ export const postInteraction = async (req, res, next) => {
     if (rows.length === 0) {
       await db.query(`
         INSERT INTO
-        watchio.movie(id, title, poster_path, year, tmdb_rating)
+        movie(id, title, poster_path, year, tmdb_rating)
         VALUES
         ($1, $2, $3, $4, $5);`,
         [movieId, title, poster_path, year, tmdb_rating.toFixed(2)]
@@ -61,7 +61,7 @@ export const postInteraction = async (req, res, next) => {
 
     const interactionQuery = await db.query(`
       SELECT type
-      FROM watchio.interaction AS inter
+      FROM interaction AS inter
       WHERE inter.user_id = $1
       AND inter.movie_id = $2; `,
       [user.id, movieId]
@@ -75,9 +75,8 @@ export const postInteraction = async (req, res, next) => {
 
     await db.query(`
       INSERT INTO
-    watchio.interaction(movie_id, user_id, type)
-    VALUES
-      ($1, $2, $3); `,
+      interaction(movie_id, user_id, type)
+      VALUES ($1, $2, $3);`,
       [movieId, user.id, interactionType]
     );
 
@@ -111,7 +110,7 @@ export const hasInteraction = async (req, res, next) => {
   try {
     const { rows: interaction } = await db.query(`
       SELECT type 
-      FROM watchio.interaction AS inter
+      FROM interaction AS inter
       WHERE inter.user_id = $1
       AND inter.movie_id = $2; `,
       [user.id, movieId]
@@ -139,7 +138,7 @@ export const deleteInteraction = async (req, res, next) => {
   try {
     const interaction = await db.query(`
       SELECT 1
-      FROM watchio.interaction AS inter
+      FROM interaction AS inter
       WHERE inter.user_id = $1
       AND inter.movie_id = $2
       AND inter.type = $3; `,
@@ -149,7 +148,7 @@ export const deleteInteraction = async (req, res, next) => {
     if (interaction.rows.length === 0) return res.status(400).json({ success: false, message: `User does not have '${interactionType}' interaction with movie` });
 
     await db.query(`
-      DELETE FROM watchio.interaction AS inter
+      DELETE FROM interaction AS inter
       WHERE inter.user_id = $1
       AND inter.movie_id = $2
       AND inter.type = $3; `,

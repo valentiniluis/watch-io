@@ -1,43 +1,41 @@
-import { useQuery } from '@tanstack/react-query';
-import { getHomepage } from '../util/movie-query';
+import { Suspense } from 'react';
 import Spinner from '../components/UI/Spinner';
 import ErrorSection from '../components/UI/ErrorSection';
 import MovieList from '../components/movie/MovieList';
+import { Await, useLoaderData } from 'react-router-dom';
+import { mainGenres } from '../util/mainGenres.js';
 
 
 export default function HomePage() {
+  const moviesData = useLoaderData();
 
-  const { data, isPending, isError, error } = useQuery({
-    queryKey: ['homepage'],
-    queryFn: getHomepage
-  });
+  const content = (
+    <>
+      {mainGenres.map(genre => {
+        const Fallback = (
+          <div className='my-48'>
+            <Spinner text={`Loading ${genre.name} movies...`} />
+          </div>
+        ); 
 
-  let content;
-
-  if (isPending) {
-    content = <Spinner text="Loading movie genres..." />
-  }
-  else if (isError) {
-    content = <ErrorSection message={error.message || 'Failed to load movie genres'} />
-  }
-  else if (data) {
-    const { genres } = data;
-    content = (
-      <div>
-        {Object.entries(genres).map(([genre, movies]) => (
-          <MovieList key={genre} title={genre} movies={movies} />
-        ))}
-      </div>
-    )
-  }
+        return (
+          <Suspense fallback={Fallback} key={genre.id}>
+            <Await errorElement={<ErrorSection message="Failed to load genre" />} resolve={moviesData[genre.name]}>
+              {({ movies }) => <MovieList title={genre.name} movies={movies || []} />}
+            </Await>
+          </Suspense>
+        );
+      })}
+    </>
+  )
 
   return (
     <section className='px-[5vw]'>
-      <section id='recommendations-section'>
-        <h1>Recommendations for you</h1>
+      <section className="text-center my-40" id='recommendations-section'>
+        <h1 className='text-2xl font-bold'>Our Recommendations For You</h1>
         <p>...</p>
       </section>
-      <section className='flex justify-center' id='genres-section'>
+      <section id='genres-section'>
         {content}
       </section>
     </section>

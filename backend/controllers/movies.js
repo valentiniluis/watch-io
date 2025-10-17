@@ -2,17 +2,19 @@ import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
 import db from '../model/db.js';
 
-import { searchMovie, getFullPosterPath, getRuntimeString, filterOMDBData, discoverMoviesByGenre } from '../util/api-util.js';
-import { discoverMovies } from '../util/db-util.js';
+// import { searchMovie } from '../util/api-util.js';
+import { getFullPosterPath, getRuntimeString, filterOMDBData, discoverMoviesByGenre } from '../util/api-util.js';
+import { discoverMovies, searchMovie } from '../util/db-util.js';
 import { getReleaseYear } from '../util/util-functions.js';
 
 
+// how to paginate?
 export const getSearchedMovies = async (req, res, next) => {
   const { user } = req;
   const { movie, page } = req.query;
 
   try {
-    const data = (movie) ? await searchMovie(movie, page) : await discoverMovies({ page, user });
+    const data = (movie) ? await searchMovie({ movie, page, user }) : await discoverMovies({ page, user });
     res.status(200).json({ success: true, movies: data });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
@@ -46,7 +48,7 @@ export const getMovieData = async (req, res, next) => {
     if (user) {
       const { rows: interactions } = await db.query(`
         SELECT inter.type
-        FROM watchio.interaction AS inter
+        FROM interaction AS inter
         WHERE inter.user_id = $1
         AND inter.movie_id = $2;
         `,
@@ -87,14 +89,8 @@ export const getRecommendations = async (req, res, next) => {
 
 
 export const getMovieGenres = async (req, res, next) => {
-  const endpoint = '/genre/movie/list';
-
   try {
-    const response = await tmdbAPI.get(endpoint);
-    const { data } = response;
-    if (!data?.genres) throw new Error('Failed to get movie genres');
-
-    const { genres } = data;
+    const { rows: genres } = await db.query('SELECT * FROM genre ORDER BY name;');
     res.status(200).json({ success: true, genres });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
@@ -103,30 +99,46 @@ export const getMovieGenres = async (req, res, next) => {
 }
 
 
-export const getHomepage = async (req, res, next) => {
-  const mainGenres = [
-    'Action',
-    'Comedy',
-    'Drama',
-    'Horror',
-    'Romance',
-    'Science Fiction',
-  ];
+export const getMoviesByGenre = async (req, res, next) => {
+  const limit = req.query.limit || 30;
+  const { genreId } = req.params;
+  const id = req.user?.id;
 
-  const responseData = {};
+  if (!genreId) return res.status(400).json({ success: false, message: 'Genre not informed.' });
 
   try {
-    for (const genre of mainGenres) {
-      try {
-        const movies = await discoverMoviesByGenre(genre);
-        responseData[genre] = movies;
-      } catch (err) {
-        console.log('Failed to fetch sample movies of genre:', genre);
-        console.log(err);
-      }
-    };
-
-    res.status(200).json({ success: true, genres: responseData });
+    let query;
+    const queryArgs = [genreId, limit];
+    if (id && id.length) {
+      query = `
+        SELECT mov.*
+        FROM movie AS mov
+        INNER JOIN movie_genre AS mg
+        ON mov.id = mg.movie_id
+        WHERE mg.genre_id = $1
+        AND mov.id NOT IN (
+          SELECT inter.movie_id
+          FROM interaction AS inter
+          WHERE inter.user_id = $3
+          AND inter.type = 'not interested'
+        )
+        ORDER BY mov.title, mov.tmdb_rating
+        LIMIT $2;
+      `;
+      queryArgs.push(id);
+    } else {
+      query = `
+        SELECT mov.*
+        FROM movie AS mov
+        INNER JOIN movie_genre AS mg
+        ON mov.id = mg.movie_id
+        WHERE mg.genre_id = $1
+        ORDER BY mov.title, mov.tmdb_rating
+        LIMIT $2;
+      `;
+    }
+    const { rows: results } = await db.query(query, queryArgs);
+    return res.status(200).json({ success: true, movies: results });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
     next(err);

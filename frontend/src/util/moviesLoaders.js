@@ -1,4 +1,17 @@
 import api from "../api/request.js";
+import { mainGenres } from "./mainGenres.js";
+
+
+export const loadHomepage = async () => {
+  const homepageData = {};
+
+  for (const genre of mainGenres) {
+    const fetchGenre = fetchFn('/movies/genre/' + genre.id);
+    homepageData[genre.name] = fetchGenre();
+  }
+  return homepageData;
+}
+
 
 export const loadSelectedMovie = async ({ params }) => {
   const { movieId } = params;

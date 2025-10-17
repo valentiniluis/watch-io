@@ -41,7 +41,7 @@ Estão sendo usadas as seguintes tecnologias no desenvolvimento do projeto:
 
 ## Referências
 
-Usei alguns dos estilos do tailwindcss presentes no repositório a seguir:
+Alguns estilos do tailwindcss retirados do repositório a seguir:
 
 https://github.com/adrianhajdin/react-movies
 
@@ -52,3 +52,7 @@ https://github.com/adrianhajdin/react-movies
 Ícones retirados do SVG Repo:
 
 [SVG Repo](https://www.svgrepo.com/)
+
+Alguns componentes e estilos do Flowbite utilizados:
+
+[Flowbite](https://flowbite.com/)
