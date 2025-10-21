@@ -8,34 +8,33 @@ import RootLayout from './components/layout/RootLayout.jsx';
 import HomePage from './pages/HomePage.jsx';
 import MoviePicker from './pages/MoviePicker.jsx';
 import SelectedMovie from './pages/SelectedMovie.jsx';
-import { loadSelectedMovie } from './util/moviesLoaders.js';
 import MyArea from './pages/MyArea.jsx';
 import GenresPage from './pages/GenresPage.jsx';
 import { loadHomepage } from './util/moviesLoaders.js';
+import ErrorPage from './pages/ErrorPage.jsx';
 
 
 const router = createBrowserRouter([
   {
     path: '',
     element: <RootLayout />,
+    errorElement: <ErrorPage message="Page Not Found" />,
     children: [
       { index: true, loader: () => redirect('/home') },
       {
         path: 'search', children: [
           { index: true, element: <MoviePicker /> },
-          { path: ':movieId', element: <SelectedMovie />, loader: loadSelectedMovie }
+          { path: ':movieId', element: <SelectedMovie /> }
         ]
       },
       {
         path: 'home', children: [
           { index: true, element: <HomePage />, loader: loadHomepage },
-          { path: ':movieId', element: <SelectedMovie />, loader: loadSelectedMovie }
         ]
       },
       {
         path: 'my-area', children: [
           { index: true, element: <MyArea /> },
-          { path: ':movieId', element: <SelectedMovie />, loader: loadSelectedMovie }
         ]
       },
       {

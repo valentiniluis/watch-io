@@ -1,33 +1,40 @@
-import { Suspense } from 'react';
-import { Await, useLoaderData } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import ErrorPage from './ErrorPage.jsx';
-import MovieList from '../components/movie/MovieList.jsx';
 import MovieInfo from '../components/movie/MovieInfo.jsx';
 import Spinner from '../components/UI/Spinner.jsx';
-import ErrorSection from '../components/UI/ErrorSection.jsx';
+import { loadMovieData } from '../util/movie-query.js';
+import MovieRecommendations from '../components/movie/Recommendations.jsx';
 
 
 export default function SelectedMoviePage() {
-  const loaderData = useLoaderData();
-  const { movie, recommendations } = loaderData;
+  const { movieId } = useParams();
 
-  // recomendações são extraídas apenas após os dados do filme
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['movie-data', { movieId }],
+    queryFn: loadMovieData
+  });
+
+  let content;
+  if (isLoading) {
+    content = <Spinner text="Loading Movie Data..." />;
+  }
+  else if (isError) {
+    content = <ErrorPage message="This Movie Is Unavailable." />;
+  }
+  else if (data) {
+    // recomendações são extraídas apenas após os dados do filme
+    content = (
+      <>
+        <MovieInfo movie={data.movieData} />
+        <MovieRecommendations movieId={movieId} />
+      </>
+    );
+  }
+
   return (
     <section className='px-[5vw]'>
-      <Suspense fallback={<Spinner text="Loading Movie Data..." />}>
-        <Await errorElement={<ErrorPage message="This Movie Is Unavailable." />} resolve={movie}>
-          {loaded => (
-            <>
-              <MovieInfo movie={loaded.movieData} />
-              <Suspense fallback={<Spinner text="Loading Recommendations..." />} >
-                <Await errorElement={<ErrorSection message="Failed to Load Recommendations." />} resolve={recommendations}>
-                  {({ recommendations }) => <MovieList title="You May Like" fallback="Failed to load recommendations" movies={recommendations} />}
-                </Await>
-              </Suspense>
-            </>
-          )}
-        </Await>
-      </Suspense>
+      {content}
     </section>
   );
 }

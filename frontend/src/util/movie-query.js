@@ -29,3 +29,21 @@ export async function getInteractions({ queryKey }) {
   const response = await api.get('/interactions/' + movieId);
   return response.data;
 }
+
+
+export const loadMovieData = async ({ queryKey }) => {
+  const { movieId } = queryKey[1];
+  const response = await api.get('/movies/' + movieId);
+  const data = response.data;
+  if (!data.success) throw new Error(data.status_message);
+  return data;
+}
+
+
+export const loadRecommendations = async ({ queryKey }) => {
+  const { movieId } = queryKey[1];
+  const response = await api.get('/movies/' + movieId + '/recommendations');
+  const data = response.data;
+  if (!data.success) throw new Error(data.status_message);
+  return data;
+}
