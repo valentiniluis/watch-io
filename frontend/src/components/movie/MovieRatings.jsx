@@ -3,7 +3,7 @@ export default function MovieRatings({ ratings }) {
   const gridCols = 'grid-cols-' + ratings.length;
 
   return (
-    <section className={'grid gap-5 text-center mb-8 ' + gridCols}>
+    <section className={'grid gap-5 text-center mb-8 mt-6 ' + gridCols}>
       {ratings.map(rating => (
         <div key={rating.Source}>
           <p className='text-stone-400 font-medium text-xs'>{rating.Source}</p>

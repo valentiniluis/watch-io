@@ -61,7 +61,7 @@ body {
   }
 
   .movie-info-container {
-    @apply flex flex-col-reverse items-center justify-center xl:flex-row xl:items-stretch;
+    @apply flex flex-col items-center justify-center xl:flex-row xl:items-stretch;
 
     & img {
       @apply max-h-[500px];
@@ -72,7 +72,7 @@ body {
     }
 
     & .movie-name {
-      @apply text-3xl md:text-4xl text-center text-stone-100 font-semibold tracking-wide my-8 xl:my-0;
+      @apply text-3xl md:text-4xl text-center text-stone-100 font-semibold tracking-wide mb-8 xl:my-0;
     }
 
     & .tagline {
@@ -80,7 +80,11 @@ body {
     }
 
     & .additional-info {
-      @apply flex gap-6 text-[.9rem] md:text-[1rem] justify-center text-stone-300 mb-8 xl:mb-0;
+      @apply flex gap-6  justify-center mb-8 xl:mb-0;
+    }
+
+    & .additional-info p {
+      @apply text-sm md:text-[.9rem] font-medium text-stone-200;
     }
   }
 

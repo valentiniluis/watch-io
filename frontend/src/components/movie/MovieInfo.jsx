@@ -27,10 +27,16 @@ export default function MovieInfo({ movie }) {
     <>
       {errorBlock}
       <div className='movie-info-container'>
-        <img src={poster} alt={title + ' Movie Poster'} />
-        <div className='text-container'>
+
+        <div className='text-container xl:hidden'>
           <h1 className='movie-name'>{title}</h1>
           {tagline && <h4 className='tagline'>{tagline}</h4>}
+        </div>
+
+        <img src={poster} alt={title + ' Movie Poster'} />
+        <div className='text-container'>
+          <h1 className='movie-name hidden xl:inline-block'>{title}</h1>
+          {tagline && <h4 className='tagline hidden xl:inline-block'>{tagline}</h4>}
           {movie.ratings?.length && <MovieRatings ratings={movie.ratings} />}
           {/* <p className='text-justify mb-6 text-[.9rem] md:text-[1rem]'>{overview}</p> */}
           {isLoggedIn && <MovieInteractions movie={movie} onError={setError} />}
