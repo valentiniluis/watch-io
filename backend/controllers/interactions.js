@@ -1,3 +1,4 @@
+import Joi from 'joi';
 import db from '../model/db.js';
 
 
@@ -32,15 +33,29 @@ export const getInteractions = async (req, res, next) => {
 }
 
 // create interaction between user and movie
+
+const interactionSchema = Joi.object({
+  id: Joi.number().min(1).required(),
+  title: Joi.string().required(),
+  poster_path: Joi.string().uri(),
+  year: Joi.number().min(0),
+  tmdb_rating: Joi.number().min(0)
+});
+
 export const postInteraction = async (req, res, next) => {
-  const { id: movieId, title, poster_path, year, tmdb_rating } = req.body;
-  const { user } = req;
-  const { interactionType } = req.params;
-
-  // provisional check
-  if (!movieId || !title) return res.status(400).json({ success: false, message: "Required data was not provided." });
-
   try {
+    const { error } = interactionSchema.validate(req.body);
+
+    if (error) {
+      const err = new Error('Invalid Input:', error.message);
+      err.statusCode = 400;
+      throw err;
+    } 
+
+    const { id: movieId, title, poster_path, year, tmdb_rating } = req.body;
+    const { user } = req;
+    const { interactionType } = req.params;
+
     const { rows } = await db.query(`
       SELECT 1
       FROM movie AS mov
