@@ -1,5 +1,5 @@
-import Joi from 'joi';
 import db from '../model/db.js';
+import { interactionSchema, movieSchema, movieIdSchema } from '../util/validationSchemas.js';
 
 
 // get all user interactions
@@ -33,26 +33,17 @@ export const getInteractions = async (req, res, next) => {
 }
 
 // create interaction between user and movie
-
-const interactionSchema = Joi.object({
-  id: Joi.number().min(1).required(),
-  title: Joi.string().required(),
-  poster_path: Joi.string().uri(),
-  year: Joi.number().min(0),
-  tmdb_rating: Joi.number().min(0)
-});
-
 export const postInteraction = async (req, res, next) => {
   try {
-    const { error } = interactionSchema.validate(req.body);
+    const { error, value } = movieSchema.validate(req.body);
 
     if (error) {
-      const err = new Error('Invalid Input:', error.message);
+      const err = new Error('Invalid Input: ' + error.message);
       err.statusCode = 400;
       throw err;
-    } 
+    }
 
-    const { id: movieId, title, poster_path, year, tmdb_rating } = req.body;
+    const { id: movieId, title, poster_path, year, tmdb_rating } = value;
     const { user } = req;
     const { interactionType } = req.params;
 
@@ -117,12 +108,20 @@ export const postInteraction = async (req, res, next) => {
 
 // check if user has interaction with particular movie
 export const hasInteraction = async (req, res, next) => {
-  const { user } = req;
-  const { movieId } = req.params;
-
-  if (!movieId) return res.status(400).json({ success: false, message: "No movie id provided" });
-
   try {
+    const { error, value } = movieIdSchema.validate(req.params);
+
+    if (error) {
+      const err = new Error('Invalid Input: ' + error.message);
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const { movieId } = value;
+    const { user } = req;
+
+    if (!movieId) return res.status(400).json({ success: false, message: "No movie id provided" });
+
     const { rows: interaction } = await db.query(`
       SELECT type 
       FROM interaction AS inter
@@ -144,13 +143,18 @@ export const hasInteraction = async (req, res, next) => {
 
 
 export const deleteInteraction = async (req, res, next) => {
-  const { interactionType, movieId } = req.params;
-  const { user } = req;
-
-  // provisional validation
-  if (!interactionType || !movieId || !user) return res.status(400).json({ success: false, message: "Missing required data in request" });
-
   try {
+    const { error, value } = interactionSchema.validate(req.params);
+
+    if (error) {
+      const err = new Error('Invalid Input: ' + error.message);
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const { interactionType, movieId } = value;
+    const { user } = req;
+
     const interaction = await db.query(`
       SELECT 1
       FROM interaction AS inter

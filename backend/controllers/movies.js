@@ -1,11 +1,10 @@
 import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
 import db from '../model/db.js';
-
-// import { searchMovie } from '../util/api-util.js';
-import { getFullPosterPath, getRuntimeString, filterOMDBData, discoverMoviesByGenre } from '../util/api-util.js';
+import { getFullPosterPath, getRuntimeString, filterOMDBData } from '../util/api-util.js';
 import { discoverMovies, searchMovie } from '../util/db-util.js';
 import { getReleaseYear } from '../util/util-functions.js';
+import { movieIdSchema, genreIdSchema } from '../util/validationSchemas.js';
 
 
 // how to paginate?
@@ -24,10 +23,17 @@ export const getSearchedMovies = async (req, res, next) => {
 
 
 export const getMovieData = async (req, res, next) => {
-  const { movieId } = req.params;
-  const { user } = req;
-
   try {
+    const { value, error } = movieIdSchema.validate(req.params);
+
+    if (error) {
+      const err = new Error("Invalid Movie: " + error.message);
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const { movieId } = value;
+    const { user } = req;
     const urlTMDB = `/movie/${movieId}`;
     const responseTMDB = await tmdbAPI.get(urlTMDB);
     const dataTMDB = { ...responseTMDB.data };
@@ -68,9 +74,16 @@ export const getMovieData = async (req, res, next) => {
 // frequency counter to find most recommended movie
 // not implementer yet. other approach?
 export const getRecommendations = async (req, res, next) => {
-  const { movieId } = req.params;
-
   try {
+    const { value, error } = movieIdSchema.validate(req.params);
+
+    if (error) {
+      const err = new Error("Invalid Movie: " + error.message);
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const { movieId } = value;
     const urlTMDB = `/movie/${movieId}/recommendations`;
     const responseTMDB = await tmdbAPI.get(urlTMDB);
     const dataTMDB = { ...responseTMDB.data };
@@ -101,13 +114,19 @@ export const getMovieGenres = async (req, res, next) => {
 
 export const getMoviesByGenre = async (req, res, next) => {
   const limit = req.query.limit || 30;
-  const { genreId } = req.params;
   const id = req.user?.id;
-
-  if (!genreId) return res.status(400).json({ success: false, message: 'Genre not informed.' });
+  let query;
 
   try {
-    let query;
+    const { error, value } = genreIdSchema.validate(req.params);
+
+    if (error) {
+      const err = new Error('Invalid genre ID: ' + error.message);
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const { genreId } = value;
     const queryArgs = [genreId, limit];
     if (id && id.length) {
       query = `

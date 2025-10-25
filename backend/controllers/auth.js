@@ -1,15 +1,22 @@
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import db from '../model/db.js';
+import { loginSchema } from '../util/validationSchemas.js';
 
 
 export const postLogin = async (req, res, next) => {
-  const { credential, clientId } = req.body;
-
-  if (!credential || !clientId) return res.status(400).json({ success: false, message: 'Credentials were not provided.' });
-  const client = new OAuth2Client(clientId);
-
   try {
+    const { value, error } = loginSchema.validate(req.body);
+
+    if (error) {
+      const err = new Error("Invalid Input: " + error.message);
+      err.statusCode = 400;
+      throw err;
+    }
+    
+    const { credential, clientId } = value;
+    const client = new OAuth2Client(clientId);
+
     const ticket = await client.verifyIdToken({
       idToken: credential,
       audience: clientId
