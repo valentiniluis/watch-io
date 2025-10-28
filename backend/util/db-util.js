@@ -78,3 +78,15 @@ export async function searchMovie({ movie, user = {}, page = 1 }) {
   const { rows: results } = await db.query(query, queryArgs);
   return results;
 }
+
+
+export async function getInteraction({ movieId, userId }) {
+  const { rows: interaction } = await db.query(`
+    SELECT inter.type 
+    FROM interaction AS inter
+    WHERE inter.user_id = $1
+    AND inter.movie_id = $2;`,
+    [userId, movieId]
+  );
+  return interaction;
+}

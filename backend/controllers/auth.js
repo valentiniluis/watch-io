@@ -6,7 +6,8 @@ import { loginSchema } from '../util/validationSchemas.js';
 
 export const postLogin = async (req, res, next) => {
   try {
-    const { value, error } = loginSchema.validate(req.body);
+    const loginData = { credential: req.body.credential, clientId: req.body.clientId };
+    const { value, error } = loginSchema.validate(loginData);
 
     if (error) {
       const err = new Error("Invalid Input: " + error.message);
@@ -25,10 +26,9 @@ export const postLogin = async (req, res, next) => {
     const payload = ticket.getPayload();
 
     const { rows } = await db.query(`
-        SELECT *
-        FROM user_account AS us
-        WHERE us.email = $1;
-      `,
+      SELECT *
+      FROM user_account AS us
+      WHERE us.email = $1;`,
       [payload.email]
     );
 
@@ -37,8 +37,7 @@ export const postLogin = async (req, res, next) => {
         INSERT INTO
         user_account(id, email, name)
         VALUES
-        ($1, $2, $3);
-        `,
+        ($1, $2, $3);`,
         [payload.sub, payload.email, payload.name]
       );
     }
@@ -55,8 +54,9 @@ export const postLogin = async (req, res, next) => {
     res.cookie('WATCHIO_JWT', token, { httpOnly: true });
     res.status(200).json({ success: true, message: 'Authentication successful', token, user: payload });
   } catch (err) {
-    console.error(err);
-    res.status(401).json({ success: false, message: 'Invalid Google Token' });
+    err.statusCode = 401;
+    err.message = "Invalid Google Token";
+    next(err);
   }
 }
 

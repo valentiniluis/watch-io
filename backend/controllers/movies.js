@@ -2,7 +2,7 @@ import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
 import db from '../model/db.js';
 import { getFullPosterPath, getRuntimeString, filterOMDBData } from '../util/api-util.js';
-import { discoverMovies, searchMovie } from '../util/db-util.js';
+import { discoverMovies, getInteraction, searchMovie } from '../util/db-util.js';
 import { getReleaseYear } from '../util/util-functions.js';
 import { movieIdSchema, genreIdSchema } from '../util/validationSchemas.js';
 
@@ -25,6 +25,7 @@ export const getSearchedMovies = async (req, res, next) => {
 export const getMovieData = async (req, res, next) => {
   try {
     const { value, error } = movieIdSchema.validate(req.params);
+    const { user } = req;
 
     if (error) {
       const err = new Error("Invalid Movie: " + error.message);
@@ -33,7 +34,6 @@ export const getMovieData = async (req, res, next) => {
     }
 
     const { movieId } = value;
-    const { user } = req;
     const urlTMDB = `/movie/${movieId}`;
     const responseTMDB = await tmdbAPI.get(urlTMDB);
     const dataTMDB = { ...responseTMDB.data };
@@ -52,15 +52,13 @@ export const getMovieData = async (req, res, next) => {
 
     const userData = {};
     if (user) {
-      const { rows: interactions } = await db.query(`
-        SELECT inter.type
-        FROM interaction AS inter
-        WHERE inter.user_id = $1
-        AND inter.movie_id = $2;
-        `,
-        [user.id, movieId]
-      );
-      interactions.forEach(value => userData[value] = true);
+      const interactions = await getInteraction({ movieId, userId: user.id });
+      
+      if (interactions.length) {
+        const [interaction] = interactions;
+        userData[interaction.type] = true;
+      }
+
       userData.authenticated = true;
     }
 

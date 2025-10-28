@@ -1,4 +1,5 @@
 import db from '../model/db.js';
+import { getInteraction } from '../util/db-util.js';
 import { interactionSchema, movieSchema, movieIdSchema } from '../util/validationSchemas.js';
 
 
@@ -27,7 +28,6 @@ export const getInteractions = async (req, res, next) => {
     const { rows: interactions } = await db.query(query, queryArgs);
     return res.status(200).json({ success: true, interactions })
   } catch (err) {
-    if (!err.statusCode) err.statusCode = 500;
     next(err);
   }
 }
@@ -50,8 +50,7 @@ export const postInteraction = async (req, res, next) => {
     const { rows } = await db.query(`
       SELECT 1
       FROM movie AS mov
-      WHERE mov.id = $1;
-    `,
+      WHERE mov.id = $1;`,
       [movieId]
     );
 
@@ -65,18 +64,12 @@ export const postInteraction = async (req, res, next) => {
       );
     }
 
-    const interactionQuery = await db.query(`
-      SELECT type
-      FROM interaction AS inter
-      WHERE inter.user_id = $1
-      AND inter.movie_id = $2; `,
-      [user.id, movieId]
-    );
-
-    if (interactionQuery.rows.length > 0) {
-      const interactedData = interactionQuery.rows;
-      const { type } = interactedData[0];
-      return res.status(400).json({ success: false, message: 'User has already interacted with this movie.', type });
+    const interactionQuery = await getInteraction({ movieId, userId: user.id });
+    if (interactionQuery.length) {
+      const [interaction] = interactionQuery;
+      const { type } = interaction;
+      const err = new Error(`User already has "${type}" interaction with this movie.`);
+      throw err;
     }
 
     await db.query(`
@@ -101,7 +94,6 @@ export const postInteraction = async (req, res, next) => {
 
     res.status(201).json({ success: true, message });
   } catch (err) {
-    if (!err.statusCode) err.statusCode = 500;
     next(err);
   }
 }
@@ -112,7 +104,7 @@ export const hasInteraction = async (req, res, next) => {
     const { error, value } = movieIdSchema.validate(req.params);
 
     if (error) {
-      const err = new Error('Invalid Input: ' + error.message);
+      const err = new Error('Invalid Input: No movie id provided. ' + error.message);
       err.statusCode = 400;
       throw err;
     }
@@ -120,23 +112,13 @@ export const hasInteraction = async (req, res, next) => {
     const { movieId } = value;
     const { user } = req;
 
-    if (!movieId) return res.status(400).json({ success: false, message: "No movie id provided" });
-
-    const { rows: interaction } = await db.query(`
-      SELECT type 
-      FROM interaction AS inter
-      WHERE inter.user_id = $1
-      AND inter.movie_id = $2; `,
-      [user.id, movieId]
-    );
-
+    const interaction = await getInteraction({ userId: user.id, movieId });
     const hasInteraction = (interaction.length > 0);
     const responseData = { hasInteraction };
     if (hasInteraction) responseData.type = interaction[0].type;
 
     return res.status(200).json({ success: true, ...responseData });
   } catch (err) {
-    if (!err.statusCode) err.statusCode = 500;
     next(err);
   }
 }
@@ -145,6 +127,7 @@ export const hasInteraction = async (req, res, next) => {
 export const deleteInteraction = async (req, res, next) => {
   try {
     const { error, value } = interactionSchema.validate(req.params);
+    const { user } = req;
 
     if (error) {
       const err = new Error('Invalid Input: ' + error.message);
@@ -153,29 +136,24 @@ export const deleteInteraction = async (req, res, next) => {
     }
 
     const { interactionType, movieId } = value;
-    const { user } = req;
+    const interaction = await getInteraction({ movieId, userId: user.id });
 
-    const interaction = await db.query(`
-      SELECT 1
-      FROM interaction AS inter
-      WHERE inter.user_id = $1
-      AND inter.movie_id = $2
-      AND inter.type = $3; `,
-      [user.id, movieId, interactionType]
-    );
-
-    if (interaction.rows.length === 0) return res.status(400).json({ success: false, message: `User does not have '${interactionType}' interaction with movie` });
-
+    if (!interaction.length || interaction[0].type !== interactionType) {
+      const err = new Error(`User does not have '${interactionType}' interaction with movie`);
+      err.statusCode = 400;
+      throw err;
+    }
+    
     await db.query(`
       DELETE FROM interaction AS inter
       WHERE inter.user_id = $1
       AND inter.movie_id = $2
-      AND inter.type = $3; `,
+      AND inter.type = $3;`,
       [user.id, movieId, interactionType]
     );
+    
     return res.status(200).json({ success: true, message: `Deleted '${interactionType}' interaction successfully.` });
   } catch (err) {
-    if (!err.statusCode) err.statusCode = 500;
     next(err);
   }
 }

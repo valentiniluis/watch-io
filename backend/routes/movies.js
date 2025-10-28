@@ -11,7 +11,7 @@ router.get('/search', optionallyAuthenticateJWT, moviesControllers.getSearchedMo
 router.get('/genres', moviesControllers.getMovieGenres);
 
 // get data for a particular movie
-router.get('/:movieId', moviesControllers.getMovieData);
+router.get('/:movieId', optionallyAuthenticateJWT, moviesControllers.getMovieData);
 
 // get recommendations based on a particular movie
 router.get('/:movieId/recommendations', optionallyAuthenticateJWT, moviesControllers.getRecommendations);
