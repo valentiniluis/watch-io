@@ -102,15 +102,15 @@ export const postInteraction = async (req, res, next) => {
 export const hasInteraction = async (req, res, next) => {
   try {
     const { error, value } = movieIdSchema.validate(req.params);
+    const { user } = req;
 
     if (error) {
-      const err = new Error('Invalid Input: No movie id provided. ' + error.message);
+      const err = new Error('Invalid movie id provided. ' + error.message);
       err.statusCode = 400;
       throw err;
     }
 
     const { movieId } = value;
-    const { user } = req;
 
     const interaction = await getInteraction({ userId: user.id, movieId });
     const hasInteraction = (interaction.length > 0);
@@ -151,7 +151,7 @@ export const deleteInteraction = async (req, res, next) => {
       AND inter.type = $3;`,
       [user.id, movieId, interactionType]
     );
-    
+
     return res.status(200).json({ success: true, message: `Deleted '${interactionType}' interaction successfully.` });
   } catch (err) {
     next(err);

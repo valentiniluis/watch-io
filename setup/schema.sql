@@ -49,5 +49,16 @@ create table
 	);
 
 
--- create index
--- ;
+-- indexes:
+
+-- index para ordenar filmes pela média de avaliação
+-- torna mais rápidas as consultas de filmes melhor avaliados
+create index movie_tmdb_rating_idx on public.movie using btree (tmdb_rating);
+
+-- index para id do gênero dos filmes
+-- torna mais rápidas as consultas de filmes por gênero
+create index movie_genre_genre_id on public.movie_genre using btree (genre_id);
+
+-- index para id do usuário na tabela de interações
+-- facilita a consulta de filmes interagidos por um usuário
+create index interaction_user_id on public.interaction using btree (user_id);
