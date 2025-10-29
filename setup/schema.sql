@@ -48,9 +48,20 @@ create table
 		constraint fk_movie_genre_movie foreign key (movie_id) references movie ("id")
 	);
 
+create table
+	if not exists movie_rating (
+		user_id varchar(100) not null,
+		movie_id integer not null,
+		score integer not null,
+		note varchar(511) null,
+		created_at timestamptz not null default (now ()),
+		last_update timestamptz not null default (now ()),
+		constraint pk_movie_rating primary key (user_id, movie_id),
+		constraint fk_movie_rating_user_account foreign key (user_id) references user_account(id),
+		constraint fk_movie_rating_movie foreign key (movie_id) references movie(id)
+	);
 
 -- indexes:
-
 -- index para ordenar filmes pela média de avaliação
 -- torna mais rápidas as consultas de filmes melhor avaliados
 create index movie_tmdb_rating_idx on public.movie using btree (tmdb_rating);

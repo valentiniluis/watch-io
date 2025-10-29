@@ -29,3 +29,8 @@ export const movieIdSchema = Joi.object({
 export const genreIdSchema = Joi.object({
   genreId: Joi.number().positive().required()
 });
+
+export const ratingSchema = Joi.object({
+  score: Joi.number().min(0).max(10).integer().required(),
+  note: Joi.string().min(2).max(511)
+});
