@@ -11,3 +11,10 @@ export function getGenreId(searchGenre) {
   const found = genres.find(genre => genre.name === searchGenre);
   return (found) ? found.id : -1;
 }
+
+
+export function throwError(statusCode, message="Sorry, something went wrong.") {
+  const err = new Error(message);
+  err.statusCode = statusCode;
+  throw err;
+}

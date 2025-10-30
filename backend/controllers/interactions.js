@@ -1,6 +1,8 @@
 import db from '../model/db.js';
 import { getInteraction } from '../util/db-util.js';
 import { interactionSchema, movieSchema, movieIdSchema } from '../util/validationSchemas.js';
+import { throwError } from '../util/util-functions.js';
+import { PG_UNIQUE_ERR } from '../util/constants.js';
 
 
 // get all user interactions
@@ -36,12 +38,7 @@ export const getInteractions = async (req, res, next) => {
 export const postInteraction = async (req, res, next) => {
   try {
     const { error, value } = movieSchema.validate(req.body);
-
-    if (error) {
-      const err = new Error('Invalid Input: ' + error.message);
-      err.statusCode = 400;
-      throw err;
-    }
+    if (error) throwError(400, 'Invalid Input: ' + error.message);
 
     const { id: movieId, title, poster_path, year, tmdb_rating } = value;
     const { user } = req;
@@ -64,14 +61,7 @@ export const postInteraction = async (req, res, next) => {
       );
     }
 
-    const interactionQuery = await getInteraction({ movieId, userId: user.id });
-    if (interactionQuery.length) {
-      const [interaction] = interactionQuery;
-      const { type } = interaction;
-      const err = new Error(`User already has "${type}" interaction with this movie.`);
-      throw err;
-    }
-
+    // try to insert. If it goes wrong, trigger catches it
     await db.query(`
       INSERT INTO
       interaction(movie_id, user_id, type)
@@ -88,12 +78,16 @@ export const postInteraction = async (req, res, next) => {
         message = "Movie added to likes!";
         break;
       case 'uninterested':
-        message = "Movie added to uninterested list. This movie won't be recommended to you anymore.";
+        message = "Movie added to not interested list. This movie won't be recommended to you anymore.";
         break;
     }
 
     res.status(201).json({ success: true, message });
   } catch (err) {
+    if (err.code == PG_UNIQUE_ERR) {
+      err.message = "User has already interacted with this movie.";
+      err.statusCode = 400;
+    }
     next(err);
   }
 }
@@ -101,14 +95,9 @@ export const postInteraction = async (req, res, next) => {
 // check if user has interaction with particular movie
 export const hasInteraction = async (req, res, next) => {
   try {
-    const { error, value } = movieIdSchema.validate(req.params);
     const { user } = req;
-
-    if (error) {
-      const err = new Error('Invalid movie id provided. ' + error.message);
-      err.statusCode = 400;
-      throw err;
-    }
+    const { error, value } = movieIdSchema.validate(req.params);
+    if (error) throwError(400, 'Invalid movie id provided. ' + error.message);
 
     const { movieId } = value;
 
@@ -126,15 +115,11 @@ export const hasInteraction = async (req, res, next) => {
 
 export const deleteInteraction = async (req, res, next) => {
   try {
-    const { error, value } = interactionSchema.validate(req.params);
     const { user } = req;
+    const { error, value } = interactionSchema.validate(req.params);
+    if (error) throwError(400, 'Invalid Input: ' + error.message);
 
-    if (error) {
-      const err = new Error('Invalid Input: ' + error.message);
-      err.statusCode = 400;
-      throw err;
-    }
-
+    // try to eliminate this query
     const { interactionType, movieId } = value;
     const interaction = await getInteraction({ movieId, userId: user.id });
 
