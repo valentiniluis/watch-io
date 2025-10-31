@@ -4,6 +4,8 @@ import MovieRatings from './MovieRatings.jsx';
 import Toast from '../UI/Toast.jsx';
 import MovieInteractions from './MovieInteractions.jsx';
 import noPoster from '/no-movie.png';
+import HighlightedText from '../UI/HighligthedText.jsx';
+import RatingSection from '../UI/RatingSection.jsx';
 
 
 export default function MovieInfo({ movie }) {
@@ -11,21 +13,15 @@ export default function MovieInfo({ movie }) {
   const [error, setError] = useState();
   const { isLoggedIn } = auth;
 
+  console.log(movie);
+
   // overview ? accordion
   const { title, poster_path, tagline, year, runtime, genres } = movie;
   const poster = poster_path || noPoster;
 
-  let errorBlock = null;
-  if (error) {
-    errorBlock = (
-      <div className='flex justify-center'>
-        <Toast message={error} />
-      </div>
-    );
-  }
   return (
     <>
-      {errorBlock}
+      {error && <Toast message={error} />}
       <div className='movie-info-container'>
 
         <div className='text-container xl:hidden'>
@@ -37,7 +33,10 @@ export default function MovieInfo({ movie }) {
         <div className='text-container'>
           <h1 className='movie-name hidden xl:inline-block'>{title}</h1>
           {tagline && <h4 className='tagline hidden xl:inline-block'>{tagline}</h4>}
-          {movie.ratings?.length && <MovieRatings ratings={movie.ratings} />}
+          {movie.ratings?.length === 0 ?
+            <p className='text-center text-sm text-stone-300'>No ratings available.</p>
+            : <MovieRatings ratings={movie.ratings} />
+          }
           {/* <p className='text-justify mb-6 text-[.9rem] md:text-[1rem]'>{overview}</p> */}
           {isLoggedIn && <MovieInteractions movie={movie} onError={setError} />}
           <div className='additional-info mt-8'>
@@ -47,11 +46,24 @@ export default function MovieInfo({ movie }) {
           </div>
         </div>
       </div>
-      <section className='my-10'>
-        <h2 className='section-title'>More Information</h2>
-        {movie.director?.length > 0 ? <p className="small-text">Directed by {movie.director}</p> : null}
-        {movie.actors?.length > 0 ? <p className="small-text">Starring {movie.actors}</p> : null}
-        <p className="small-text">Available on...</p>
+      {/* essa seção pode ser um componente próprio */}
+      <section className='my-10 grid grid-cols-2'>
+        <div>
+          <h2 className='section-title'>More Information</h2>
+          {movie.director?.length > 0 && <HighlightedText regularText="Directed by " highlighted={movie.director} />}
+          {movie.actors?.length > 0 && <HighlightedText regularText="Starring " highlighted={movie.actors} />}
+          {movie.rated?.length > 0 && <HighlightedText regularText="Rated " highlighted={movie.rated} />}
+          {movie.awards?.length > 0 && <HighlightedText highlighted={movie.awards} />}
+          <p className="small-text">Available on...</p>
+        </div>
+        <div>
+          {isLoggedIn ? <RatingSection />
+            : (
+              <div>
+                <p className='small-text px-4 py-2 m-0 border border-stone-200 rounded-lg w-max'>Log in to rate this movie</p>
+              </div>
+            )}
+        </div>
       </section>
     </>
   );

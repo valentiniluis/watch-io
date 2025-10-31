@@ -64,11 +64,11 @@ body {
     @apply flex flex-col items-center justify-center xl:flex-row xl:items-stretch;
 
     & img {
-      @apply max-h-[500px];
+      @apply max-h-[500px] rounded-sm;
     }
 
     & .text-container {
-      @apply w-full mx-20 max-w-[40rem] flex flex-col justify-between;
+      @apply w-full mx-20 max-w-[34rem] flex flex-col justify-between;
     }
 
     & .movie-name {
@@ -80,7 +80,7 @@ body {
     }
 
     & .additional-info {
-      @apply flex gap-6  justify-center mb-8 xl:mb-0;
+      @apply flex gap-6 justify-center mb-8 xl:mb-0;
     }
 
     & .additional-info p {
@@ -93,7 +93,11 @@ body {
   }
 
   .small-text {
-    @apply text-stone-300 font-medium mt-4;
+    @apply text-stone-300 font-light mt-4;
+  }
+
+  .regular-text {
+    @apply text-stone-200 font-normal mt-4;
   }
 
   .login-text {

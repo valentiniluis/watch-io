@@ -1,6 +1,11 @@
 
 export default function MovieRatings({ ratings }) {
-  const gridCols = 'grid-cols-' + ratings.length;
+  let gridCols;
+
+  const len = ratings.length;
+  if (len === 0 || len === 1) gridCols = 'grid-cols-1';
+  else if (len === 2) gridCols = 'grid-cols-2';
+  else gridCols = 'grid-cols-3';
 
   return (
     <section className={'grid gap-5 text-center mb-8 mt-6 ' + gridCols}>
