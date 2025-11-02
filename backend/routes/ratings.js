@@ -7,7 +7,7 @@ const router = Router();
 
 router.get('/', authenticateJWT, ratingControllers.getRatings);
 
-router.post('/:movieId', authenticateJWT, ratingControllers.postRating);
+router.post('/', authenticateJWT, ratingControllers.postRating);
 
 router.put('/:movieId', authenticateJWT, ratingControllers.putRating);
 

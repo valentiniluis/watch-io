@@ -13,8 +13,6 @@ export default function MovieInfo({ movie }) {
   const [error, setError] = useState();
   const { isLoggedIn } = auth;
 
-  console.log(movie);
-
   // overview ? accordion
   const { title, poster_path, tagline, year, runtime, genres } = movie;
   const poster = poster_path || noPoster;
@@ -57,10 +55,10 @@ export default function MovieInfo({ movie }) {
           <p className="small-text">Available on...</p>
         </div>
         <div>
-          {isLoggedIn ? <RatingSection />
+          {isLoggedIn ? <RatingSection movieId={movie.id} />
             : (
-              <div>
-                <p className='small-text px-4 py-2 m-0 border border-stone-200 rounded-lg w-max'>Log in to rate this movie</p>
+              <div className='flex justify-center'>
+                <p className='regular-text px-4 py-2 m-0 bg-blue-700 rounded-lg w-max'>Log in to rate this movie!</p>
               </div>
             )}
         </div>

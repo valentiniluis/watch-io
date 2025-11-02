@@ -5,10 +5,13 @@ import MovieInfo from '../components/movie/MovieInfo.jsx';
 import Spinner from '../components/UI/Spinner.jsx';
 import { loadMovieData } from '../util/movie-query.js';
 import MovieRecommendations from '../components/movie/Recommendations.jsx';
+import { movieActions } from '../store/movie.js';
+import { useDispatch } from 'react-redux';
 
 
 export default function SelectedMoviePage() {
   const { movieId } = useParams();
+  const dispatch = useDispatch();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['movie-data', { movieId }],
@@ -23,6 +26,7 @@ export default function SelectedMoviePage() {
     content = <ErrorPage message="This Movie Is Unavailable." />;
   }
   else if (data) {
+    dispatch(movieActions.setMovie(data.movieData));
     // recomendações são extraídas apenas após os dados do filme
     content = (
       <>

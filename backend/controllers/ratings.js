@@ -1,5 +1,5 @@
 import db from '../model/db.js';
-import { movieIdSchema, ratingSchema } from '../util/validationSchemas.js';
+import { movieIdSchema, movieSchema, ratingSchema } from '../util/validationSchemas.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
 import { throwError } from '../util/util-functions.js';
 
@@ -7,18 +7,26 @@ import { throwError } from '../util/util-functions.js';
 export const getRatings = async (req, res, next) => {
   try {
     const { user } = req;
+    const { movieId } = req.query;
 
-    const query = `
+    const queryArgs = [user.id];
+    let query = `
       SELECT
       FROM movie_rating AS rt
       INNER JOIN movie AS mov
       ON rt.movie_id = mov.id
-      WHERE rt.user_id = $1;
+      WHERE rt.user_id = $1
     `;
 
-    const { rows: result } = await db.query(query, user.id);
+    if (movieId) {
+      query += ' AND rt.movie_id = $2;';
+      queryArgs.push(movieId);
+    }
+    else query += ';';
 
-    return res.status(200).json({ success: true, message: "Ratings retrieved successfully", ratings: result });
+    const { rows: result } = await db.query(query, queryArgs);
+
+    return res.status(200).json({ success: true, message: "Rating(s) retrieved successfully", ratings: result });
   } catch (err) {
 
   }
@@ -27,21 +35,31 @@ export const getRatings = async (req, res, next) => {
 
 export const postRating = async (req, res, next) => {
   try {
-    const { value: movieIdObj, error: movieIdErr } = movieIdSchema.validate(req.params);
-    if (movieIdErr) throwError(400, 'Invalid movie: ' + movieIdErr.message);
+    const { value: movie, error: movieError } = movieSchema.validate(req.params.movie);
+    if (movieError) throwError(400, 'Invalid movie: ' + movieError.message);
 
-    const { value, error } = ratingSchema.validate(req.body);
-    if (error) throwError(400, 'Invalid rating: ' + error.message);
+    const { ratingValue, ratingError } = ratingSchema.validate(req.body.rating);
+    if (ratingError) throwError(400, 'Invalid rating: ' + ratingError.message);
 
-    const { movieId } = movieIdObj;
-    const { score, note } = value;
+
+    const { movieId, title, poster_path, year, tmdb_rating } = ratingValue;
+    const args = [movieId, title, poster_path, year, tmdb_rating.toFixed(2)];
+    const query = `
+      INSERT INTO
+      movie(id, title, poster_path, year, tmdb_rating)
+      VALUES
+      ($1, $2, $3, $4, $5);
+    `;
+    await tryInsert(query, args);
+
+    const { score, headline, note } = movie;
     const { user } = req;
 
     await db.query(`
       INSERT INTO
-      movie_rating (user_id, movie_id, score, note)
-      VALUES ($1, $2, $3, $4);`,
-      [user.id, movieId, score, note]
+      movie_rating (user_id, movie_id, score, headline, note)
+      VALUES ($1, $2, $3, $4, $5);`,
+      [user.id, movieId, score, headline, note]
     );
 
     return res.status(201).json({ success: true, message: "Movie rated successfully!" });

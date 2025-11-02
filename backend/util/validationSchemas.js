@@ -12,7 +12,7 @@ export const movieSchema = Joi.object({
   title: Joi.string().required(),
   poster_path: Joi.string().uri(),
   year: Joi.number().positive(),
-  tmdb_rating: Joi.number().positive()
+  tmdb_rating: Joi.number().positive().max(10)
 });
 
 
@@ -31,6 +31,7 @@ export const genreIdSchema = Joi.object({
 });
 
 export const ratingSchema = Joi.object({
-  score: Joi.number().min(0).max(10).integer().required(),
-  note: Joi.string().min(2).max(511)
+  score: Joi.number().min(1).max(10).integer().required(),
+  headline: Joi.string().required(),
+  note: Joi.string().max(511).optional()
 });

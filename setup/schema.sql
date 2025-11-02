@@ -53,6 +53,7 @@ create table
 		user_id varchar(100) not null,
 		movie_id integer not null,
 		score integer not null,
+		headline varchar(255) not null,
 		note varchar(511) null,
 		created_at timestamptz not null default (now ()),
 		last_update timestamptz not null default (now ()),

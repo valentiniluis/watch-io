@@ -3,34 +3,37 @@ import { addInteraction, getInteractions, removeInteraction } from "../../util/m
 import ToggleInteraction from './ToggleInteraction';
 import queryClient from '../../util/query';
 import Spinner from "../UI/Spinner";
+import { useSelector } from "react-redux";
 
 
 const interactionTypes = ['watchlist', 'like', 'not interested'];
 
 
-export default function MovieInteractions({ movie, onError }) {
-  const movieId = movie.id;
+export default function MovieInteractions({ onError }) {
+  // const movieId = movie.id;
+  const movie = useSelector(state => state.movie);
+  const { id: movieId } = movie;
 
   const {
     data: interactionData,
     isPending: interactionDataPending,
     isError: interactionDataIsError
   } = useQuery({
-    queryKey: ['watchlist', { movieId }],
+    queryKey: ['interaction', { movieId }],
     queryFn: getInteractions
   });
 
   const { mutate: add, error: addError, isError: isAddError } = useMutation({
     mutationFn: addInteraction,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['watchlist', { movieId }] });
+      await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] });
     }
   });
 
   const { mutate: remove, error: removeError, isError: isRemoveError } = useMutation({
     mutationFn: removeInteraction,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['watchlist', { movieId }] });
+      await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] });
     }
   });
 
@@ -40,8 +43,7 @@ export default function MovieInteractions({ movie, onError }) {
   }
 
   function handleAddInteraction(type) {
-    const movieData = { id: movieId, title: movie.title, poster_path: movie.poster_path, year: movie.year, tmdb_rating: movie.vote_average };
-    add({ movie: movieData, type });
+    add({ movie, type });
   }
 
   function handleRemoveInteraction() {
@@ -60,9 +62,7 @@ export default function MovieInteractions({ movie, onError }) {
     content = (
       <ToggleInteraction active={true} type={interactionData.type} onClick={handleRemoveInteraction} />
     );
-  }
-
-  else if (!interactionData?.hasInteraction) {
+  } else {
     content = (
       <>
         {interactionTypes.map(type => (

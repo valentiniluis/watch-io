@@ -17,6 +17,20 @@ export async function addInteraction({ movie, type }) {
 }
 
 
+export async function addRating({ movie, rating }) {
+  const response = await api.post('/ratings', { movie, rating });
+  return response.data;
+}
+
+
+export async function getRating({ queryKey }) {
+  const parameters = queryKey[1];
+  const { movieId } = parameters;
+  const response = await api.get(`/ratings?movieId=${movieId}`);
+  return response.data;
+}
+
+
 export async function removeInteraction({ movieId, type }) {
   const response = await api.delete(`/interactions/${type}/${movieId}`);
   return response.data;

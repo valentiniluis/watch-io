@@ -1,9 +1,10 @@
 import db from '../model/db.js';
+import { PG_UNIQUE_ERR } from './constants.js';
 
 
 // Dados de 10 mil filmes migrados para o postgreSQL, consultas locais
 
-export const discoverMovies = async ({ page = 1, user = {} }) => {
+export async function discoverMovies({ page = 1, user = {} }) {
   const id = user?.id;
   const offset_amount = (page - 1) * 20;
   let query;
@@ -89,4 +90,19 @@ export async function getInteraction({ movieId, userId }) {
     [userId, movieId]
   );
   return interaction;
+}
+
+
+// if it's duplicate record, ignore the error.
+// else throw it and stop execution
+export async function tryInsert(stmt, args) {
+  let err = null;
+
+  try {
+    await db.query(stmt, args);
+  } catch (error) {
+    err = error;
+  }
+
+  if (err && err.code !== PG_UNIQUE_ERR) throw err;
 }

@@ -1,6 +1,6 @@
 
 export default function Input({ id, name, label, type, ...props }) {
-  let cssClass = 'border border-stone-400 rounded-md px-4 py-1.5';
+  let cssClass = 'border border-stone-400 rounded-md px-4 py-1.5 block w-full mt-1';
   if (props.className) cssClass += ' ' + props.className;
 
   let inputType;
@@ -8,7 +8,7 @@ export default function Input({ id, name, label, type, ...props }) {
     inputType = <textarea id={id} name={name} {...props} className={cssClass}></textarea>
   }
   else {
-    inputType = <input id={id} name={name} {...props} className={cssClass} />;
+    inputType = <input type={type || "text"} id={id} name={name} {...props} className={cssClass} />;
   }
 
   return (
@@ -18,3 +18,10 @@ export default function Input({ id, name, label, type, ...props }) {
     </div>
   );
 }
+
+
+// function charCount({ maxlength, value }) {
+//   return (
+//     <p className="text-right text-sm text-stone-600">{value.length}/{maxlength}</p>
+//   )
+// }

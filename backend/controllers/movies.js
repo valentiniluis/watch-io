@@ -38,6 +38,8 @@ export const getMovieData = async (req, res, next) => {
     const responseTMDB = await tmdbAPI.get(urlTMDB);
     const dataTMDB = { ...responseTMDB.data };
     dataTMDB.poster_path = getFullPosterPath(dataTMDB.poster_path);
+    dataTMDB.tmdb_rating = dataTMDB.vote_average;
+    dataTMDB.tmdb_votes = dataTMDB.vote_count;
     const { imdb_id } = dataTMDB;
     if (!imdb_id) return res.status(200).json({ success: true, movieData: dataTMDB });
 

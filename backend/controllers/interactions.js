@@ -1,5 +1,5 @@
 import db from '../model/db.js';
-import { getInteraction } from '../util/db-util.js';
+import { getInteraction, tryInsert } from '../util/db-util.js';
 import { interactionSchema, movieSchema, movieIdSchema } from '../util/validationSchemas.js';
 import { throwError } from '../util/util-functions.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
@@ -44,22 +44,14 @@ export const postInteraction = async (req, res, next) => {
     const { user } = req;
     const { interactionType } = req.params;
 
-    const { rows } = await db.query(`
-      SELECT 1
-      FROM movie AS mov
-      WHERE mov.id = $1;`,
-      [movieId]
-    );
-
-    if (rows.length === 0) {
-      await db.query(`
-        INSERT INTO
-        movie(id, title, poster_path, year, tmdb_rating)
-        VALUES
-        ($1, $2, $3, $4, $5);`,
-        [movieId, title, poster_path, year, tmdb_rating.toFixed(2)]
-      );
-    }
+    const args = [movieId, title, poster_path, year, tmdb_rating.toFixed(2)];
+    const query = `
+      INSERT INTO
+      movie(id, title, poster_path, year, tmdb_rating)
+      VALUES
+      ($1, $2, $3, $4, $5);
+    `;
+    await tryInsert(query, args);
 
     // try to insert. If it goes wrong, trigger catches it
     await db.query(`
@@ -84,7 +76,7 @@ export const postInteraction = async (req, res, next) => {
 
     res.status(201).json({ success: true, message });
   } catch (err) {
-    if (err.code == PG_UNIQUE_ERR) {
+    if (err.code === PG_UNIQUE_ERR) {
       err.message = "User has already interacted with this movie.";
       err.statusCode = 400;
     }
@@ -128,7 +120,7 @@ export const deleteInteraction = async (req, res, next) => {
       err.statusCode = 400;
       throw err;
     }
-    
+
     await db.query(`
       DELETE FROM interaction AS inter
       WHERE inter.user_id = $1
