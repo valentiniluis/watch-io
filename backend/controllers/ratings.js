@@ -2,6 +2,7 @@ import db from '../model/db.js';
 import { movieIdSchema, movieSchema, ratingSchema } from '../util/validationSchemas.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
 import { throwError } from '../util/util-functions.js';
+import { tryInsert } from '../util/db-util.js';
 
 
 export const getRatings = async (req, res, next) => {
@@ -36,14 +37,14 @@ export const getRatings = async (req, res, next) => {
 export const postRating = async (req, res, next) => {
   try {
     const { user } = req;
-    const { value: movie, error: movieError } = movieSchema.validate(req.params.movie);
+    const { value: movieData, error: movieError } = movieSchema.validate(req.body.movie);
     if (movieError) throwError(400, 'Invalid movie: ' + movieError.message);
 
-    const { value: ratingValue, error: ratingError } = ratingSchema.validate(req.body.rating);
+    const { value: ratingData, error: ratingError } = ratingSchema.validate(req.body.rating);
     if (ratingError) throwError(400, 'Invalid rating: ' + ratingError.message);
 
-    const { movieId, title, poster_path, year, tmdb_rating } = movie;
-    const { score, headline, note } = ratingValue;
+    const { id: movieId, title, poster_path, year, tmdb_rating } = movieData;
+    const { score, headline, note } = ratingData;
 
     const args = [movieId, title, poster_path, year, tmdb_rating.toFixed(2)];
     const query = `

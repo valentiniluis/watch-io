@@ -38,10 +38,8 @@ export default function RatingSection() {
   }
   else if (data?.ratings?.length) {
     const { ratings } = data;
-    const { score } = ratings[0];
-    content = <RatingPreview score={score} />
+    content = <RatingPreview rating={ratings[0]} />;
   }
-
 
   return (
     <>
