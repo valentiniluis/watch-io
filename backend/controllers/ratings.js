@@ -11,7 +11,7 @@ export const getRatings = async (req, res, next) => {
 
     const queryArgs = [user.id];
     let query = `
-      SELECT
+      SELECT *
       FROM movie_rating AS rt
       INNER JOIN movie AS mov
       ON rt.movie_id = mov.id
@@ -28,21 +28,23 @@ export const getRatings = async (req, res, next) => {
 
     return res.status(200).json({ success: true, message: "Rating(s) retrieved successfully", ratings: result });
   } catch (err) {
-
+    next(err);
   }
 }
 
 
 export const postRating = async (req, res, next) => {
   try {
+    const { user } = req;
     const { value: movie, error: movieError } = movieSchema.validate(req.params.movie);
     if (movieError) throwError(400, 'Invalid movie: ' + movieError.message);
 
-    const { ratingValue, ratingError } = ratingSchema.validate(req.body.rating);
+    const { value: ratingValue, error: ratingError } = ratingSchema.validate(req.body.rating);
     if (ratingError) throwError(400, 'Invalid rating: ' + ratingError.message);
 
+    const { movieId, title, poster_path, year, tmdb_rating } = movie;
+    const { score, headline, note } = ratingValue;
 
-    const { movieId, title, poster_path, year, tmdb_rating } = ratingValue;
     const args = [movieId, title, poster_path, year, tmdb_rating.toFixed(2)];
     const query = `
       INSERT INTO
@@ -51,9 +53,6 @@ export const postRating = async (req, res, next) => {
       ($1, $2, $3, $4, $5);
     `;
     await tryInsert(query, args);
-
-    const { score, headline, note } = movie;
-    const { user } = req;
 
     await db.query(`
       INSERT INTO
@@ -110,7 +109,7 @@ export const deleteRating = async (req, res, next) => {
   try {
     const { error, value } = movieIdSchema.validate(req.params);
     if (error) throwError(400, 'Invalid movie: ' + error.message);
-    
+
     const { movieId } = value;
 
     await db.query(`

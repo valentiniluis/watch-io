@@ -23,10 +23,24 @@ export async function addRating({ movie, rating }) {
 }
 
 
-export async function getRating({ queryKey }) {
-  const parameters = queryKey[1];
-  const { movieId } = parameters;
-  const response = await api.get(`/ratings?movieId=${movieId}`);
+export async function getRatings({ queryKey }) {
+  let url = '/ratings';
+  if (queryKey.length > 1) {
+    const parameters = queryKey[1];
+    const { movieId } = parameters;
+    url += `?movieId=${movieId}`;
+  }
+  const response = await api.get(url);
+  return response.data;
+}
+
+
+export async function getInteractedMovies({ queryKey }) {
+  const params = queryKey[1];
+  const { interactionType } = params;
+  let url = '/interactions';
+  if (interactionType) url += `?interactionType=${interactionType}`;
+  const response = await api.get(url);
   return response.data;
 }
 

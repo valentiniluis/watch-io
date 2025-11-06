@@ -10,7 +10,6 @@ const interactionTypes = ['watchlist', 'like', 'not interested'];
 
 
 export default function MovieInteractions({ onError }) {
-  // const movieId = movie.id;
   const movie = useSelector(state => state.movie);
   const { id: movieId } = movie;
 

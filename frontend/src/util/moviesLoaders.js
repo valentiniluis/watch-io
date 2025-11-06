@@ -13,14 +13,6 @@ export const loadHomepage = async () => {
 }
 
 
-export const loadInteractedMovies = async ({ interactionType }) => {
-  let url = '/interactions';
-  if (interactionType) url += `?interactionType=${interactionType}`;
-  const loadFn = fetchFn(url);
-  return await loadFn();
-}
-
-
 const fetchFn = (url) => {
   return async function () {
     const response = await api.get(url);
