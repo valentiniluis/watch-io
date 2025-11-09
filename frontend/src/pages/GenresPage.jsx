@@ -1,55 +1,53 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import DropdownMenu from "../components/UI/DropdownMenu";
-import api from '../api/request';
 import MovieCatalog from '../components/movie/MovieCatalog';
 import Spinner from '../components/UI/Spinner';
 import ErrorSection from '../components/UI/ErrorSection';
+import GenreDropdownMenu from '../components/movie/GenreDropdownMenu';
+import { loadMoviesByGenre } from '../util/movie-query';
+
+const orderByOptions = [
+  { id: 'title.asc', name: "Title (ASC)", 'data-attribute': 'title.asc', 'data-label': 'Title (Ascending)' },
+  { id: 'title.desc', name: 'Title (DESC)', 'data-attribute': 'title.desc', 'data-label': 'Title (Descending)' },
+  { id: 'tmdb_rating.asc', name: "Rating (ASC)", 'data-attribute': 'tmdb_rating.asc', 'data-label': "Rating (Ascending)" },
+  { id: 'tmdb_rating.desc', name: "Rating (DESC)", 'data-attribute': 'tmdb_rating.desc', 'data-label': "Rating (Descending)" },
+  { id: 'year.asc', name: "Year (ASC)", 'data-attribute': 'year.asc', 'data-label': "Year (Asceding)" },
+  { id: 'year.desc', name: "Year (DESC)", 'data-attribute': 'year.desc', 'data-label': "Year (Descending)" },
+];
 
 
 export default function GenresPage() {
   const [currentGenre, setCurrentGenre] = useState({ genre: null, genreId: null });
-
-  const { data: genres } = useQuery({
-    queryKey: ['movie-genres'],
-    queryFn: async () => {
-      const response = await api.get('/movies/genres');
-      return response.data.genres;
-    }
-  });
+  const [sortAttribute, setSortAttribute] = useState({ label: orderByOptions[0].name, id: orderByOptions[0].id });
 
   const { data: movies, isLoading, isError, error } = useQuery({
-    queryKey: ['movies', { genre: currentGenre.genreId }],
-    queryFn: async (context) => {
-      const { queryKey } = context;
-      const { genre } = queryKey[1];
-
-      const url = (genre) ? '/movies/genre/' + genre : '/movies/search';
-      const response = await api.get(url);
-      return response.data.movies;
-    }
+    queryKey: ['movies', { genre: currentGenre.genreId, orderBy: sortAttribute.attribute }],
+    queryFn: loadMoviesByGenre,
   });
 
-
   let content;
-  if (isLoading) {
-    content = <Spinner text="Loading movies by genre..." />    
+  if (isLoading || !currentGenre.genre) {
+    content = <Spinner text="Loading movies by genre..." />
   }
-  if (isError) {
+  else if (isError) {
     content = <ErrorSection message={error.message || "Failed to load movies."} />
   }
-  if (movies) {
+  else if (movies) {
     content = <MovieCatalog movies={movies} />
   }
 
-  function handleUpdateGenre(event) {
-    const { genreId, genre } = event.currentTarget.dataset;
-    setCurrentGenre({ genreId, genre });
+  function handleSort(event) {
+    const { attribute, label } = event.currentTarget.dataset;
+    setSortAttribute({ attribute, label })
   }
 
   return (
     <section>
-      <DropdownMenu text={!currentGenre.genre ? "Genre" : currentGenre.genre} options={genres} onUpdate={handleUpdateGenre} />
+      <div className="flex justify-evenly items-center">
+        <GenreDropdownMenu currentGenre={currentGenre} setGenre={setCurrentGenre} />
+        <DropdownMenu label="Sort By" className="bg-orange-500 font-semibold text-white tracking-wide text-md rounded-lg focus:ring-orange-400" text={sortAttribute.label} options={orderByOptions} onUpdate={handleSort} />
+      </div>
       <div className='catalog-container'>
         {content}
       </div>

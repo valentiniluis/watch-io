@@ -75,3 +75,23 @@ export const loadRecommendations = async ({ queryKey }) => {
   if (!data.success) throw new Error(data.status_message);
   return data;
 }
+
+
+export const loadMoviesByGenre = async ({ queryKey }) => {
+  const { genre, orderBy } = queryKey[1];
+
+  // cannot fetch movies by genre if genres weren't loaded
+  if (!genre) return [];
+
+  let url;
+  if (genre) url = '/movies/genre/' + genre;
+  if (orderBy) url += '?orderBy=' + orderBy;
+  const response = await api.get(url);
+  return response.data.movies;
+}
+
+
+export const loadGenres = async () => {
+  const response = await api.get('/movies/genres');
+  return response.data.genres;
+}

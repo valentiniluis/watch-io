@@ -1,9 +1,11 @@
 import { useState } from "react";
 
 
-export default function DropdownMenu({ text, options, onUpdate }) {
+export default function DropdownMenu({ label, className, text, options, onUpdate }) {
   const [isOpen, setIsOpen] = useState(false);
-
+  let baseClass =  "w-full px-5 py-2.5 w-full text-center flex justify-center items-center focus:ring-3 focus:outline-none";
+  if (className) baseClass += " " + className;
+ 
   function handleToggleOpen() {
     setIsOpen(prev => !prev);
   }
@@ -13,13 +15,13 @@ export default function DropdownMenu({ text, options, onUpdate }) {
     onUpdate(event);
   }
 
-  // m-auto px-[5vw] sm:px-0
   return (
-    <div className="flex justify-center">
-      <div className="mx-[5vw] max-w-md w-full relative mb-16">
+    <div className="flex flex-col items-center justify-center max-w-3xs w-full gap-2">
+      <h3 className="text-sm uppercase font-medium tracking-wider text-stone-200">{label}</h3>
+      <div className="w-full relative mb-16">
         <button
           id="dropdownDefaultButton"
-          className="bg-blue-600 hover:bg-blue-700 focus:ring-blue-800 w-full focus:ring-4 focus:outline-none font-semibold rounded-lg text-lg text-white px-5 py-2.5 text-center flex justify-center items-center"
+          className={baseClass}
           type="button"
           onClick={handleToggleOpen}
         >
@@ -34,7 +36,7 @@ export default function DropdownMenu({ text, options, onUpdate }) {
             <ul className="py-2 text-base text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
               {options.map((option, index) => (
                 <li key={option.id}>
-                  <button data-genre-id={option.id} data-genre={option.name} className="w-full block px-4 py-2.5 hover:bg-gray-600 hover:text-white" onClick={handleSelect}>
+                  <button {...option} className="w-full block px-4 py-2.5 hover:bg-gray-600 hover:text-white" onClick={handleSelect}>
                     {option.name}
                   </button>
                   {index < options.length - 1 && <hr className="w-9/10 h-0 m-auto border-t-gray-600" />}

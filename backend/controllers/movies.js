@@ -3,8 +3,8 @@ import omdbAPI from '../api/omdb-api.js';
 import db from '../model/db.js';
 import { getFullPosterPath, getRuntimeString, filterOMDBData } from '../util/api-util.js';
 import { discoverMovies, getInteraction, searchMovie } from '../util/db-util.js';
-import { getReleaseYear } from '../util/util-functions.js';
-import { movieIdSchema, genreIdSchema } from '../util/validationSchemas.js';
+import { getReleaseYear, throwError } from '../util/util-functions.js';
+import { movieIdSchema, genreIdSchema, orderSchema, limitSchema } from '../util/validationSchemas.js';
 
 
 // how to paginate?
@@ -24,14 +24,9 @@ export const getSearchedMovies = async (req, res, next) => {
 
 export const getMovieData = async (req, res, next) => {
   try {
-    const { value, error } = movieIdSchema.validate(req.params);
     const { user } = req;
-
-    if (error) {
-      const err = new Error("Invalid Movie: " + error.message);
-      err.statusCode = 400;
-      throw err;
-    }
+    const { value, error } = movieIdSchema.validate(req.params);
+    if (error) throwError(400, "Invalid Movie: " + error.message);
 
     const { movieId } = value;
     const urlTMDB = `/movie/${movieId}`;
@@ -54,14 +49,12 @@ export const getMovieData = async (req, res, next) => {
 
     const userData = {};
     if (user) {
+      userData.authenticated = true;
       const interactions = await getInteraction({ movieId, userId: user.id });
-      
       if (interactions.length) {
         const [interaction] = interactions;
         userData[interaction.type] = true;
       }
-
-      userData.authenticated = true;
     }
 
     res.status(200).json({ success: true, movieData: responseData, user: userData });
@@ -76,12 +69,7 @@ export const getMovieData = async (req, res, next) => {
 export const getRecommendations = async (req, res, next) => {
   try {
     const { value, error } = movieIdSchema.validate(req.params);
-
-    if (error) {
-      const err = new Error("Invalid Movie: " + error.message);
-      err.statusCode = 400;
-      throw err;
-    }
+    if (error) throwError(400, "Invalid Movie: " + error.message);
 
     const { movieId } = value;
     const urlTMDB = `/movie/${movieId}/recommendations`;
@@ -113,20 +101,19 @@ export const getMovieGenres = async (req, res, next) => {
 
 
 export const getMoviesByGenre = async (req, res, next) => {
-  const limit = req.query.limit || 30;
-  const id = req.user?.id;
-  let query;
-
   try {
-    const { error, value } = genreIdSchema.validate(req.params);
+    const id = req.user?.id;
+    const { value: limit, error: limitError } = limitSchema.validate(req.query.limit);
+    // guarantee that order by is in the allowed options so there's no injection in the query
+    const { value: orderBy, error: orderByError } = orderSchema.validate(req.query.orderBy);
+    const { error: genreError, value } = genreIdSchema.validate(req.params);
 
-    if (error) {
-      const err = new Error('Invalid genre ID: ' + error.message);
-      err.statusCode = 400;
-      throw err;
-    }
+    if (limitError) throwError(400, 'Invalid movie limit: ' + limitError.message);
+    if (orderByError) throwError(400, 'Invalid sorting condition: ' + orderByError.message);
+    if (genreError) throwError(400, 'Invalid genre: ' + genreError.message);
 
     const { genreId } = value;
+    let query;
     const queryArgs = [genreId, limit];
     if (id && id.length) {
       query = `
@@ -141,8 +128,6 @@ export const getMoviesByGenre = async (req, res, next) => {
           WHERE inter.user_id = $3
           AND inter.type = 'not interested'
         )
-        ORDER BY mov.title, mov.tmdb_rating
-        LIMIT $2;
       `;
       queryArgs.push(id);
     } else {
@@ -152,10 +137,14 @@ export const getMoviesByGenre = async (req, res, next) => {
         INNER JOIN movie_genre AS mg
         ON mov.id = mg.movie_id
         WHERE mg.genre_id = $1
-        ORDER BY mov.title, mov.tmdb_rating
-        LIMIT $2;
       `;
     }
+
+    // unique id used as tiebreaker
+    const [attr, sort] = orderBy.split('.');
+    query += ` ORDER BY ${attr} ${sort}, mov.id ASC`;
+    query += ' LIMIT $2;';
+
     const { rows: results } = await db.query(query, queryArgs);
     return res.status(200).json({ success: true, movies: results });
   } catch (err) {
