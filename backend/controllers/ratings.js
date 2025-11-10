@@ -81,9 +81,9 @@ export const putRating = async (req, res, next) => {
     if (movieIdError) throwError(400, 'Invalid movie: ' + movieIdError.message);
 
     const { value, error } = ratingSchema.validate(req.body);
-    if (error) throwError(400, 'Invalid rating:  ' + error.message);
+    if (error) throwError(400, 'Invalid rating: ' + error.message);
 
-    const { score, note } = value;
+    const { score, headline, note } = value;
     const { movieId } = movieIdValue;
     const now = new Date().toISOString();
 
@@ -91,12 +91,13 @@ export const putRating = async (req, res, next) => {
       UPDATE movie_rating
       SET
       score = $1,
-      note = $2,
-      last_updated = $3
+      headline = $2,
+      note = $3,
+      last_update = $4
       WHERE
-      movie_id = $4 AND
-      user_id = $5;`,
-      [score, note, now, movieId, user.id]
+      movie_id = $5 AND
+      user_id = $6;`,
+      [score, headline, note, now, movieId, user.id]
     );
 
     return res.status(200).json({ success: true, message: "Rating updated successfully." });
@@ -108,6 +109,7 @@ export const putRating = async (req, res, next) => {
 
 export const deleteRating = async (req, res, next) => {
   try {
+    const { user } = req;
     const { error, value } = movieIdSchema.validate(req.params);
     if (error) throwError(400, 'Invalid movie: ' + error.message);
 

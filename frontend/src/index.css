@@ -52,11 +52,11 @@ body {
   }
 
   .movie-list {
-    @apply flex overflow-y-visible overflow-x-hidden max-w-[90vw] whitespace-nowrap gap-5 py-5 px-3;
+    @apply flex overflow-y-visible overflow-x-hidden w-full whitespace-nowrap gap-5 py-5 px-3;
 
 
     & li {
-      @apply h-auto min-w-[170px] max-w-[200px] w-full;
+      @apply h-auto min-w-[100px] sm:min-w-[120px] md:min-w-[150px] lg:min-w-[170px] max-w-[200px] w-full;
     }
   }
 
@@ -64,7 +64,7 @@ body {
     @apply flex flex-col items-center justify-center xl:flex-row xl:items-stretch;
 
     & img {
-      @apply max-h-[500px] rounded-sm;
+      @apply max-h-[350px] sm:max-h-[400px] md:max-h-[450px] lg:max-h-[500px] rounded-sm;
     }
 
     & .text-container {
@@ -93,11 +93,15 @@ body {
   }
 
   .small-text {
-    @apply text-stone-300 font-light mt-4;
+    @apply text-stone-300 mt-4 text-xs md:text-sm;
   }
 
   .regular-text {
-    @apply text-stone-200 font-normal mt-4;
+    @apply text-stone-200 font-normal text-base mt-4;
+  }
+
+  .hightlighted-text {
+    @apply text-stone-100 font-medium;
   }
 
   .login-text {

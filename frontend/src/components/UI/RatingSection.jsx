@@ -13,7 +13,7 @@ export default function RatingSection() {
   const modalRef = useRef();
 
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['rating', { movieId: movie.id }],
+    queryKey: ['ratings', { movieId: movie.id }],
     queryFn: getRatings
   });
 

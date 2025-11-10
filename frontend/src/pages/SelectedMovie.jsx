@@ -31,13 +31,13 @@ export default function SelectedMoviePage() {
     content = (
       <>
         <MovieInfo movie={data.movieData} />
-        <MovieRecommendations movieId={movieId} />
+        <MovieRecommendations />
       </>
     );
   }
 
   return (
-    <section className='px-[5vw]'>
+    <section className='px-[1.5vw] sm:px-[3vw] lg:px-[5vw]'>
       {content}
     </section>
   );

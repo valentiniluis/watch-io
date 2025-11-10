@@ -3,11 +3,14 @@ import { loadRecommendations } from '../../util/movie-query';
 import Spinner from "../UI/Spinner";
 import ErrorSection from '../UI/ErrorSection';
 import MovieList from "./MovieList";
+import { useSelector } from "react-redux";
 
 
-export default function MovieRecommendations({ movieId }) {
+export default function MovieRecommendations() {
+  const movie = useSelector(state => state.movie);
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['movie-recommendations', { movieId }],
+    queryKey: ['movie-recommendations', { movieId: movie.id }],
     queryFn: loadRecommendations
   });
 

@@ -17,12 +17,6 @@ export async function addInteraction({ movie, type }) {
 }
 
 
-export async function addRating({ movie, rating }) {
-  const response = await api.post('/ratings', { movie, rating });
-  return response.data;
-}
-
-
 export async function getRatings({ queryKey }) {
   let url = '/ratings';
   if (queryKey.length > 1) {
@@ -31,6 +25,24 @@ export async function getRatings({ queryKey }) {
     url += `?movieId=${movieId}`;
   }
   const response = await api.get(url);
+  return response.data;
+}
+
+
+export async function addRating({ movie, rating }) {
+  const response = await api.post('/ratings', { movie, rating });
+  return response.data;
+}
+
+
+export async function editRating({ movie, rating }) {
+  const response = await api.put(`/ratings/${movie.id}`, rating);
+  return response.data;
+}
+
+
+export async function deleteRating({ movie }) {
+  const response = await api.delete(`/ratings/${movie.id}`);
   return response.data;
 }
 

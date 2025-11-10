@@ -1,9 +1,9 @@
 
 export default function HighlightedText({ regularText, highlighted }) {
   return (
-    <p className="small-text">
+    <p className="regular-text font-light">
       {regularText}
-      <span className="regular-text">
+      <span className="hightlighted-text">
         {highlighted}
       </span>
     </p>
