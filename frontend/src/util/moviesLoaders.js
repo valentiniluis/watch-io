@@ -1,5 +1,5 @@
 import api from "../api/request.js";
-import { mainGenres } from "./mainGenres.js";
+import { mainGenres } from "./constants.js";
 
 
 export const loadHomepage = async () => {

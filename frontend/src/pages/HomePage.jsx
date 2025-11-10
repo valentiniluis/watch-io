@@ -3,7 +3,7 @@ import Spinner from '../components/UI/Spinner';
 import ErrorSection from '../components/UI/ErrorSection';
 import MovieList from '../components/movie/MovieList';
 import { Await, useLoaderData } from 'react-router-dom';
-import { mainGenres } from '../util/mainGenres.js';
+import { mainGenres } from '../util/constants.js';
 
 
 export default function HomePage() {
