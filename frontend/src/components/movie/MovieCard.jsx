@@ -35,9 +35,7 @@ export default function MovieCard({ movie, linkTo }) {
         onMouseMove={handleMouseMove}
         onClick={handleClick}
       >
-        <div className="image-wrapper">
-          <img src={posterImage} alt={title + " Movie Poster"} />
-        </div>
+        <img src={posterImage} alt={title + " Movie Poster"} />
         <div className="card-text-wrapper">
           <h3 className="card-title">{title}</h3>
           <div className="card-info">

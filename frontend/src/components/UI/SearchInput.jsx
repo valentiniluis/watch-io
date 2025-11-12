@@ -13,13 +13,14 @@ export default function SearchInput({ onUpdate }) {
 
   return (
     <>
-      <label className="text-amber-50 text-2xl font-bold tracking-wide my-6" htmlFor="search">
-        Pick a Movie,{' '}
-        <span className="text-transparent bg-gradient-to-r from-violet-200 to-violet-400 bg-clip-text font-medium">
-          We'll Do the Rest
+      <label className="text-amber-50 text-lg md:text-[22px] lg:text-2xl font-bold md:tracking-wide my-4 md:my-5 lg:my-6" htmlFor="search">
+        Find{" "}
+        <span className="text-transparent bg-linear-to-r from-purple-300 to-purple-400 bg-clip-text font-medium">
+          Great Movies
         </span>
+        {" "}With Ease
       </label>
-      <input className="bg-stone-600 w-full max-w-130 px-4 py-4 mb-12 rounded-lg text-[1.1rem] text-center text-stone-200 transition-colors ease-in focus:outline-none focus:bg-stone-500"
+      <input className="bg-stone-600 w-full max-w-[min(85vw,360px)] sm:max-w-[60vw] md:max-w-130 p-3.5 md:p-4 mb-12 rounded-lg text-[.9rem] md:text-base lg:text-[1.1rem] text-center text-stone-200 transition-colors ease-in focus:outline-none focus:bg-stone-500"
         id="search"
         name="search"
         type="text"
