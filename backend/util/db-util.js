@@ -4,11 +4,11 @@ import { PG_UNIQUE_ERR } from './constants.js';
 
 // Dados de 10 mil filmes migrados para o postgreSQL, consultas locais
 
-export async function discoverMovies({ page = 1, user = {} }) {
+export async function discoverMovies({ page, user = {}, limit }) {
   const id = user?.id;
-  const offset_amount = (page - 1) * 20;
+  const offset_amount = (page - 1) * limit;
   let query;
-  const queryArgs = [offset_amount];
+  const queryArgs = [limit, offset_amount];
 
   if (id && id.length) {
     queryArgs.push(id);
@@ -16,68 +16,76 @@ export async function discoverMovies({ page = 1, user = {} }) {
       WITH not_interested AS (
         SELECT inter.movie_id
         FROM interaction AS inter
-        WHERE inter.user_id = $2
+        WHERE inter.user_id = $3
         AND inter.type = 'not interested'
       )
-      SELECT *
+      SELECT *, COUNT(*) OVER() AS row_count 
       FROM movie AS mov
       WHERE mov.id NOT IN (
         SELECT movie_id FROM not_interested
       )
       ORDER BY mov.tmdb_rating DESC, mov.title
-      LIMIT 20
-      OFFSET $1;
+      LIMIT $1
+      OFFSET $2;
     `;
   } else {
     query = `
-      SELECT *
+      SELECT *, COUNT(*) OVER() AS row_count 
       FROM movie AS mov
       ORDER BY mov.tmdb_rating DESC, mov.title
-      LIMIT 20
-      OFFSET $1;
+      LIMIT $1
+      OFFSET $2;
     `;
   }
 
   const { rows: data } = await db.query(query, queryArgs);
-  return data;
+  const total_rows = data.length > 0 ? +data[0].row_count : 0;
+  const pages = Math.ceil(total_rows / limit);
+  // cleanup
+  data.forEach(item => delete item.row_count);
+  return { movies: data, pages };
 }
 
 
-export async function searchMovie({ movie, user = {}, page = 1 }) {
+export async function searchMovie({ movie, user = {}, limit, page }) {
   const id = user?.id;
-  const offset_amount = (page - 1) * 20;
+  const offset_amount = (page - 1) * limit;
 
   let query;
-  const queryArgs = [`%${movie}%`, offset_amount];
+  const queryArgs = [`%${movie}%`, limit, offset_amount];
 
   if (id && id.length) {
     query = `
-      SELECT *
+      SELECT *, COUNT(*) OVER() AS row_count
       FROM movie AS mov
       WHERE mov.id NOT IN (
         SELECT inter.movie_id
         FROM interaction AS inter
-        WHERE inter.user_id = $3
+        WHERE inter.user_id = $4
       )
       AND mov.title ILIKE $1
       ORDER BY mov.tmdb_rating DESC, mov.title
-      LIMIT 20
-      OFFSET $2;
+      LIMIT $2
+      OFFSET $3;
     `;
     queryArgs.push(id);
   } else {
     query = `
-      SELECT *
+      SELECT *, COUNT(*) OVER() AS row_count
       FROM movie AS mov
       WHERE mov.title ILIKE $1
       ORDER BY mov.tmdb_rating DESC, mov.title
-      LIMIT 20
-      OFFSET $2;
+      LIMIT $2
+      OFFSET $3;
     `;
   }
 
-  const { rows: results } = await db.query(query, queryArgs);
-  return results;
+  const { rows: data } = await db.query(query, queryArgs);
+  const total_items = data.length > 0 ? +data[0].row_count : 0;
+  const pages = Math.ceil(total_items / limit);
+  // cleanup
+  data.forEach(item => delete item.row_count);
+  return { movies: data, pages };
 }
 
 

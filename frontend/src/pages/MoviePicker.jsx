@@ -33,11 +33,11 @@ export default function MoviePicker() {
   }
 
   else if (data) {
+    const { movies, pages } = data;
     content = (
       <div className="catalog-container">
-        <MovieCatalog movies={data} />
-        {/* valor 350 hardcoded, mas depende das interações do usuário com os filmes */}
-        <Pagination current={page} max={350} setPage={setPage}/>
+        <MovieCatalog movies={movies} />
+        <Pagination current={page} max={pages} setPage={setPage}/>
       </div>
     );
   }

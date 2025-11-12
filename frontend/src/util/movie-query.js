@@ -6,8 +6,8 @@ export async function fetchMovies({ queryKey }) {
   let url = `/movies/search?page=${page}`;
   url += (searchTerm.length > 0) ? `&movie=${searchTerm}` : '';
   const response = await api.get(url);
-  const { movies } = response.data;
-  return movies;
+  const data = response.data;
+  return data;
 }
 
 

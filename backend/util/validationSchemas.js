@@ -39,3 +39,5 @@ export const ratingSchema = Joi.object({
 export const orderSchema = Joi.string().valid('title.asc', 'title.desc', 'year.asc', 'year.desc', 'tmdb_rating.asc', 'tmdb_rating.desc', 'random').optional().default('random');
 
 export const limitSchema = Joi.number().integer().positive().optional().default(30);
+
+export const pageSchema = Joi.number().integer().positive().optional().default(1);

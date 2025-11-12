@@ -4,17 +4,23 @@ import db from '../model/db.js';
 import { getFullPosterPath, getRuntimeString, filterOMDBData } from '../util/api-util.js';
 import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery } from '../util/db-util.js';
 import { getReleaseYear, throwError } from '../util/util-functions.js';
-import { movieIdSchema, genreIdSchema, orderSchema, limitSchema } from '../util/validationSchemas.js';
+import { movieIdSchema, genreIdSchema, orderSchema, limitSchema, pageSchema } from '../util/validationSchemas.js';
 
 
 // how to paginate?
 export const getSearchedMovies = async (req, res, next) => {
-  const { user } = req;
-  const { movie, page } = req.query;
-
   try {
-    const data = (movie) ? await searchMovie({ movie, page, user }) : await discoverMovies({ page, user });
-    res.status(200).json({ success: true, movies: data });
+    const { user } = req;
+    const { value: page, error: pageErr } = pageSchema.validate(req.query.page);
+    if (pageErr) throwError(400, 'Invalid page: ' + pageErr.message);
+
+    const { value: limit, error: limitErr } = limitSchema.validate(req.query.limit);
+    if (limitErr) throwError(400, 'Invalid limit: ', limitErr.message);
+
+    const { movie } = req.query;
+
+    const data = (movie) ? await searchMovie({ movie, page, user, limit }) : await discoverMovies({ page, user, limit });
+    res.status(200).json({ success: true, ...data });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
     next(err);

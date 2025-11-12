@@ -26,7 +26,7 @@ export default function Header() {
           <NavigationLink to="/home" text="Home" onClick={handleCloseMenu} />
           <NavigationLink to="/search" text="Search" onClick={handleCloseMenu} />
           <NavigationLink to="/genres" text="Genres" onClick={handleCloseMenu} />
-          {isLoggedIn && <NavigationLink linkTo="/my-area" text="My Area" />}
+          {isLoggedIn && <NavigationLink to="/my-area" text="My Area" />}
         </ul>
       </menu>
       <div className='inline-block absolute top-4 right-6 md:top-3'>
