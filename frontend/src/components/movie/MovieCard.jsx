@@ -23,7 +23,6 @@ export default function MovieCard({ movie, linkTo }) {
     draggingRef.current = false;
   }
 
-
   const { tmdb_rating, poster_path, title, year } = movie;
   const posterImage = poster_path || noPoster;
 
@@ -36,18 +35,22 @@ export default function MovieCard({ movie, linkTo }) {
         onMouseMove={handleMouseMove}
         onClick={handleClick}
       >
-        <img src={posterImage} alt={title + " Movie Poster"} />
-        <div className="px-5 mt-4 mb-3.5">
+        <div className="image-wrapper">
+          <img src={posterImage} alt={title + " Movie Poster"} />
+        </div>
+        <div className="card-text-wrapper">
           <h3 className="card-title">{title}</h3>
           <div className="card-info">
             <div className="rating">
-              <img src={star} className='size-4' alt="Start Icon" />
+              <img src={star} className='size-3 md:size-3.5 lg:size-4' alt="Start Icon" />
               <p>{tmdb_rating}</p>
             </div>
             <span className="text-xs text-stone-300">•</span>
             <p className='release'>{year}</p>
           </div>
         </div>
+
+
       </Link>
     </li>
   );

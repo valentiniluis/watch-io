@@ -21,7 +21,7 @@ export default function MovieList({ title, movies, fallback }) {
   }
 
   return (
-    <section className='relative my-12'>
+    <section className='relative my-4 md:my-8 lg:my-12'>
       <h3 className='section-title'>{title}</h3>
       <ScrollContainer className="movie-list" horizontal vertical={false} innerRef={recommendationsRef} >
         <button

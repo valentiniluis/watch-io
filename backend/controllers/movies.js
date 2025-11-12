@@ -2,7 +2,7 @@ import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
 import db from '../model/db.js';
 import { getFullPosterPath, getRuntimeString, filterOMDBData } from '../util/api-util.js';
-import { discoverMovies, getInteraction, searchMovie } from '../util/db-util.js';
+import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery } from '../util/db-util.js';
 import { getReleaseYear, throwError } from '../util/util-functions.js';
 import { movieIdSchema, genreIdSchema, orderSchema, limitSchema } from '../util/validationSchemas.js';
 
@@ -113,37 +113,9 @@ export const getMoviesByGenre = async (req, res, next) => {
     if (genreError) throwError(400, 'Invalid genre: ' + genreError.message);
 
     const { genreId } = value;
-    let query;
     const queryArgs = [genreId, limit];
-    if (id && id.length) {
-      query = `
-        SELECT mov.*
-        FROM movie AS mov
-        INNER JOIN movie_genre AS mg
-        ON mov.id = mg.movie_id
-        WHERE mg.genre_id = $1
-        AND mov.id NOT IN (
-          SELECT inter.movie_id
-          FROM interaction AS inter
-          WHERE inter.user_id = $3
-          AND inter.type = 'not interested'
-        )
-      `;
-      queryArgs.push(id);
-    } else {
-      query = `
-        SELECT mov.*
-        FROM movie AS mov
-        INNER JOIN movie_genre AS mg
-        ON mov.id = mg.movie_id
-        WHERE mg.genre_id = $1
-      `;
-    }
-
-    // unique id used as tiebreaker
-    const [attr, sort] = orderBy.split('.');
-    query += ` ORDER BY ${attr} ${sort}, mov.id ASC`;
-    query += ' LIMIT $2;';
+    if (id) queryArgs.push(id);
+    const query = getMovieGenreQuery(orderBy, id?.length > 0);
 
     const { rows: results } = await db.query(query, queryArgs);
     return res.status(200).json({ success: true, movies: results });

@@ -37,7 +37,7 @@ export default function SelectedMoviePage() {
   }
 
   return (
-    <section className='px-[1.5vw] sm:px-[3vw] lg:px-[5vw]'>
+    <section className='content-wrapper'>
       {content}
     </section>
   );

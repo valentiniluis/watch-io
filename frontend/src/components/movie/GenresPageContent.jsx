@@ -9,7 +9,7 @@ import MovieCatalog from './MovieCatalog';
 
 export default function GenresPageContent({ genres }) {
   const [genre, setGenre] = useState({ name: genres[0].name, id: genres[0].id });
-  const [sortAttribute, setSortAttribute] = useState({ label: sortOptions[0].name, id: sortOptions[0].id });
+  const [sortAttribute, setSortAttribute] = useState({ attribute: sortOptions[0].id, label: sortOptions[0].name });
 
   const { data: movies, isLoading, isError, error } = useQuery({
     queryKey: ['movies', { genre: genre.id, orderBy: sortAttribute.attribute }],
@@ -39,9 +39,9 @@ export default function GenresPageContent({ genres }) {
 
   return (
     <section>
-      <div className="flex justify-evenly items-center">
-        <DropdownMenu label="Genre" className="bg-blue-600 text-white font-semibold rounded-lg text-md hover:bg-blue-700 focus:ring-blue-800" text={genre.name} options={genres} onUpdate={handleUpdateGenre} />
-        <DropdownMenu label="Sort By" className="bg-orange-500 font-semibold text-white tracking-wide text-md rounded-lg focus:ring-orange-400" text={sortAttribute.label} options={sortOptions} onUpdate={handleSort} />
+      <div className="flex justify-evenly items-center gap-3 px-2">
+        <DropdownMenu label="Genre" className="bg-blue-600 text-white font-semibold rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide hover:bg-blue-700 focus:ring-blue-800" text={genre.name} options={genres} onUpdate={handleUpdateGenre} />
+        <DropdownMenu label="Sort By" className="bg-orange-500 font-semibold text-white rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide focus:ring-orange-400" text={sortAttribute.label} options={sortOptions} onUpdate={handleSort} />
       </div>
       <div className='catalog-container'>
         {content}

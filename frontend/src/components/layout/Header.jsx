@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { NavLink } from 'react-router-dom';
 import NavigationLink from '../UI/NavigationLink';
 import HamburguerMenuBtn from '../UI/HamburguerMenuBtn';
 import AuthButton from '../auth/AuthButton';
@@ -24,12 +23,10 @@ export default function Header() {
       <HamburguerMenuBtn className="md:hidden" onClick={handleToggleMenu} />
       <menu className={`${isMenuOpen ? 'block' : 'hidden'} absolute top-0 right-0 left-0 z-50 bg-stone-800 md:bg-transparent md:inline-block md:w-3/5 md:relative md:top-0 md:flex-row`} onMouseLeave={handleCloseMenu}>
         <ul className="flex flex-col items-center justify-center text-zinc-200 gap-6 py-8 md:gap-12 md:py-0 md:flex-row">
-          <NavigationLink linkTo="/home" text="Home" />
-          <NavigationLink linkTo="/search" text="Search" />
-          <NavigationLink linkTo="/genres" text="Genres" />
-          {isLoggedIn && (
-            <NavigationLink linkTo="/my-area" text="My Area" />
-          )}
+          <NavigationLink to="/home" text="Home" onClick={handleCloseMenu} />
+          <NavigationLink to="/search" text="Search" onClick={handleCloseMenu} />
+          <NavigationLink to="/genres" text="Genres" onClick={handleCloseMenu} />
+          {isLoggedIn && <NavigationLink linkTo="/my-area" text="My Area" />}
         </ul>
       </menu>
       <div className='inline-block absolute top-4 right-6 md:top-3'>

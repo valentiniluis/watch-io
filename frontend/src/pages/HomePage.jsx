@@ -30,7 +30,7 @@ export default function HomePage() {
   )
 
   return (
-    <section className='px-[5vw]'>
+    <section className='content-wrapper'>
       <section className="text-center my-40" id='recommendations-section'>
         <h1 className='text-2xl font-bold'>Our Recommendations For You</h1>
         <p>...</p>
