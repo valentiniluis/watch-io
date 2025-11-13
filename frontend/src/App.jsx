@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
 import { RouterProvider, createBrowserRouter, redirect } from 'react-router-dom';
@@ -5,13 +6,15 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import store from './store/store.js';
 import queryClient from './util/query.js';
 import RootLayout from './components/layout/RootLayout.jsx';
-import HomePage from './pages/HomePage.jsx';
-import MoviePicker from './pages/MoviePicker.jsx';
-import SelectedMovie from './pages/SelectedMovie.jsx';
-import MyArea from './pages/MyArea.jsx';
-import GenresPage from './pages/GenresPage.jsx';
+import LoadingOverlay from './components/layout/LoadingOverlay.jsx';
 import { loadHomepage } from './util/moviesLoaders.js';
-import ErrorPage from './pages/ErrorPage.jsx';
+
+const HomePage = lazy(() => import('./pages/HomePage.jsx'));
+const MoviePicker = lazy(() => import('./pages/MoviePicker.jsx'));
+const SelectedMovie = lazy(() => import('./pages/SelectedMovie.jsx'));
+const MyArea = lazy(() => import('./pages/MyArea.jsx'));
+const GenresPage = lazy(() => import('./pages/GenresPage.jsx'));
+const ErrorPage = lazy(() => import('./pages/ErrorPage.jsx'));
 
 
 const router = createBrowserRouter([
@@ -23,23 +26,56 @@ const router = createBrowserRouter([
       { index: true, loader: () => redirect('/home') },
       {
         path: 'search', children: [
-          { index: true, element: <MoviePicker /> },
-          { path: ':movieId', element: <SelectedMovie /> }
+          {
+            index: true,
+            element: (
+              <Suspense fallback={<LoadingOverlay text="Loading content..." />}>
+                <MoviePicker />
+              </Suspense>
+            )
+          },
+          {
+            path: ':movieId',
+            element: (
+              <Suspense fallback={<LoadingOverlay text="Loading content..." />}>
+                <SelectedMovie />
+              </Suspense>
+            )
+          }
         ]
       },
       {
         path: 'home', children: [
-          { index: true, element: <HomePage />, loader: loadHomepage },
+          {
+            index: true,
+            element: (
+              <Suspense fallback={<LoadingOverlay text="Loading content..." />}>
+                <HomePage />
+              </Suspense>
+            ),
+            loader: loadHomepage
+          },
         ]
       },
       {
         path: 'my-area', children: [
-          { index: true, element: <MyArea /> },
+          {
+            index: true,
+            element: (
+              <Suspense fallback={<LoadingOverlay text="Loading content..." />}>
+                <MyArea />
+              </Suspense>
+            ),
+          },
         ]
       },
       {
         path: 'genres',
-        element: <GenresPage />
+        element: (
+          <Suspense fallback={<LoadingOverlay text="Loading content..." />}>
+            <GenresPage />
+          </Suspense>
+        )
       }
     ]
   }

@@ -21,7 +21,19 @@ export default function MyArea() {
   let content;
 
   if (isPending) {
-    content = <Spinner />;
+    let messageComplement;
+    switch (contentType) {
+      case 'like':
+        messageComplement = 'liked movies';
+        break;
+      case 'not interested':
+        messageComplement = '"Not Interested" list';
+        break;
+      default:
+        messageComplement = contentType;
+        break;
+    }
+    content = <Spinner text={'Loading ' + messageComplement} />;
   }
   else if (isError) {
     content = <ErrorSection message={error.response?.data?.message || 'Failed to load data.'} />;
