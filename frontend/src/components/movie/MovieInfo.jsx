@@ -18,6 +18,8 @@ export default function MovieInfo({ movie }) {
   const { title, poster_path, tagline, year, runtime, genres } = movie;
   const poster = poster_path || noPoster;
 
+  console.log(movie);
+
   return (
     <>
       {error && <Toast message={error} />}

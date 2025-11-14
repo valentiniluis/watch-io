@@ -7,7 +7,6 @@ import store from './store/store.js';
 import queryClient from './util/query.js';
 import RootLayout from './components/layout/RootLayout.jsx';
 import LoadingOverlay from './components/layout/LoadingOverlay.jsx';
-import { loadHomepage } from './util/moviesLoaders.js';
 
 const HomePage = lazy(() => import('./pages/HomePage.jsx'));
 const MoviePicker = lazy(() => import('./pages/MoviePicker.jsx'));
@@ -53,7 +52,6 @@ const router = createBrowserRouter([
                 <HomePage />
               </Suspense>
             ),
-            loader: loadHomepage
           },
         ]
       },

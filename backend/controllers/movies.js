@@ -4,17 +4,16 @@ import db from '../model/db.js';
 import { getFullPosterPath, getRuntimeString, filterOMDBData } from '../util/api-util.js';
 import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery } from '../util/db-util.js';
 import { getReleaseYear, throwError } from '../util/util-functions.js';
-import { movieIdSchema, genreIdSchema, orderSchema, limitSchema, pageSchema } from '../util/validationSchemas.js';
+import { movieIdSchema, genreIdSchema, orderByValidation, limitValidation, pageValidation, countryValidation } from '../util/validationSchemas.js';
 
 
-// how to paginate?
 export const getSearchedMovies = async (req, res, next) => {
   try {
     const { user } = req;
-    const { value: page, error: pageErr } = pageSchema.validate(req.query.page);
+    const { value: page, error: pageErr } = pageValidation.validate(req.query.page);
     if (pageErr) throwError(400, 'Invalid page: ' + pageErr.message);
 
-    const { value: limit, error: limitErr } = limitSchema.validate(req.query.limit);
+    const { value: limit, error: limitErr } = limitValidation.validate(req.query.limit);
     if (limitErr) throwError(400, 'Invalid limit: ', limitErr.message);
 
     const { movie } = req.query;
@@ -33,15 +32,21 @@ export const getMovieData = async (req, res, next) => {
     const { user } = req;
     const { value, error } = movieIdSchema.validate(req.params);
     if (error) throwError(400, "Invalid Movie: " + error.message);
-
     const { movieId } = value;
-    const urlTMDB = `/movie/${movieId}`;
+
+    const { value: country, error: countryErr } = countryValidation.validate(req.query.country);
+    if (countryErr) throwError(400, 'Invalid country: ' + countryErr.message);
+
+    const urlTMDB = `/movie/${movieId}?append_to_response=watch/providers`;
     const responseTMDB = await tmdbAPI.get(urlTMDB);
     const dataTMDB = { ...responseTMDB.data };
+    dataTMDB.available = dataTMDB['watch/providers'].results[country];
+    delete dataTMDB['watch/providers'];
     dataTMDB.poster_path = getFullPosterPath(dataTMDB.poster_path);
     dataTMDB.tmdb_rating = dataTMDB.vote_average;
     dataTMDB.tmdb_votes = dataTMDB.vote_count;
     const { imdb_id } = dataTMDB;
+    // if there's no id for IMDb, then it's not possible to fetch info from OMDb. The request ends here
     if (!imdb_id) return res.status(200).json({ success: true, movieData: dataTMDB });
 
     const urlOMDB = `/?i=${imdb_id}`;
@@ -70,8 +75,7 @@ export const getMovieData = async (req, res, next) => {
   }
 }
 
-// frequency counter to find most recommended movie
-// not implementer yet. other approach?
+
 export const getRecommendations = async (req, res, next) => {
   try {
     const { value, error } = movieIdSchema.validate(req.params);
@@ -109,9 +113,9 @@ export const getMovieGenres = async (req, res, next) => {
 export const getMoviesByGenre = async (req, res, next) => {
   try {
     const id = req.user?.id;
-    const { value: limit, error: limitError } = limitSchema.validate(req.query.limit);
+    const { value: limit, error: limitError } = limitValidation.validate(req.query.limit);
     // guarantee that order by is in the allowed options so there's no injection in the query
-    const { value: orderBy, error: orderByError } = orderSchema.validate(req.query.orderBy);
+    const { value: orderBy, error: orderByError } = orderByValidation.validate(req.query.orderBy);
     const { error: genreError, value } = genreIdSchema.validate(req.params);
 
     if (limitError) throwError(400, 'Invalid movie limit: ' + limitError.message);

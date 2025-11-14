@@ -1,33 +1,73 @@
-import { Suspense } from 'react';
+import { Fragment, useRef, useState, useEffect } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import Spinner from '../components/UI/Spinner';
 import ErrorSection from '../components/UI/ErrorSection';
 import MovieList from '../components/movie/MovieList';
-import { Await, useLoaderData } from 'react-router-dom';
 import { mainGenres } from '../util/constants.js';
+import { loadMoviesByGenre } from '../util/movie-query.js';
 
 
 export default function HomePage() {
-  const moviesData = useLoaderData();
+  const [enabledQueries, setEnabledQueries] = useState([true, ...Array(mainGenres.length - 1).fill(false)]);
+  const observerRefs = useRef([]);
 
-  const content = (
-    <>
-      {mainGenres.map(genre => {
-        const Fallback = (
-          <div className='my-48'>
-            <Spinner text={`Loading ${genre.name} movies...`} />
-          </div>
-        ); 
+  const results = useQueries({
+    queries: mainGenres.map((genre, index) => ({
+      queryKey: ['genres', { genre: genre.id, genreName: genre.name }],
+      queryFn: loadMoviesByGenre,
+      // 10 minutes until refetch
+      refetchInterval: 1000 * 60 * 10,
+      refetchOnWindowFocus: false,
+      enabled: enabledQueries[index],
+    }))
+  });
 
-        return (
-          <Suspense fallback={Fallback} key={genre.id}>
-            <Await errorElement={<ErrorSection message="Failed to load genre" />} resolve={moviesData[genre.name]}>
-              {({ movies }) => <MovieList title={genre.name} movies={movies || []} />}
-            </Await>
-          </Suspense>
+  useEffect(() => {
+    const observers = [];
+    observerRefs.current.forEach((ref, index) => {
+      if (ref && index < mainGenres.length - 1) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            // if is intersecting, enable next query
+            if (entry.isIntersecting && !enabledQueries[index + 1]) {
+              setEnabledQueries(prev => {
+                const newEnabled = [...prev];
+                newEnabled[index + 1] = true;
+                return newEnabled;
+              });
+            }
+          });
+        },
+          {
+            threshold: 0.1,
+            rootMargin: '100px' // Start loading 100px before element is visible
+          }
         );
-      })}
-    </>
-  )
+
+        observer.observe(ref);
+        observers.push(observer);
+      }
+    });
+
+    return () => observers.forEach(observer => observer.disconnect());
+  }, [enabledQueries]);
+
+
+  const content = results.map((result, i) => {
+    if (!enabledQueries[i]) return null;
+    const { data, isPending, isError, error } = result;
+
+    return (
+      <Fragment key={i}>
+        {isPending && <div className='py-40'><Spinner text={`Loading ${mainGenres[i].name} movies...`} /></div>}
+        {isError && <ErrorSection message={error.message} />}
+        {data && <MovieList movies={data} title={mainGenres[i].name} />}
+
+        {/* Trigger for next section */}
+        {i < mainGenres.length - 1 && <div ref={el => observerRefs.current[i] = el} />}
+      </Fragment>
+    );
+  });
 
   return (
     <section className='content-wrapper'>

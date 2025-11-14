@@ -19,5 +19,4 @@ router.get('/:movieId/recommendations', optionallyAuthenticateJWT, moviesControl
 // get only movies of a certain genre
 router.get('/genre/:genreId', optionallyAuthenticateJWT, moviesControllers.getMoviesByGenre);
 
-
 export default router;

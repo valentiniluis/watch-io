@@ -90,7 +90,7 @@ export const loadRecommendations = async ({ queryKey }) => {
 
 
 export const loadMoviesByGenre = async ({ queryKey }) => {
-  const { genre, orderBy } = queryKey[1];
+  const { genre, orderBy='random' } = queryKey[1];
 
   // cannot fetch movies by genre if genres weren't loaded
   if (!genre) return [];

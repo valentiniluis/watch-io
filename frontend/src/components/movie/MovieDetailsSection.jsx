@@ -14,6 +14,7 @@ export default function MovieDetailsSection({ movie }) {
         {movie.director?.length > 0 && <HighlightedText regularText="Directed by " highlighted={movie.director} />}
         {movie.awards?.length > 0 && <HighlightedText highlighted={movie.awards} />}
         {movie.rated?.length > 0 && <HighlightedText regularText="Rated " highlighted={movie.rated} />}
+        {/* make new component for displaying this */}
         <p className="small-text">Available on...</p>
       </div>
       <div className='w-full lg:w-1/2'>

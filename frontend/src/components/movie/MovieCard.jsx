@@ -47,8 +47,6 @@ export default function MovieCard({ movie, linkTo }) {
             <p className='release'>{year}</p>
           </div>
         </div>
-
-
       </Link>
     </li>
   );
