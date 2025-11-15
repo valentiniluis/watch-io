@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { formatDate } from '../../util/funtions.js';
+import { formatDate } from '../../util/functions.js';
 import NoPoster from '/no-movie.png';
 import StarIcon from '../UI/StarIcon.jsx';
 import CalendarIcon from '../UI/CalendarIcon.jsx';

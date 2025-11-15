@@ -1,4 +1,4 @@
-import { formatDate } from '../../util/funtions';
+import { formatDate } from '../../util/functions';
 import StarIcon from "../UI/StarIcon";
 
 

@@ -19,11 +19,11 @@ export async function addInteraction({ movie, type }) {
 
 export async function getRatings({ queryKey }) {
   let url = '/ratings';
-  if (queryKey.length > 1) {
-    const parameters = queryKey[1];
-    const { movieId } = parameters;
-    url += `?movieId=${movieId}`;
-  }
+  const params = (queryKey.length > 1) ? queryKey[1] : null;
+  const requestParams = [];
+  if (params?.page) requestParams.push(`page=${params.page}`);
+  if (params?.movieId) requestParams.push(`movieId=${params.movieId}`);
+  if (requestParams.length) url += '?' + requestParams.join('&');
   const response = await api.get(url);
   return response.data;
 }
@@ -48,10 +48,13 @@ export async function deleteRating({ movie }) {
 
 
 export async function getInteractedMovies({ queryKey }) {
-  const params = queryKey[1];
-  const { interactionType } = params;
   let url = '/interactions';
-  if (interactionType) url += `?interactionType=${interactionType}`;
+  const params = queryKey[1];
+  const queryParams = [];
+  const { interactionType, page } = params;
+  if (interactionType) queryParams.push(`interactionType=${interactionType}`);
+  if (page) queryParams.push(`page=${page}`);
+  if (queryParams.length) url += '?' + queryParams.join('&');
   const response = await api.get(url);
   return response.data;
 }
@@ -90,20 +93,22 @@ export const loadRecommendations = async ({ queryKey }) => {
 
 
 export const loadMoviesByGenre = async ({ queryKey }) => {
-  const { genre, orderBy='random' } = queryKey[1];
+  const { genre, orderBy='random', page = 1 } = queryKey[1];
 
   // cannot fetch movies by genre if genres weren't loaded
   if (!genre) return [];
 
   let url;
-  if (genre) url = '/movies/genre/' + genre;
-  if (orderBy) url += '?orderBy=' + orderBy;
+  if (genre) url = `/movies/genre/${genre}?page=${page}`;
+  if (orderBy) url += '&orderBy=' + orderBy;
   const response = await api.get(url);
-  return response.data.movies;
+  return response.data;
 }
 
 
 export const loadGenres = async () => {
   const response = await api.get('/movies/genres');
-  return response.data.genres;
+  const { genres } = response.data;
+  const filtered = genres.filter(genre => genre.name !== 'Documentary');
+  return filtered;
 }

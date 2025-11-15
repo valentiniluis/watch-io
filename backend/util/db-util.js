@@ -38,12 +38,8 @@ export async function discoverMovies({ page, user = {}, limit }) {
     `;
   }
 
-  const { rows: data } = await db.query(query, queryArgs);
-  const total_rows = data.length > 0 ? +data[0].row_count : 0;
-  const pages = Math.ceil(total_rows / limit);
-  // cleanup
-  data.forEach(item => delete item.row_count);
-  return { movies: data, pages };
+  const { rows } = await db.query(query, queryArgs);
+  return rows;
 }
 
 
@@ -80,12 +76,17 @@ export async function searchMovie({ movie, user = {}, limit, page }) {
     `;
   }
 
-  const { rows: data } = await db.query(query, queryArgs);
+  const { rows } = await db.query(query, queryArgs);
+  return rows;
+}
+
+
+export function getPagesAndClearData(data, limit, key='data') {
   const total_items = data.length > 0 ? +data[0].row_count : 0;
   const pages = Math.ceil(total_items / limit);
   // cleanup
   data.forEach(item => delete item.row_count);
-  return { movies: data, pages };
+  return { [key]: data, pages };
 }
 
 
@@ -116,32 +117,37 @@ export async function tryInsert(stmt, args) {
 }
 
 
-export const getMovieGenreQuery = (orderBy, authenticated) => {
+export const getMovieGenreQuery = (orderBy, authenticated, parameters) => {
+  const queryParams = [parameters.genreId];
   let query = `
-    SELECT mov.*
+    SELECT mov.*, COUNT(*) OVER() AS row_count
     FROM movie AS mov
     INNER JOIN movie_genre AS mg
     ON mov.id = mg.movie_id
     WHERE mg.genre_id = $1
   `;
   if (authenticated) {
+    queryParams.push(parameters.userId);
     query += `
       AND mov.id NOT IN (
         SELECT inter.movie_id
         FROM interaction AS inter
-        WHERE inter.user_id = $3
+        WHERE inter.user_id = $${queryParams.length}
         AND inter.type = 'not interested'
       )
     `;
   }
 
+  queryParams.push(parameters.limit);
+
   // could be costly if the table were very big. works fine for now
-  if (orderBy === 'random') query += ' ORDER BY random()';
+  if (orderBy === 'random') query += ` ORDER BY random() LIMIT $${queryParams.length};`;
   else {
     // unique id used as tiebreaker
+    const offset = (parameters.page - 1) * parameters.limit;
+    queryParams.push(offset);
     const [attr, sort] = orderBy.split('.');
-    query += ` ORDER BY ${attr} ${sort}, mov.id ASC`;
+    query += ` ORDER BY ${attr} ${sort}, mov.id ASC LIMIT $${queryParams.length-1} OFFSET $${queryParams.length};`;
   }
-  query += ' LIMIT $2;';
-  return query;
+  return [query, queryParams];
 };

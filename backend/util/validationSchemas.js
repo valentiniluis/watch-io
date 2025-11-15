@@ -38,8 +38,12 @@ export const ratingSchema = Joi.object({
 
 export const orderByValidation = Joi.string().valid('title.asc', 'title.desc', 'year.asc', 'year.desc', 'tmdb_rating.asc', 'tmdb_rating.desc', 'random').optional().default('random');
 
-export const limitValidation = Joi.number().integer().positive().optional().default(30);
+export const limitValidation = Joi.number().integer().positive().optional().max(50).default(30);
 
 export const pageValidation = Joi.number().integer().positive().optional().default(1);
 
 export const countryValidation = Joi.string().length(2).uppercase().default('US');
+
+export const movieIdValidation = Joi.number().integer().positive().optional();
+
+export const interactionTypeValidation = Joi.string().valid('not interested', 'watchlist', 'like').optional();

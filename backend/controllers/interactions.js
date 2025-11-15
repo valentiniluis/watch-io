@@ -1,34 +1,43 @@
 import db from '../model/db.js';
-import { getInteraction, tryInsert } from '../util/db-util.js';
-import { interactionSchema, movieSchema, movieIdSchema } from '../util/validationSchemas.js';
+import { getInteraction, getPagesAndClearData, tryInsert } from '../util/db-util.js';
+import { interactionSchema, movieSchema, movieIdSchema, interactionTypeValidation, pageValidation, limitValidation } from '../util/validationSchemas.js';
 import { throwError } from '../util/util-functions.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
 
 
 // get all user interactions
 export const getInteractions = async (req, res, next) => {
-  const { user } = req;
-  const { interactionType } = req.query;
-
-  let query = `
-    SELECT inter.type, mov.*
-    FROM interaction AS inter
-    INNER JOIN movie AS mov
-    ON inter.movie_id = mov.id
-    WHERE inter.user_id = $1
-  `;
-
-  const queryArgs = [user.id];
-
-  if (interactionType) {
-    query += ' AND inter.type = $2;';
-    queryArgs.push(interactionType);
-  }
-  else query += ';';
-
   try {
+    const { user } = req;
+    const { value: interactionType, error: interactionErr } = interactionTypeValidation.validate(req.query.interactionType);
+    if (interactionErr) throwError(400, 'Invalid interaction type: ' + interactionErr.message);
+
+    const { value: page, error: pageErr } = pageValidation.validate(req.query.page);
+    if (pageErr) throwError(400, 'Invalid page: ' + pageErr.message);
+
+    const { value: limit, error: limitErr } = limitValidation.validate(req.query.limit);
+    if (limitErr) throwError(400, 'Invalid limit: ', limitErr.message);
+
+    const offset = (page - 1) * limit;
+    const queryArgs = [user.id, limit, offset];
+    let query = `
+      SELECT inter.type, mov.*, COUNT(*) OVER() AS row_count
+      FROM interaction AS inter
+      INNER JOIN movie AS mov
+      ON inter.movie_id = mov.id
+      WHERE inter.user_id = $1
+    `;
+
+    if (interactionType) {
+      query += ' AND inter.type = $4';
+      queryArgs.push(interactionType);
+    }
+
+    query += ' LIMIT $2 OFFSET $3;';
+
     const { rows: interactions } = await db.query(query, queryArgs);
-    return res.status(200).json({ success: true, interactions })
+    const finalData = getPagesAndClearData(interactions, limit, 'interactions');
+    return res.status(200).json({ success: true, ...finalData });
   } catch (err) {
     next(err);
   }

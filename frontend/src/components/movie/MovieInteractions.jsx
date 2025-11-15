@@ -24,9 +24,7 @@ export default function MovieInteractions({ onError }) {
 
   const { mutate: add, error: addError, isError: isAddError } = useMutation({
     mutationFn: addInteraction,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] });
-    }
+    onSuccess: async () => await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] })
   });
 
   const { mutate: remove, error: removeError, isError: isRemoveError } = useMutation({

@@ -5,14 +5,16 @@ import DropdownMenu from "../UI/DropdownMenu";
 import { loadMoviesByGenre } from "../../util/movie-query";
 import Spinner from "../UI/Spinner";
 import MovieCatalog from './MovieCatalog';
+import Pagination from '../UI/Pagination';
 
 
 export default function GenresPageContent({ genres }) {
   const [genre, setGenre] = useState({ name: genres[0].name, id: genres[0].id });
   const [sortAttribute, setSortAttribute] = useState({ attribute: sortOptions[0].id, label: sortOptions[0].name });
+  const [page, setPage] = useState(1);
 
-  const { data: movies, isLoading, isError, error } = useQuery({
-    queryKey: ['movies', { genre: genre.id, orderBy: sortAttribute.attribute }],
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['movies', { genre: genre.id, orderBy: sortAttribute.attribute, page }],
     queryFn: loadMoviesByGenre,
   });
 
@@ -23,8 +25,14 @@ export default function GenresPageContent({ genres }) {
   else if (isError) {
     content = <ErrorSection message={error.message || "Failed to load movies."} />
   }
-  else if (movies) {
-    content = <MovieCatalog movies={movies} />
+  else if (data) {
+    const { movies, pages } = data;
+    content = (
+      <div className="catalog-container">
+        <MovieCatalog movies={movies} />
+        <Pagination current={page} max={pages} setPage={setPage} />
+      </div>
+    )
   }
 
   function handleSort(event) {
@@ -35,6 +43,7 @@ export default function GenresPageContent({ genres }) {
   function handleUpdateGenre(event) {
     const { genreId, genre } = event.currentTarget.dataset;
     setGenre({ name: genre, id: genreId });
+    setPage(1)
   }
 
   return (
@@ -43,9 +52,7 @@ export default function GenresPageContent({ genres }) {
         <DropdownMenu label="Genre" className="bg-blue-600 text-white font-semibold rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide hover:bg-blue-700 focus:ring-blue-800" text={genre.name} options={genres} onUpdate={handleUpdateGenre} />
         <DropdownMenu label="Sort By" className="bg-orange-500 font-semibold text-white rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide focus:ring-orange-400" text={sortAttribute.label} options={sortOptions} onUpdate={handleSort} />
       </div>
-      <div className='catalog-container'>
-        {content}
-      </div>
+      {content}
     </section>
   );
 }

@@ -1,18 +1,27 @@
 import db from '../model/db.js';
-import { movieIdSchema, movieSchema, ratingSchema } from '../util/validationSchemas.js';
+import { limitValidation, movieIdSchema, movieIdValidation, movieSchema, pageValidation, ratingSchema } from '../util/validationSchemas.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
 import { throwError } from '../util/util-functions.js';
-import { tryInsert } from '../util/db-util.js';
+import { getPagesAndClearData, tryInsert } from '../util/db-util.js';
 
 
 export const getRatings = async (req, res, next) => {
   try {
     const { user } = req;
-    const { movieId } = req.query;
 
-    const queryArgs = [user.id];
+    const { value: movieId, error: movieIdErr } = movieIdValidation.validate(req.query.movieId);
+    if (movieIdErr) throwError(400, 'Invalid movie: ' + movieIdErr.message);
+
+    const { value: limit, error: limitErr } = limitValidation.validate(req.params.limit);
+    if (limitErr) throwError(400, 'Invalid limit: ' + limitErr.message);
+
+    const { value: page, error: pageErr } = pageValidation.validate(req.query.page);
+    if (pageErr) throwError(400, 'Invalid page: ' + pageErr.message);
+
+    const offset = (page - 1) * limit;
+    const queryArgs = [user.id, limit, offset];
     let query = `
-      SELECT *
+      SELECT *, COUNT(*) OVER() AS row_count
       FROM movie_rating AS rt
       INNER JOIN movie AS mov
       ON rt.movie_id = mov.id
@@ -20,14 +29,15 @@ export const getRatings = async (req, res, next) => {
     `;
 
     if (movieId) {
-      query += ' AND rt.movie_id = $2;';
+      query += ' AND rt.movie_id = $4';
       queryArgs.push(movieId);
     }
-    else query += ';';
+
+    query += ' LIMIT $2 OFFSET $3;';
 
     const { rows: result } = await db.query(query, queryArgs);
-
-    return res.status(200).json({ success: true, message: "Rating(s) retrieved successfully", ratings: result });
+    const finalData = getPagesAndClearData(result, limit, 'ratings');
+    return res.status(200).json({ success: true, message: "Rating(s) retrieved successfully", ...finalData });
   } catch (err) {
     next(err);
   }
