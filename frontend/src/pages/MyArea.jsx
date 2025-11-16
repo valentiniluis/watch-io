@@ -1,24 +1,35 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSelector } from "react-redux";
 import Spinner from "../components/UI/Spinner";
 import MovieCatalog from "../components/movie/MovieCatalog";
 import ErrorSection from "../components/UI/ErrorSection";
-import { getRatings, getInteractedMovies } from "../util/movie-query";
 import Ratings from "../components/movie/Ratings";
-import MyAreaButton from "../components/UI/MyAreaButton";
 import Pagination from '../components/UI/Pagination';
+import DropdownMenu from '../components/UI/DropdownMenu';
 import { getMyAreaEmptyMessage, getMyAreaLoadingMessage } from "../util/functions";
+import { getRatings, getInteractedMovies } from "../util/movie-query";
+import { myAreaCategories } from "../util/constants";
 
+const initialState = {
+  label: myAreaCategories[0]["data-label"],
+  category: myAreaCategories[0]["data-category"]
+};
 
 export default function MyArea() {
-  const [contentType, setContentType] = useState('watchlist');
+  const { isLoggedIn } = useSelector(state => state.auth);
+  const [contentType, setContentType] = useState(initialState);
   const [page, setPage] = useState(1);
 
   const { data, isPending, isError, error } = useQuery({
-    queryFn: (contentType === 'ratings') ? getRatings : getInteractedMovies,
-    queryKey: (contentType === 'ratings') ? ['ratings', { page }] : ['interactions', { interactionType: contentType, page }],
+    queryFn: (contentType.category === 'ratings') ? getRatings : getInteractedMovies,
+    queryKey: (contentType.category === 'ratings') ? ['ratings', { page }] : ['interactions', { interactionType: contentType.category, page }],
     retry: false
   });
+
+  console.log(contentType);
+
+  if (!isLoggedIn) return <ErrorSection message="Authentication failed or expired. Please re-autheticate to access your private area." />;
 
   let content;
   if (isPending) {
@@ -32,7 +43,7 @@ export default function MyArea() {
     const message = getMyAreaEmptyMessage(contentType);
     content = <ErrorSection message={message} />;
   }
-  else if (contentType === 'ratings') {
+  else if (contentType.category === 'ratings') {
     const { ratings, pages } = data;
     content = (
       <>
@@ -45,28 +56,22 @@ export default function MyArea() {
     const { pages, interactions } = data;
     content = (
       <>
-        <MovieCatalog movies={interactions} catalogType={contentType} />
+        <MovieCatalog movies={interactions} />
         <Pagination current={page} max={pages} setPage={setPage} />
       </>
     )
   }
 
-  function updateContentType(newType) {
-    setContentType(newType);
+  function updateContentType(event) {
+    const { label, category } = event.currentTarget.dataset;
+    setContentType({ label, category });
     setPage(1);
   }
 
   return (
     <section id="interacted-movies" className="catalog-container">
-      <div className="flex justify-between mb-10">
-        <div className="flex gap-2">
-          <MyAreaButton text="Watchlist" active={contentType === 'watchlist'} onClick={() => updateContentType('watchlist')} />
-          <MyAreaButton text="Like" active={contentType === 'like'} onClick={() => updateContentType('like')} />
-          <MyAreaButton text="Not Interested" active={contentType === 'not interested'} onClick={() => updateContentType('not interested')} />
-        </div>
-        <div>
-          <MyAreaButton text="Ratings" active={contentType === 'ratings'} onClick={() => updateContentType('ratings')} />
-        </div>
+      <div className="flex justify-center">
+        <DropdownMenu label="Category" options={myAreaCategories} text={contentType.label} onUpdate={updateContentType} className="bg-cyan-900 font-semibold text-white rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide focus:ring-cyan-950 hover:bg-cyan-950" />
       </div>
       {content}
     </section>

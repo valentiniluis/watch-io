@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { sortOptions } from "../../util/constants";
 import { useQuery } from "@tanstack/react-query";
 import DropdownMenu from "../UI/DropdownMenu";
 import { loadMoviesByGenre } from "../../util/movie-query";
 import Spinner from "../UI/Spinner";
 import MovieCatalog from './MovieCatalog';
 import Pagination from '../UI/Pagination';
+import { sortOptions } from "../../util/constants";
 
 
 export default function GenresPageContent({ genres }) {
@@ -50,7 +50,7 @@ export default function GenresPageContent({ genres }) {
     <section>
       <div className="flex justify-evenly items-center gap-3 px-2">
         <DropdownMenu label="Genre" className="bg-blue-600 text-white font-semibold rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide hover:bg-blue-700 focus:ring-blue-800" text={genre.name} options={genres} onUpdate={handleUpdateGenre} />
-        <DropdownMenu label="Sort By" className="bg-orange-500 font-semibold text-white rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide focus:ring-orange-400" text={sortAttribute.label} options={sortOptions} onUpdate={handleSort} />
+        <DropdownMenu label="Sort By" className="bg-cyan-900 font-semibold text-white rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide focus:ring-cyan-950 hover:bg-cyan-950" text={sortAttribute.label} options={sortOptions} onUpdate={handleSort} />
       </div>
       {content}
     </section>

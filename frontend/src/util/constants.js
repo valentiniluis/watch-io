@@ -8,10 +8,17 @@ export const mainGenres = [
 ];
 
 export const sortOptions = [
-  { id: 'title.asc', name: "Title (ASC)", 'data-attribute': 'title.asc', 'data-label': 'Title (Ascending)' },
-  { id: 'title.desc', name: 'Title (DESC)', 'data-attribute': 'title.desc', 'data-label': 'Title (Descending)' },
-  { id: 'tmdb_rating.asc', name: "Rating (ASC)", 'data-attribute': 'tmdb_rating.asc', 'data-label': "Rating (Ascending)" },
-  { id: 'tmdb_rating.desc', name: "Rating (DESC)", 'data-attribute': 'tmdb_rating.desc', 'data-label': "Rating (Descending)" },
-  { id: 'year.asc', name: "Year (ASC)", 'data-attribute': 'year.asc', 'data-label': "Year (Asceding)" },
-  { id: 'year.desc', name: "Year (DESC)", 'data-attribute': 'year.desc', 'data-label': "Year (Descending)" },
+  { id: 'title.asc', name: "Title (↑)", 'data-attribute': 'title.asc', 'data-label': 'Title ↑' },
+  { id: 'title.desc', name: 'Title (↓)', 'data-attribute': 'title.desc', 'data-label': 'Title ↓' },
+  { id: 'tmdb_rating.asc', name: "Rating (↑)", 'data-attribute': 'tmdb_rating.asc', 'data-label': "Rating ↑" },
+  { id: 'tmdb_rating.desc', name: "Rating (↓)", 'data-attribute': 'tmdb_rating.desc', 'data-label': "Rating ↓" },
+  { id: 'year.asc', name: "Year (↑)", 'data-attribute': 'year.asc', 'data-label': "Year ↑" },
+  { id: 'year.desc', name: "Year (↓)", 'data-attribute': 'year.desc', 'data-label': "Year ↓" },
+];
+
+export const myAreaCategories = [
+  { id: 'watchlist', name: 'Watchlist', 'data-label': 'Watchlist', 'data-category': 'watchlist' },
+  { id: 'like', name: 'Liked', 'data-label': 'Liked', 'data-category': 'like' },
+  { id: 'not interested', name: 'Not Interested', 'data-label': 'Not Interested', 'data-category': 'not interested' },
+  { id: 'ratings', name: 'Ratings', 'data-label': 'Ratings', 'data-category': 'ratings' },
 ];
