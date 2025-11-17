@@ -1,7 +1,7 @@
 import db from '../model/db.js';
 import { getInteraction, getPagesAndClearData, tryInsert } from '../util/db-util.js';
-import { interactionSchema, movieSchema, movieIdSchema, interactionTypeValidation, pageValidation, limitValidation } from '../util/validationSchemas.js';
-import { throwError } from '../util/util-functions.js';
+import { interactionSchema, movieSchema, movieIdSchema, interactionTypeValidation } from '../util/validationSchemas.js';
+import { calculateOffset, throwError, validatePage } from '../util/util-functions.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
 
 
@@ -9,16 +9,12 @@ import { PG_UNIQUE_ERR } from '../util/constants.js';
 export const getInteractions = async (req, res, next) => {
   try {
     const { user } = req;
+
     const { value: interactionType, error: interactionErr } = interactionTypeValidation.validate(req.query.interactionType);
     if (interactionErr) throwError(400, 'Invalid interaction type: ' + interactionErr.message);
+    const [page, limit] = validatePage(req.query.page, req.query.limit);
 
-    const { value: page, error: pageErr } = pageValidation.validate(req.query.page);
-    if (pageErr) throwError(400, 'Invalid page: ' + pageErr.message);
-
-    const { value: limit, error: limitErr } = limitValidation.validate(req.query.limit);
-    if (limitErr) throwError(400, 'Invalid limit: ', limitErr.message);
-
-    const offset = (page - 1) * limit;
+    const offset = calculateOffset(page, limit);
     const queryArgs = [user.id, limit, offset];
     let query = `
       SELECT inter.type, mov.*, COUNT(*) OVER() AS row_count

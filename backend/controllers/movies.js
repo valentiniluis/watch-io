@@ -3,19 +3,14 @@ import omdbAPI from '../api/omdb-api.js';
 import db from '../model/db.js';
 import { getFullPosterPath, getRuntimeString, filterOMDBData } from '../util/api-util.js';
 import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData } from '../util/db-util.js';
-import { getReleaseYear, throwError } from '../util/util-functions.js';
-import { movieIdSchema, genreIdSchema, orderByValidation, limitValidation, pageValidation, countryValidation } from '../util/validationSchemas.js';
+import { getReleaseYear, throwError, validatePage } from '../util/util-functions.js';
+import { movieIdSchema, genreIdSchema, orderByValidation, countryValidation } from '../util/validationSchemas.js';
 
 
 export const getSearchedMovies = async (req, res, next) => {
   try {
     const { user } = req;
-    const { value: page, error: pageErr } = pageValidation.validate(req.query.page);
-    if (pageErr) throwError(400, 'Invalid page: ' + pageErr.message);
-
-    const { value: limit, error: limitErr } = limitValidation.validate(req.query.limit);
-    if (limitErr) throwError(400, 'Invalid limit: ', limitErr.message);
-
+    const [page, limit] = validatePage(req.query.page, req.query.limit);
     const { movie } = req.query;
 
     const data = (movie) ? await searchMovie({ movie, page, user, limit }) : await discoverMovies({ page, user, limit });
@@ -114,17 +109,15 @@ export const getMovieGenres = async (req, res, next) => {
 export const getMoviesByGenre = async (req, res, next) => {
   try {
     const id = req.user?.id;
-    const { value: limit, error: limitError } = limitValidation.validate(req.query.limit);
+
     // guarantee that order by is in the allowed options so there's no injection in the query
     const { value: orderBy, error: orderByError } = orderByValidation.validate(req.query.orderBy);
-    const { error: genreError, value } = genreIdSchema.validate(req.params);
-    const { value: page, error: pageErr } = pageValidation.validate(req.query.page);
-
-    if (limitError) throwError(400, 'Invalid movie limit: ' + limitError.message);
     if (orderByError) throwError(400, 'Invalid sorting condition: ' + orderByError.message);
-    if (genreError) throwError(400, 'Invalid genre: ' + genreError.message);
-    if (pageErr) throwError(400, 'Invalid page number: ' + pageErr.message);
 
+    const { error: genreError, value } = genreIdSchema.validate(req.params);
+    if (genreError) throwError(400, 'Invalid genre: ' + genreError.message);
+
+    const [page, limit] = validatePage(req.query.page, req.query.limit);
     const { genreId } = value;
     const parameters = { genreId, userId: id, limit, page };
     const [query, args] = getMovieGenreQuery(orderBy, id?.length > 0, parameters);

@@ -1,14 +1,15 @@
 import db from '../model/db.js';
 import { PG_UNIQUE_ERR } from './constants.js';
+import { calculateOffset } from './util-functions.js';
 
 
 // Dados de 10 mil filmes migrados para o postgreSQL, consultas locais
 
 export async function discoverMovies({ page, user = {}, limit }) {
-  const id = user?.id;
-  const offset_amount = (page - 1) * limit;
   let query;
-  const queryArgs = [limit, offset_amount];
+  const id = user?.id;
+  const offset = calculateOffset(page, limit);
+  const queryArgs = [limit, offset];
 
   if (id && id.length) {
     queryArgs.push(id);
@@ -44,11 +45,10 @@ export async function discoverMovies({ page, user = {}, limit }) {
 
 
 export async function searchMovie({ movie, user = {}, limit, page }) {
-  const id = user?.id;
-  const offset_amount = (page - 1) * limit;
-
   let query;
-  const queryArgs = [`%${movie}%`, limit, offset_amount];
+  const id = user?.id;
+  const offset = calculateOffset(page, limit);
+  const queryArgs = [`%${movie}%`, limit, offset];
 
   if (id && id.length) {
     query = `
@@ -81,7 +81,7 @@ export async function searchMovie({ movie, user = {}, limit, page }) {
 }
 
 
-export function getPagesAndClearData(data, limit, key='data') {
+export function getPagesAndClearData(data, limit, key = 'data') {
   const total_items = data.length > 0 ? +data[0].row_count : 0;
   const pages = Math.ceil(total_items / limit);
   // cleanup
@@ -144,10 +144,10 @@ export const getMovieGenreQuery = (orderBy, authenticated, parameters) => {
   if (orderBy === 'random') query += ` ORDER BY random() LIMIT $${queryParams.length};`;
   else {
     // unique id used as tiebreaker
-    const offset = (parameters.page - 1) * parameters.limit;
+    const offset = calculateOffset(parameters.page, parameters.limit);
     queryParams.push(offset);
     const [attr, sort] = orderBy.split('.');
-    query += ` ORDER BY ${attr} ${sort}, mov.id ASC LIMIT $${queryParams.length-1} OFFSET $${queryParams.length};`;
+    query += ` ORDER BY ${attr} ${sort}, mov.id ASC LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length};`;
   }
   return [query, queryParams];
 };

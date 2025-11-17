@@ -1,7 +1,7 @@
 import db from '../model/db.js';
-import { limitValidation, movieIdSchema, movieIdValidation, movieSchema, pageValidation, ratingSchema } from '../util/validationSchemas.js';
+import { movieIdSchema, movieIdValidation, movieSchema, ratingSchema } from '../util/validationSchemas.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
-import { throwError } from '../util/util-functions.js';
+import { throwError, calculateOffset, validatePage } from '../util/util-functions.js';
 import { getPagesAndClearData, tryInsert } from '../util/db-util.js';
 
 
@@ -12,13 +12,9 @@ export const getRatings = async (req, res, next) => {
     const { value: movieId, error: movieIdErr } = movieIdValidation.validate(req.query.movieId);
     if (movieIdErr) throwError(400, 'Invalid movie: ' + movieIdErr.message);
 
-    const { value: limit, error: limitErr } = limitValidation.validate(req.params.limit);
-    if (limitErr) throwError(400, 'Invalid limit: ' + limitErr.message);
+    const [page, limit] = validatePage(req.query.page, req.query.limit);
+    const offset = calculateOffset(page, limit);
 
-    const { value: page, error: pageErr } = pageValidation.validate(req.query.page);
-    if (pageErr) throwError(400, 'Invalid page: ' + pageErr.message);
-
-    const offset = (page - 1) * limit;
     const queryArgs = [user.id, limit, offset];
     let query = `
       SELECT *, COUNT(*) OVER() AS row_count
