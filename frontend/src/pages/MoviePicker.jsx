@@ -4,7 +4,6 @@ import SearchInput from "../components/UI/SearchInput.jsx";
 import MovieCatalog from "../components/movie/MovieCatalog.jsx";
 import Spinner from "../components/UI/Spinner.jsx";
 import { fetchMovies } from "../util/movie-query.js";
-import Pagination from "../components/UI/Pagination.jsx";
 import ErrorSection from "../components/UI/ErrorSection.jsx";
 
 
@@ -36,8 +35,7 @@ export default function MoviePicker() {
     const { movies, pages } = data;
     content = (
       <div className="catalog-container">
-        <MovieCatalog movies={movies} />
-        <Pagination current={page} max={pages} setPage={setPage}/>
+        <MovieCatalog movies={movies} currentPage={page} maxPages={pages} setPage={setPage} />
       </div>
     );
   }

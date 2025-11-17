@@ -17,7 +17,7 @@ export default function DropdownMenu({ label, className, text, options, onUpdate
 
   return (
     <div className="flex flex-col items-center justify-center max-w-3xs w-full gap-2">
-      <h3 className="text-sm uppercase font-medium tracking-wider text-stone-200">{label}</h3>
+      <h3 className="text-xs sm:text-[.8rem] lg:text-sm uppercase font-medium tracking-wider text-stone-200">{label}</h3>
       <div className="w-full relative mb-16">
         <button
           id="dropdownDefaultButton"

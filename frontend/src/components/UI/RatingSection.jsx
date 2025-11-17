@@ -31,7 +31,7 @@ export default function RatingSection() {
   else if (data?.ratings?.length === 0) {
     content = (
       <div className='flex justify-center'>
-        <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors" onClick={openModal}>Leave Rating</button>
+        <button className="bg-blue-600 text-white text-sm md:text-base px-4 py-1.5 md:px-6 md:py-3 rounded-lg hover:bg-blue-700 transition-colors" onClick={openModal}>Leave Rating</button>
         <RatingModal ref={modalRef} />
       </div>
     );

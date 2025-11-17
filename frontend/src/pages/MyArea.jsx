@@ -5,7 +5,6 @@ import Spinner from "../components/UI/Spinner";
 import MovieCatalog from "../components/movie/MovieCatalog";
 import ErrorSection from "../components/UI/ErrorSection";
 import Ratings from "../components/movie/Ratings";
-import Pagination from '../components/UI/Pagination';
 import DropdownMenu from '../components/UI/DropdownMenu';
 import { getMyAreaEmptyMessage, getMyAreaLoadingMessage } from "../util/functions";
 import { getRatings, getInteractedMovies } from "../util/movie-query";
@@ -27,8 +26,6 @@ export default function MyArea() {
     retry: false
   });
 
-  console.log(contentType);
-
   if (!isLoggedIn) return <ErrorSection message="Authentication failed or expired. Please re-autheticate to access your private area." />;
 
   let content;
@@ -45,21 +42,11 @@ export default function MyArea() {
   }
   else if (contentType.category === 'ratings') {
     const { ratings, pages } = data;
-    content = (
-      <>
-        <Ratings ratings={ratings} />
-        <Pagination current={page} max={pages} setPage={setPage} />
-      </>
-    );
+    content = <Ratings ratings={ratings} currentPage={page} maxPages={pages} setPage={setPage} />
   }
   else {
     const { pages, interactions } = data;
-    content = (
-      <>
-        <MovieCatalog movies={interactions} />
-        <Pagination current={page} max={pages} setPage={setPage} />
-      </>
-    )
+    content = <MovieCatalog movies={interactions} currentPage={page} maxPages={pages} setPage={setPage} />
   }
 
   function updateContentType(event) {

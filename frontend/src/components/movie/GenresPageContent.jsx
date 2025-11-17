@@ -4,13 +4,16 @@ import DropdownMenu from "../UI/DropdownMenu";
 import { loadMoviesByGenre } from "../../util/movie-query";
 import Spinner from "../UI/Spinner";
 import MovieCatalog from './MovieCatalog';
-import Pagination from '../UI/Pagination';
 import { sortOptions } from "../../util/constants";
 
+const initialState = {
+  label: sortOptions[0]["data-label"],
+  attribute: sortOptions[0]["data-attribute"]
+};
 
 export default function GenresPageContent({ genres }) {
   const [genre, setGenre] = useState({ name: genres[0].name, id: genres[0].id });
-  const [sortAttribute, setSortAttribute] = useState({ attribute: sortOptions[0].id, label: sortOptions[0].name });
+  const [sortAttribute, setSortAttribute] = useState(initialState);
   const [page, setPage] = useState(1);
 
   const { data, isLoading, isError, error } = useQuery({
@@ -29,8 +32,7 @@ export default function GenresPageContent({ genres }) {
     const { movies, pages } = data;
     content = (
       <div className="catalog-container">
-        <MovieCatalog movies={movies} />
-        <Pagination current={page} max={pages} setPage={setPage} />
+        <MovieCatalog movies={movies} currentPage={page} maxPages={pages} setPage={setPage} />
       </div>
     )
   }
