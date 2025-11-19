@@ -1,5 +1,3 @@
-
-// deixar a página atual centralizada na div
 export default function Pagination({ current, max, setPage }) {
   const FIRST = 1;
   const PREV = current - 1;

@@ -19,7 +19,6 @@ export default function Input({ id, name, label, type, ...props }) {
   );
 }
 
-
 // function charCount({ maxlength, value }) {
 //   return (
 //     <p className="text-right text-sm text-stone-600">{value.length}/{maxlength}</p>
