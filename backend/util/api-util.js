@@ -14,7 +14,9 @@ export function getFullLogoPath(logoPath) {
 
 
 export function fillAllLogoPaths(providers) {
-  if (providers === null || typeof providers !== 'object') throw Error('Unexpected argument, unable to fill logo paths.');
+  if (!providers) return;
+
+  if (typeof providers !== 'object') throw Error('Unexpected argument, unable to fill logo paths.');
   
   const entries = Object.entries(providers);
   

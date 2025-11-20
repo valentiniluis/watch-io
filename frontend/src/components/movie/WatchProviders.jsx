@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import ErrorSection from '../UI/ErrorSection';
 import { capitalize } from '../../util/functions';
 
 
@@ -68,7 +67,7 @@ function WatchProviders({ providers, summaryProviders, limit, expandedLength, ma
   const hasMore = expandedLength > limit;
 
   return (
-    <div className={`bg-slate-700 rounded-xl shadow-lg p-4 max-w-2xl ${margin}`}>
+    <div className={`bg-slate-800 rounded-xl shadow-lg p-4 max-w-2xl ${margin}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold text-stone-50">
           Where to Watch
@@ -76,7 +75,7 @@ function WatchProviders({ providers, summaryProviders, limit, expandedLength, ma
         {hasMore && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+            className="flex items-center gap-1 text-sm font-medium text-blue-400 hover:text-blue-500 transition-colors"
           >
             {isExpanded ? 'Show Less' : `Show All (${expandedLength})`}
             <svg
@@ -100,7 +99,7 @@ function WatchProviders({ providers, summaryProviders, limit, expandedLength, ma
 // wrapper component so that the javascript logic doesn't re-execute for every state change (optimizing performance)
 export default function WatchProvidersWrapper({ providers, margin }) {
   if (!providers || Object.keys(providers).length === 0) {
-    return <ErrorSection message="No streaming information available" />
+    return <p className='regular-text'>No streaming information available!</p>
   }
 
   const MAX_SUMMARY_ITEMS = 4;

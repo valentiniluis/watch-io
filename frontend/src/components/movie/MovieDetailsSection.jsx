@@ -16,7 +16,7 @@ export default function MovieDetailsSection({ movie }) {
         {director?.length > 0 && <HighlightedText regularText="Directed by " highlighted={movie.director} />}
         {awards != 'N/A' && <HighlightedText highlighted={movie.awards} />}
         {rated?.length > 0 && <HighlightedText regularText="Rated " highlighted={movie.rated} />}
-        <WatchProviders providers={available} />
+        <WatchProviders providers={available} margin="mt-4" />
       </div>
       <div className='w-full lg:w-1/2'>
         {isLoggedIn
