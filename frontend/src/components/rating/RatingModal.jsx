@@ -1,10 +1,11 @@
-import { createPortal } from "react-dom";
-import Input from "./Input";
-import { useMutation } from "@tanstack/react-query";
-import { addRating, editRating } from "../../util/movie-query";
-import queryClient from '../../util/query';
 import { useSelector } from 'react-redux';
+import { createPortal } from "react-dom";
+import { useMutation } from "@tanstack/react-query";
+import queryClient from '../../util/query';
+import Input from "../UI/Input";
+import { addRating, editRating } from "../../util/movie-query";
 import Modal from "../layout/Modal";
+import RatingInput from './RatingInput';
 
 
 export default function RatingModal({ ref, editMode, data }) {
@@ -51,8 +52,8 @@ export default function RatingModal({ ref, editMode, data }) {
             ×
           </button>
         </div>
-        <Input type="number" min="1" max="10" label="Score*" id="score" name="score" className="mb-4" defaultValue={editMode ? data.score : undefined} required />
-        <Input id='headline' name='headline' label="Headline*" maxLength="255" className="font-medium text-[1.05rem] mb-4" defaultValue={editMode ? data.headline : undefined} required />
+        <RatingInput id="score" name="score" margin="mb-4" defaultValue={editMode ? data.score : ""} required />
+        <Input id='headline' name='headline' label="Headline*" maxLength="255" className="font-medium text-[1.05rem]" defaultValue={editMode ? data.headline : undefined} required />
         <Input type="textarea" id="description" name="note" label="Description" maxLength="511" className="text-stone-600 text-sm" defaultValue={editMode ? data?.note : undefined} />
         <div className="flex justify-end gap-3 mt-6">
           <button

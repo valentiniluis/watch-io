@@ -4,8 +4,6 @@ import MovieRatings from './MovieRatings.jsx';
 import Toast from '../UI/Toast.jsx';
 import MovieInteractions from './MovieInteractions.jsx';
 import noPoster from '/no-movie.png';
-import HighlightedText from '../UI/HighligthedText.jsx';
-import RatingSection from '../UI/RatingSection.jsx';
 import MovieDetailsSection from './MovieDetailsSection.jsx';
 
 
@@ -17,8 +15,6 @@ export default function MovieInfo({ movie }) {
   // overview accordion ?
   const { title, poster_path, tagline, year, runtime, genres } = movie;
   const poster = poster_path || noPoster;
-
-  console.log(movie);
 
   return (
     <>

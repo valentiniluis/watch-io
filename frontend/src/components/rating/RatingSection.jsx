@@ -3,9 +3,9 @@ import RatingModal from "./RatingModal";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { getRatings } from '../../util/movie-query';
-import ErrorBlock from './ErrorSection';
-import Spinner from "./Spinner";
-import RatingPreview from "../movie/RatingPreview";
+import ErrorBlock from '../UI/ErrorSection';
+import Spinner from "../UI/Spinner";
+import RatingPreview from "./RatingPreview";
 
 
 export default function RatingSection() {
@@ -41,9 +41,5 @@ export default function RatingSection() {
     content = <RatingPreview rating={ratings[0]} />;
   }
 
-  return (
-    <>
-      {content}
-    </>
-  );
+  return content;
 }

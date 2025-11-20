@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import Spinner from "../components/UI/Spinner";
 import MovieCatalog from "../components/movie/MovieCatalog";
 import ErrorSection from "../components/UI/ErrorSection";
-import Ratings from "../components/movie/Ratings";
+import Ratings from "../components/rating/Ratings";
 import DropdownMenu from '../components/UI/DropdownMenu';
 import { getMyAreaEmptyMessage, getMyAreaLoadingMessage } from "../util/functions";
 import { getRatings, getInteractedMovies } from "../util/movie-query";

@@ -26,9 +26,5 @@ export default function MovieRecommendations() {
     content = <MovieList title="You May Like" fallback="Failed to load recommendations" movies={movies} />
   }
 
-  return (
-    <>
-      {content}
-    </>
-  );
+  return content;
 }

@@ -1,5 +1,5 @@
 import { formatDate } from '../../util/functions';
-import StarIcon from "../UI/StarIcon";
+import StarIcon from "../icons/StarIcon";
 
 
 export default function RatingPreview({ rating }) {

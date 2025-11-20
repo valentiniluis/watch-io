@@ -1,21 +1,22 @@
 import { useSelector } from "react-redux";
 import HighlightedText from "../UI/HighligthedText";
-import RatingSection from "../UI/RatingSection";
+import RatingSection from "../rating/RatingSection";
+import WatchProviders from "./WatchProviders";
 
 
 export default function MovieDetailsSection({ movie }) {
   const { isLoggedIn } = useSelector(state => state.auth);
+  const { actors, director, awards, rated, available } = movie;
 
   return (
     <section className='my-8 flex flex-col-reverse lg:flex-row w-full gap-8'>
       <div className='w-full lg:w-1/2 text-center lg:text-start'>
         <h2 className='section-title mb-5'>More Information</h2>
-        {movie.actors?.length > 0 && <HighlightedText regularText="Starring " highlighted={movie.actors} />}
-        {movie.director?.length > 0 && <HighlightedText regularText="Directed by " highlighted={movie.director} />}
-        {movie.awards?.length > 0 && <HighlightedText highlighted={movie.awards} />}
-        {movie.rated?.length > 0 && <HighlightedText regularText="Rated " highlighted={movie.rated} />}
-        {/* make new component for displaying this */}
-        <p className="small-text">Available on...</p>
+        {actors?.length > 0 && <HighlightedText regularText="Starring " highlighted={movie.actors} />}
+        {director?.length > 0 && <HighlightedText regularText="Directed by " highlighted={movie.director} />}
+        {awards != 'N/A' && <HighlightedText highlighted={movie.awards} />}
+        {rated?.length > 0 && <HighlightedText regularText="Rated " highlighted={movie.rated} />}
+        <WatchProviders providers={available} />
       </div>
       <div className='w-full lg:w-1/2'>
         {isLoggedIn

@@ -1,7 +1,7 @@
 import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
 import db from '../model/db.js';
-import { getFullPosterPath, getRuntimeString, filterOMDBData } from '../util/api-util.js';
+import { getFullPosterPath, getRuntimeString, filterOMDBData, fillAllLogoPaths } from '../util/api-util.js';
 import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData } from '../util/db-util.js';
 import { getReleaseYear, throwError, validatePage } from '../util/util-functions.js';
 import { movieIdSchema, genreIdSchema, orderByValidation, countryValidation } from '../util/validationSchemas.js';
@@ -37,6 +37,7 @@ export const getMovieData = async (req, res, next) => {
     const responseTMDB = await tmdbAPI.get(urlTMDB);
     const dataTMDB = { ...responseTMDB.data };
     dataTMDB.available = dataTMDB['watch/providers'].results[country];
+    fillAllLogoPaths(dataTMDB.available);
     delete dataTMDB['watch/providers'];
     dataTMDB.poster_path = getFullPosterPath(dataTMDB.poster_path);
     dataTMDB.tmdb_rating = dataTMDB.vote_average;

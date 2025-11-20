@@ -1,12 +1,12 @@
 import { useRef } from 'react';
 import { formatDate } from '../../util/functions.js';
 import NoPoster from '/no-movie.png';
-import StarIcon from '../UI/StarIcon.jsx';
-import CalendarIcon from '../UI/CalendarIcon.jsx';
+import StarIcon from '../icons/StarIcon.jsx';
+import CalendarIcon from '../icons/CalendarIcon.jsx';
 import EditIcon from '/edit.svg';
 import DeleteIcon from '/delete.svg';
-import IconButton from '../UI/IconButton.jsx';
-import RatingModal from '../UI/RatingModal.jsx';
+import IconButton from '../icons/IconButton.jsx';
+import RatingModal from './RatingModal.jsx';
 import { useDispatch } from 'react-redux';
 import { movieActions } from '../../store/movie.js';
 import DeleteRatingModal from './DeleteRatingModal.jsx';

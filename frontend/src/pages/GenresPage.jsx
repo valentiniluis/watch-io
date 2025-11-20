@@ -23,9 +23,5 @@ export default function GenresPage() {
     content = <GenresPageContent genres={genres} />
   }
 
-  return (
-    <>
-      {content}
-    </>
-  );
+  return content;
 }
