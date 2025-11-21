@@ -24,3 +24,5 @@
 */*.sw?
 */.venv
 */.env
+
+/setup/pg_data

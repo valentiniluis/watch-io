@@ -37,22 +37,22 @@ Estão sendo usadas as seguintes tecnologias no desenvolvimento do projeto:
 
 ### Banco de Dados
 
-* PostgreSQL: banco relacional para representar relacionamentos N:N entre filmes e usuários.
+* PostgreSQL: banco escolhido para representar dados altamente relacionados (usuários, avaliações, filmes, gêneros, etc).
+
+### Execução
+
+* Docker e Docker Compose para organizar e executar de forma centralizada a inicialização do banco de dados e a conexão do back-end e front-end. Atualmente no processo de configurar os containers.
 
 ## Referências
 
-Alguns estilos do tailwindcss retirados do repositório a seguir:
+Ícones - [SVG Repo](https://www.svgrepo.com/)
 
-https://github.com/adrianhajdin/react-movies
+Estilos e componentes React - https://github.com/adrianhajdin/react-movies
 
-[API do The Movie Database (TMDb)](https://developer.themoviedb.org)
+Estilos e componentes React - [Flowbite](https://flowbite.com/)
 
-[API do Open Movie Database (OMDb)](https://www.omdbapi.com)
+API Principal - [The Movie Database (TMDb) API](https://developer.themoviedb.org)
 
-Ícones retirados do SVG Repo:
+API Complementar - [JustWatch API](https://www.justwatch.com/br/JustWatch-Streaming-API)
 
-[SVG Repo](https://www.svgrepo.com/)
-
-Alguns componentes e estilos do Flowbite utilizados:
-
-[Flowbite](https://flowbite.com/)
+API Complementar - [API do Open Movie Database (OMDb)](https://www.omdbapi.com)
