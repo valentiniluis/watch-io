@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchUser } from '../../util/user-query.js';
 import { authActions } from '../../store/auth.js';
 import { useDispatch } from "react-redux";
+import { useEffect } from "react";
 
 
 export default function RootLayout() {
@@ -15,9 +16,9 @@ export default function RootLayout() {
     refetchInterval: 1000 * 60 * 10
   });
 
-  if (data && data.success) {
-    dispatch(authActions.login(data.user));
-  }
+  useEffect(() => {
+    if (data?.success) dispatch(authActions.login(data.user));
+  }, [data, dispatch]);
 
   return (
     <div className='min-h-dvh'>

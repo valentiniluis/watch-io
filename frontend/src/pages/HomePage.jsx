@@ -61,7 +61,7 @@ export default function HomePage() {
       <Fragment key={i}>
         {isPending && <div className='py-40'><Spinner text={`Loading ${mainGenres[i].name} movies...`} /></div>}
         {isError && <ErrorSection message={error.message} />}
-        {data && <MovieList movies={data.movies} title={mainGenres[i].name} />}
+        {data && <MovieList movies={data.movies} fallback="No movies found" title={mainGenres[i].name} />}
 
         {/* Trigger for next section */}
         {i < mainGenres.length - 1 && <div ref={el => observerRefs.current[i] = el} />}

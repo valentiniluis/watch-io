@@ -1,8 +1,8 @@
-create user watchio_user password 'applicationadministrator';
+-- create user watchio_user password 'applicationadministrator';
 
-create database watchio owner = watchio_user;
+-- create database watchio owner = watchio_user;
 
-grant all on watchio to watchio_user;
+-- grant all on watchio to watchio_user;
 
 create table
 	if not exists user_account (
@@ -58,19 +58,19 @@ create table
 		created_at timestamptz not null default (now ()),
 		last_update timestamptz not null default (now ()),
 		constraint pk_movie_rating primary key (user_id, movie_id),
-		constraint fk_movie_rating_user_account foreign key (user_id) references user_account(id),
-		constraint fk_movie_rating_movie foreign key (movie_id) references movie(id)
+		constraint fk_movie_rating_user_account foreign key (user_id) references user_account (id),
+		constraint fk_movie_rating_movie foreign key (movie_id) references movie (id)
 	);
 
 -- indexes:
 -- index para ordenar filmes pela média de avaliação
 -- torna mais rápidas as consultas de filmes melhor avaliados
-create index movie_tmdb_rating_idx on public.movie using btree (tmdb_rating);
+create index idx_movie_tmdb_rating on public.movie using btree (tmdb_rating);
 
 -- index para id do gênero dos filmes
 -- torna mais rápidas as consultas de filmes por gênero
-create index movie_genre_genre_id on public.movie_genre using btree (genre_id);
+create index idx_movie_genre_genre_id on public.movie_genre using btree (genre_id);
 
 -- index para id do usuário na tabela de interações
 -- facilita a consulta de filmes interagidos por um usuário
-create index interaction_user_id on public.interaction using btree (user_id);
+create index idx_interaction_user_id on public.interaction using btree (user_id);

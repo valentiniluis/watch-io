@@ -6,7 +6,7 @@ import GenresPageContent from '../components/movie/GenresPageContent';
 
 
 export default function GenresPage() {
-  const { data, isPending, isError, error } = useQuery({
+  const { data, isPending, isError } = useQuery({
     queryKey: ['movie-genres'],
     queryFn: loadGenres
   });
@@ -15,8 +15,8 @@ export default function GenresPage() {
   if (isPending) {
     content = <Spinner text="Loading available genres..." />
   }
-  else if (isError) {
-    content = <ErrorSection message={error.message || "Failed to load genres"} />
+  else if (isError || !data?.length) {
+    content = <ErrorSection message="Failed to load genres" />
   }
   else if (data) {
     const genres = data.map(item => ({ ...item, 'data-genre-id': item.id, 'data-genre': item.name }));

@@ -6,8 +6,13 @@ import MovieCard from "./MovieCard";
 export default function MovieList({ title, movies, fallback }) {
   const recommendationsRef = useRef();
 
-  if (movies.length === 0) {
-    return <h3 className="text-center text-xl font-medium">{fallback}</h3>;
+  if (movies?.length === 0) {
+    return (
+      <div className="my-24 text-center">
+        <h3 className='section-title'>{title}</h3>
+        <h3 className="text-xl text-stone-300">{fallback}</h3>
+      </div>
+    );
   }
 
   const scrollBtnClass = 'hidden xl:inline-block absolute top-1/2 -translate-y-1/2 text-amber-100 bg-stone-700 px-2 py-8 z-10 rounded-xl hover:bg-stone-600';
@@ -31,8 +36,8 @@ export default function MovieList({ title, movies, fallback }) {
           &lt;
         </button>
         {movies.map(rec => <MovieCard key={rec.id} movie={rec} linkTo={`/search/${rec.id}`} />)}
-        <button 
-          className={scrollBtnClass + " right-0 translate-x-full"} 
+        <button
+          className={scrollBtnClass + " right-0 translate-x-full"}
           onClick={() => handleScroll('right')}
         >
           &gt;

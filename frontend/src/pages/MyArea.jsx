@@ -37,7 +37,7 @@ export default function MyArea() {
     content = <ErrorSection message={error.response?.data?.message || 'Failed to load data.'} />;
   }
   else if (data?.interactions?.length === 0 || data?.ratings?.length === 0) {
-    const message = getMyAreaEmptyMessage(contentType);
+    const message = getMyAreaEmptyMessage(contentType.category);
     content = <ErrorSection message={message} />;
   }
   else if (contentType.category === 'ratings') {

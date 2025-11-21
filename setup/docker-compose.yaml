@@ -3,14 +3,14 @@ services:
     image: postgres:18
     container_name: postgres_container
     environment:
-      - PG_USER=${PG_USER}
-      - PG_PW=${PG_PW}
-      - PG_DB=${PG_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "8000:5432"
     volumes:
-      - ./dados_postgres:/var/lib/postgresql/data
-      # - ./initdb:/docker-entrypoint-initdb.d
+      - ./pg_data:/var/lib/postgresql
+      - ./initdb:/docker-entrypoint-initdb.d
 
   backend:
     build:
@@ -19,12 +19,14 @@ services:
     container_name: backend_container
     environment:
       - NODE_ENV=development
-      - PG_HOST=db
-      - PG_USER=${PG_USER}
-      - PG_PW=${PG_PW}
-      - PG_DB=${PG_DB}
+      - FRONTEND_URL=http://localhost:${FRONTEND_PORT}
+      - OMDB_API_ACCESS_TOKEN=${OMDB_API_ACCESS_TOKEN}
+      - TMDB_API_ACCESS_TOKEN=${TMDB_API_ACCESS_TOKEN}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=${BACKEND_PORT}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
     depends_on:
       - db
     working_dir: /app
@@ -37,8 +39,11 @@ services:
       context: ../frontend
       dockerfile: Dockerfile
     container_name: frontend_container
+    environment:
+      - VITE_BACKEND_BASE=http://localhost:${BACKEND_PORT}
+      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
     depends_on:
       - backend
     working_dir: /app
