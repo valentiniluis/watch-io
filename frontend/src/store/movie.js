@@ -1,7 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 
-const initialState = { id: null };
+const initialState = {
+  id: null,
+  title: null,
+  poster_path: null,
+  year: null,
+  tmdb_rating: null
+};
 
 const movieSlice = createSlice({
   name: 'movie',

@@ -1,35 +1,28 @@
-import { useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
-import Toast from '../UI/Toast.jsx';
 import { useMutation } from '@tanstack/react-query';
 import { authUser } from '../../util/user-query.js';
 import queryClient from '../../util/query.js';
+import { useDispatch } from 'react-redux';
+import { toastActions } from '../../store/toast.js';
 
 
 export default function AuthButton() {
-  const [authFail, setAuthFail] = useState({ show: false, message: null });
+  const dispatch = useDispatch();
 
   const { mutate } = useMutation({
     mutationFn: authUser,
     // invalidate all cached data once authetication succeeds (refetch everything)
     onSuccess: async () => await queryClient.invalidateQueries(),
-    onError: () => setAuthFail({ show: true, message: "Failed to Authenticate" })
+    onError: () => dispatch(toastActions.setToast({ message: "Failed to authenticate!", variant: "error" })),
   });
 
   async function handleLogin(response) {
     mutate({ credentials: response });
   }
 
-  function handleAuthError() {
-    setAuthFail({ show: true, message: 'Google Authentication Failed.' });
-  }
-
   return (
-    <>
-      {authFail.show && <Toast message={authFail.message} />}
-      <section>
-        <GoogleLogin onSuccess={handleLogin} onError={handleAuthError} locale='en-US' size='medium' theme='filled_blue' shape='pill' />
-      </section>
-    </>
+    <section>
+      <GoogleLogin onSuccess={handleLogin} locale='en-US' size='medium' theme='filled_blue' shape='pill' />
+    </section>
   );
 }
