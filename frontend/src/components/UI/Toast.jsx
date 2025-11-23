@@ -36,17 +36,27 @@ export default function Toast() {
   if (!message || !variant) return null;
 
   let cssClass = 'text-white absolute z-50 top-18 right-1/2 translate-x-1/2 rounded-md text-center w-full min-w-90 max-w-120';
-  if (variant === 'info') cssClass += ' bg-blue-500';
-  else if (variant === 'success') cssClass += ' bg-green-400';
-  else if (variant === 'error') cssClass += ' bg-red-700';
+  let progressBarColor;
+  if (variant === 'info') {
+    cssClass += ' bg-blue-500';
+    progressBarColor = 'bg-blue-700';
+  }
+  else if (variant === 'success') {
+    cssClass += ' bg-green-400';
+    progressBarColor = 'bg-green-600';
+  }
+  else if (variant === 'error') {
+    cssClass += ' bg-red-700';
+    progressBarColor = 'bg-red-900';
+  }
 
   return createPortal(
     <div className={cssClass}>
       <p className='py-3 text-base font-medium tracking-wide'>{message}</p>
 
-      <div className="h-1 bg-white bg-opacity-30">
+      <div className="h-1 bg-transparent bg-opacity-30">
         <div
-          className={`h-full transition-all duration-[${MS_TIMEOUT}ms] ease-linear bg-blue-400`}
+          className={`h-full transition-all duration-[${MS_TIMEOUT}ms] ease-linear ${progressBarColor}`}
           style={{ width: `${progress}%` }}
           aria-valuenow={progress}
           aria-valuemin="0"
