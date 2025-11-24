@@ -1,5 +1,4 @@
 import db from '../model/db.js';
-import { PG_UNIQUE_ERR } from './constants.js';
 import { calculateOffset } from './util-functions.js';
 
 
@@ -113,7 +112,7 @@ export async function tryInsert(stmt, args) {
     err = error;
   }
 
-  if (err && err.code !== PG_UNIQUE_ERR) throw err;
+  return err;
 }
 
 

@@ -56,7 +56,13 @@ export const postInteraction = async (req, res, next) => {
       VALUES
       ($1, $2, $3, $4, $5);
     `;
-    await tryInsert(query, args);
+    const err = await tryInsert(query, args);
+
+    // if it's not a 'unique' constraint error, then the movie may not be available in the database
+    // if that's the case, we cannot create the interaction else there will be an inconsistency.
+    if (err && err.code !== PG_UNIQUE_ERR) throw err;
+
+    // must insert genres as well
 
     // try to insert. If it goes wrong, trigger catches it
     await db.query(`

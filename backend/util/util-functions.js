@@ -2,7 +2,7 @@ import data from './movie-genres.json' with { type: 'json' };
 import { pageValidation, limitValidation } from './validationSchemas.js';
 
 export function getReleaseYear(releaseDate) {
-  if (!releaseDate) return 'N/A';
+  if (!releaseDate || !releaseDate.length) return 'N/A';
   return releaseDate.split('-')[0];
 }
 

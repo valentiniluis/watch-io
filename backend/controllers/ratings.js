@@ -59,8 +59,10 @@ export const postRating = async (req, res, next) => {
       VALUES
       ($1, $2, $3, $4, $5);
     `;
-    await tryInsert(query, args);
+    const err = await tryInsert(query, args);
 
+    if (err && err.code !== PG_UNIQUE_ERR) throw err;
+    
     await db.query(`
       INSERT INTO
       movie_rating (user_id, movie_id, score, headline, note)

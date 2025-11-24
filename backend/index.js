@@ -19,6 +19,8 @@ import interactionsRoutes from './routes/interactions.js';
 import ratingsRoutes from './routes/ratings.js';
 import errorHandler from './controllers/error.js';
 
+import scheduleJobs from './tasks/ingestion.js';
+
 app.use('/movies', movieRoutes);
 app.use('/auth', authRoutes);
 app.use('/interactions', interactionsRoutes);
@@ -26,4 +28,9 @@ app.use('/user', userRoutes);
 app.use('/ratings', ratingsRoutes);
 app.use(errorHandler);
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}...`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}...`);
+  
+  // schedule the jobs defined in the tasks folder
+  scheduleJobs();
+});
