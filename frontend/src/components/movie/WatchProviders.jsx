@@ -6,11 +6,11 @@ function ProviderLogo({ provider }) {
   const { logo_path, provider_name } = provider;
 
   return (
-    <div title={provider_name} className="flex flex-col items-center gap-1 group">
-      <div className="w-12 h-12 rounded-lg overflow-hidden shadow-md transition-transform group-hover:scale-110">
+    <div title={provider_name} className="flex flex-col items-center gap-1 group min-w-0">
+      <div className="w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg overflow-hidden shadow-md transition-transform group-hover:scale-110">
         <img src={logo_path} alt={provider_name} className="w-full h-full object-cover" />
       </div>
-      <span className="text-xs text-stone-50 text-center max-w-[60px] truncate">
+      <span className="text-[.6rem] sm:text-[.72rem] lg:text-xs text-stone-50 text-center w-12 lg:w-[60px] truncate">
         {provider_name}
       </span>
     </div>
@@ -23,10 +23,10 @@ const ProviderSection = ({ title, providers }) => {
 
   return (
     <div className="mb-4">
-      <h4 className='text-base font-semibold mb-2 text-white'>
+      <h4 className='text-sm sm:text-[.94rem] lg:text-base font-semibold mb-2 text-white'>
         {title}
       </h4>
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-3 sm:gap-3.5 lg:gap-4">
         {providers.map(provider => (
           <ProviderLogo key={provider.provider_id} provider={provider} />
         ))}
@@ -67,15 +67,15 @@ function WatchProviders({ providers, summaryProviders, limit, expandedLength, ma
   const hasMore = expandedLength > limit;
 
   return (
-    <div className={`bg-slate-800 rounded-xl shadow-lg p-4 max-w-2xl ${margin}`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-stone-50">
+    <div className={`bg-slate-800 rounded-xl shadow-lg p-4 max-w-2xl mx-4 lg:mx-0 ${margin}`}>
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <h3 className="text-base sm:text-lg lg:text-xl font-bold text-stone-50">
           Where to Watch
         </h3>
         {hasMore && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-1 text-sm font-medium text-blue-400 hover:text-blue-500 transition-colors"
+            className="flex items-center gap-1 text-xs sm:text-[.8rem] lg:text-sm font-medium text-blue-400 hover:text-blue-500 transition-colors"
           >
             {isExpanded ? 'Show Less' : `Show All (${expandedLength})`}
             <svg
