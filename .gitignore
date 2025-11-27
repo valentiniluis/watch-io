@@ -25,4 +25,6 @@
 */.venv
 */.env
 
-/setup/pg_data
+/docker/pg_data
+/script/venv/*
+/misc

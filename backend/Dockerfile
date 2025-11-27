@@ -8,6 +8,8 @@ RUN npm install
 
 COPY . .
 
+# RUN chmod +x entrypoint.sh
+
 EXPOSE 8080
 
-CMD ["npm", "start"]
+# ENTRYPOINT ["/app/entrypoint.sh"]
