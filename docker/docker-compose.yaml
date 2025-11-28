@@ -15,6 +15,27 @@ services:
       - ./pg_data:/var/lib/postgresql
       - ./initdb:/docker-entrypoint-initdb.d
 
+  ingestion:
+    build:
+      context: ../script
+      dockerfile: Dockerfile
+    container_name: ingestion_container
+    environment:
+      - PG_HOST=${POSTGRES_HOST}
+      - PG_DB=${POSTGRES_DB}
+      - PG_USER=${POSTGRES_USER}
+      - PG_PW=${POSTGRES_PASSWORD}
+      - PG_PORT=${POSTGRES_PORT}
+      - TMDB_API_ACCESS_TOKEN=${TMDB_API_ACCESS_TOKEN}
+    entrypoint: 
+      [
+        "/bin/sh", 
+        "-c", 
+        "chmod +x /app/entrypoint.sh && /app/entrypoint.sh"
+      ]
+    volumes:
+      - ../script:/app
+
   backend:
     build:
       context: ../backend
@@ -39,7 +60,7 @@ services:
         "chmod +x /app/entrypoint.sh && /app/entrypoint.sh"
       ]
     depends_on:
-      - db
+      - ingestion
     working_dir: /app
     volumes:
       - ../backend:/app

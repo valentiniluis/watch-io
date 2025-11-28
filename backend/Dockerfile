@@ -1,4 +1,4 @@
-FROM node:22-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 
@@ -8,8 +8,4 @@ RUN npm install
 
 COPY . .
 
-# RUN chmod +x entrypoint.sh
-
 EXPOSE 8080
-
-# ENTRYPOINT ["/app/entrypoint.sh"]
