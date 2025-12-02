@@ -1,4 +1,4 @@
-import db from '../model/db.js';
+import db from '../model/postgres.js';
 import { getInteraction, getPagesAndClearData, tryInsert } from '../util/db-util.js';
 import { interactionSchema, movieSchema, movieIdSchema, interactionTypeValidation } from '../util/validationSchemas.js';
 import { calculateOffset, throwError, validatePage } from '../util/util-functions.js';

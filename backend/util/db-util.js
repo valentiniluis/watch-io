@@ -1,4 +1,4 @@
-import db from '../model/db.js';
+import pool from '../model/postgres.js';
 import { calculateOffset } from './util-functions.js';
 
 
@@ -38,7 +38,7 @@ export async function discoverMovies({ page, user = {}, limit }) {
     `;
   }
 
-  const { rows } = await db.query(query, queryArgs);
+  const { rows } = await pool.query(query, queryArgs);
   return rows;
 }
 
@@ -75,7 +75,7 @@ export async function searchMovie({ movie, user = {}, limit, page }) {
     `;
   }
 
-  const { rows } = await db.query(query, queryArgs);
+  const { rows } = await pool.query(query, queryArgs);
   return rows;
 }
 
@@ -90,7 +90,7 @@ export function getPagesAndClearData(data, limit, key = 'data') {
 
 
 export async function getInteraction({ movieId, userId }) {
-  const { rows: interaction } = await db.query(`
+  const { rows: interaction } = await pool.query(`
     SELECT inter.type 
     FROM interaction AS inter
     WHERE inter.user_id = $1
@@ -107,7 +107,7 @@ export async function tryInsert(stmt, args) {
   let err = null;
 
   try {
-    await db.query(stmt, args);
+    await pool.query(stmt, args);
   } catch (error) {
     err = error;
   }

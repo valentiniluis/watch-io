@@ -26,5 +26,6 @@
 */.env
 
 /docker/pg_data
+/docker/neo4j_data
 /script/venv/*
 /misc

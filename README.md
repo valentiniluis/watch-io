@@ -37,9 +37,21 @@ Estão sendo usadas as seguintes tecnologias no desenvolvimento do projeto:
 
 ### Banco de Dados
 
-* PostgreSQL: banco escolhido para representar dados altamente relacionados (usuários, avaliações, filmes, gêneros, etc).
+* PostgreSQL: banco de dados relacional escolhido para representar dados relacionados entre si (usuários, avaliações, filmes, gêneros, etc).
 
-### Execução
+* Neo4j: banco de dados baseado em grafos para confecção do serviço de recomendações. Grafos suportam um grande número de relacionamentos entre os dados. Isso auxilia muito na tarefa de encontrar filmes que tenham fatores em comum para recomendá-los aos usuários.
+
+## Principais Características
+
+* Uso de pooling no back-end para reaproveitar conexões de clientes e maximizar o uso do banco de dados.
+
+* Uso de transações (em andamento) no back-end para garantir a consistência dos dados.
+
+* Utilização de react-query no front-end para otimização de performance por meio de cache de dados e reduzindo rede utilizada.
+
+* Utilização de react-redux para gerenciamento de estados globais da aplicação de forma rápida e eficiente.
+
+## Execução
 
 * Docker e Docker Compose para organizar e executar de forma centralizada a inicialização do banco de dados e a conexão do back-end e front-end. Atualmente no processo de configurar os containers.
 

@@ -1,4 +1,4 @@
-import db from '../model/db.js';
+import db from '../model/postgres.js';
 import { movieIdSchema, movieIdValidation, movieSchema, ratingSchema } from '../util/validationSchemas.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
 import { throwError, calculateOffset, validatePage } from '../util/util-functions.js';

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
-import db from '../model/db.js';
+import db from '../model/postgres.js';
 import { loginSchema } from '../util/validationSchemas.js';
 
 

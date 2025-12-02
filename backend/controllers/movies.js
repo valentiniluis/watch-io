@@ -1,6 +1,6 @@
 import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
-import db from '../model/db.js';
+import db from '../model/postgres.js';
 import { getFullPosterPath, getRuntimeString, filterOMDBData, fillAllLogoPaths } from '../util/api-util.js';
 import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData } from '../util/db-util.js';
 import { getReleaseYear, throwError, validatePage } from '../util/util-functions.js';
