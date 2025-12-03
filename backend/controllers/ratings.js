@@ -1,8 +1,8 @@
-import db from '../model/postgres.js';
+import pool from '../model/postgres.js';
 import { movieIdSchema, movieIdValidation, movieSchema, ratingSchema } from '../util/validationSchemas.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
 import { throwError, calculateOffset, validatePage } from '../util/util-functions.js';
-import { getPagesAndClearData, tryInsert } from '../util/db-util.js';
+import { getPagesAndClearData } from '../util/db-util.js';
 
 
 export const getRatings = async (req, res, next) => {
@@ -31,7 +31,7 @@ export const getRatings = async (req, res, next) => {
 
     query += ' LIMIT $2 OFFSET $3;';
 
-    const { rows: result } = await db.query(query, queryArgs);
+    const { rows: result } = await pool.query(query, queryArgs);
     const finalData = getPagesAndClearData(result, limit, 'ratings');
     return res.status(200).json({ success: true, message: "Rating(s) retrieved successfully", ...finalData });
   } catch (err) {
@@ -41,6 +41,9 @@ export const getRatings = async (req, res, next) => {
 
 
 export const postRating = async (req, res, next) => {
+  // start postgres client for the upcoming transaction
+  const client = await pool.connect();
+
   try {
     const { user } = req;
     const { value: movieData, error: movieError } = movieSchema.validate(req.body.movie);
@@ -52,31 +55,44 @@ export const postRating = async (req, res, next) => {
     const { id: movieId, title, poster_path, year, tmdb_rating } = movieData;
     const { score, headline, note } = ratingData;
 
-    const args = [movieId, title, poster_path, year, tmdb_rating.toFixed(2)];
-    const query = `
-      INSERT INTO
-      movie(id, title, poster_path, year, tmdb_rating)
-      VALUES
-      ($1, $2, $3, $4, $5);
-    `;
-    const err = await tryInsert(query, args);
+    await client.query('BEGIN');
 
-    if (err && err.code !== PG_UNIQUE_ERR) throw err;
-    
-    await db.query(`
+    try {
+      await client.query(`
+        INSERT INTO
+        movie(id, title, poster_path, year, tmdb_rating)
+        VALUES
+        ($1, $2, $3, $4, $5);`,
+        [movieId, title, poster_path, year, tmdb_rating.toFixed(2)]
+      );
+
+      // try to insert genres...
+    } catch (err) {
+      if (err.code !== PG_UNIQUE_ERR) throwError(500, "Failed to rate movie: " + err.message);
+    }
+
+    await client.query(`
       INSERT INTO
       movie_rating (user_id, movie_id, score, headline, note)
       VALUES ($1, $2, $3, $4, $5);`,
       [user.id, movieId, score, headline, note]
     );
 
+    // if all went right, commit the transaction
+    await client.query('COMMIT');
+
     return res.status(201).json({ success: true, message: "Movie rated successfully!" });
   } catch (err) {
+    // if the transaction went wrong, rollback
+    await client.query("ROLLBACK");
     if (err.code === PG_UNIQUE_ERR) {
       err.message = "Cannot create rating for movie because it already exists. Try editing instead.";
       err.statusCode = 400;
     }
     next(err);
+  }
+  finally {
+    client.release();
   }
 }
 
@@ -95,7 +111,7 @@ export const putRating = async (req, res, next) => {
     const { movieId } = movieIdValue;
     const now = new Date().toISOString();
 
-    await db.query(`
+    await pool.query(`
       UPDATE movie_rating
       SET
       score = $1,
@@ -120,10 +136,9 @@ export const deleteRating = async (req, res, next) => {
     const { user } = req;
     const { error, value } = movieIdSchema.validate(req.params);
     if (error) throwError(400, 'Invalid movie: ' + error.message);
-
     const { movieId } = value;
 
-    await db.query(`
+    await pool.query(`
       DELETE FROM movie_rating
       WHERE movie_id = $1 AND
       user_id = $2;`,

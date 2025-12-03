@@ -1,6 +1,6 @@
 import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
-import db from '../model/postgres.js';
+import pool from '../model/postgres.js';
 import { getFullPosterPath, getRuntimeString, filterOMDBData, fillAllLogoPaths } from '../util/api-util.js';
 import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData } from '../util/db-util.js';
 import { getReleaseYear, throwError, validatePage } from '../util/util-functions.js';
@@ -98,7 +98,7 @@ export const getRecommendations = async (req, res, next) => {
 
 export const getMovieGenres = async (req, res, next) => {
   try {
-    const { rows: genres } = await db.query('SELECT * FROM genre ORDER BY name;');
+    const { rows: genres } = await pool.query('SELECT * FROM genre ORDER BY name;');
     res.status(200).json({ success: true, genres });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
@@ -123,7 +123,7 @@ export const getMoviesByGenre = async (req, res, next) => {
     const parameters = { genreId, userId: id, limit, page };
     const [query, args] = getMovieGenreQuery(orderBy, id?.length > 0, parameters);
 
-    const { rows: results } = await db.query(query,args);
+    const { rows: results } = await pool.query(query,args);
     const finalData = getPagesAndClearData(results, limit, 'movies');
     return res.status(200).json({ success: true, ...finalData });
   } catch (err) {

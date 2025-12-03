@@ -1,7 +1,9 @@
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
-import db from '../model/postgres.js';
 import { loginSchema } from '../util/validationSchemas.js';
+import { tryInsert } from '../util/db-util.js';
+import { PG_UNIQUE_ERR } from '../util/constants.js';
+import { throwError } from '../util/util-functions.js';
 
 
 export const postLogin = async (req, res, next) => {
@@ -14,7 +16,7 @@ export const postLogin = async (req, res, next) => {
       err.statusCode = 400;
       throw err;
     }
-    
+
     const { credential, clientId } = value;
     const client = new OAuth2Client(clientId);
 
@@ -25,22 +27,16 @@ export const postLogin = async (req, res, next) => {
 
     const payload = ticket.getPayload();
 
-    const { rows } = await db.query(`
-      SELECT *
-      FROM user_account AS us
-      WHERE us.email = $1;`,
-      [payload.email]
-    );
+    const queryArguments = [payload.sub, payload.email, payload.name];
+    const statement = `
+      INSERT INTO
+      user_account(id, email, name)
+      VALUES
+      ($1, $2, $3);
+    `;
 
-    if (rows.length === 0) {
-      await db.query(`
-        INSERT INTO
-        user_account(id, email, name)
-        VALUES
-        ($1, $2, $3);`,
-        [payload.sub, payload.email, payload.name]
-      );
-    }
+    const insertionErr = tryInsert(statement, queryArguments);
+    if (insertionErr.code !== PG_UNIQUE_ERR) throwError(500, insertionErr.message);
 
     const token = jwt.sign({
       sub: payload.sub,

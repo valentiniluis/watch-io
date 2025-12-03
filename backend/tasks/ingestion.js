@@ -47,6 +47,7 @@ async function ingestRecentMovies() {
 
       // try to insert one by one. If it's duplicate, db trigger catches it.
       movies.forEach(async (movie) => {
+        // should be a transaction as well
         const { id, title, poster_path, year, tmdb_rating } = movie;
         if (!id || !title) return;
         const args = [id, title, poster_path, (year === 'N/A') ? null : year, (tmdb_rating === 'N/A') ? null : tmdb_rating];

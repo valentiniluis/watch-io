@@ -15,28 +15,39 @@ create table
 
 create table
 	if not exists movie (
-		"id" int unique not null,
+		"id" integer unique not null,
 		title varchar(255) not null,
+		original_title varchar(255) not null,
+		original_language varchar(50) not null,
 		poster_path text null,
-		"year" int null,
+		"year" integer null,
 		tmdb_rating numeric(2, 1) null,
 		constraint pk_movie primary key ("id")
 	);
 
 create table
+	if not exists interaction_type (
+		id serial not null,
+		"type" varchar(50) not null,
+		constraint pk_interaction_type primary key (id)
+	);
+
+create table
 	if not exists interaction (
-		movie_id int not null,
+		movie_id integer not null,
 		user_id varchar(100) not null,
-		"type" varchar(30) not null,
-		constraint pk_interaction primary key (movie_id, user_id),
-		constraint fk_user_interaction foreign key (user_id) references user_account ("id"),
-		constraint fk_movie_interaction foreign key (movie_id) references movie ("id")
+		type_id integer not null,
+		constraint pk_interaction primary key (user_id, movie_id),
+		constraint fk_interaction_user foreign key (user_id) references user_account ("id"),
+		constraint fk_interaction_movie foreign key (movie_id) references movie ("id"),
+		constraint fk_interaction_interaction_type foreign key (type_id) references interaction_type ("id")
 	);
 
 create table
 	if not exists genre (
-		"id" integer primary key,
-		"name" varchar(50) not null
+		"id" integer not null,
+		"name" varchar(50) not null,
+		constraint pk_genre primary key ("id")
 	);
 
 create table
@@ -62,15 +73,16 @@ create table
 		constraint fk_movie_rating_movie foreign key (movie_id) references movie (id)
 	);
 
+
 -- indexes:
 -- index para ordenar filmes pela média de avaliação
 -- torna mais rápidas as consultas de filmes melhor avaliados
-create index idx_movie_tmdb_rating on public.movie using btree (tmdb_rating);
+create index idx_movie_tmdb_rating on movie using btree (tmdb_rating);
 
 -- index para id do gênero dos filmes
 -- torna mais rápidas as consultas de filmes por gênero
-create index idx_movie_genre_genre_id on public.movie_genre using btree (genre_id);
+create index idx_movie_genre_genre_id on movie_genre using btree (genre_id);
 
 -- index para id do usuário na tabela de interações
 -- facilita a consulta de filmes interagidos por um usuário
-create index idx_interaction_user_id on public.interaction using btree (user_id);
+-- create index idx_interaction_user_id on interaction using btree (user_id);

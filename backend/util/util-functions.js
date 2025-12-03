@@ -36,3 +36,20 @@ export function calculateOffset(page, limit) {
   const offset = (page - 1) * limit;
   return offset;
 }
+
+
+export function getInteractionMessage(type) {
+  let message;
+  switch (interactionType) {
+    case 'watchlist':
+      message = "Movie added to watchlist successfully!";
+      break;
+    case 'likes':
+      message = "Movie added to likes!";
+      break;
+    case 'uninterested':
+      message = "Movie added to not interested list. This movie won't be recommended to you anymore.";
+      break;
+  }
+  return message;
+}
