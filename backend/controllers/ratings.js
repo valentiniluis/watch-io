@@ -66,6 +66,7 @@ export const postRating = async (req, res, next) => {
         [movieId, title, poster_path, year, tmdb_rating.toFixed(2)]
       );
 
+      // IMPL
       // try to insert genres...
     } catch (err) {
       if (err.code !== PG_UNIQUE_ERR) throwError(500, "Failed to rate movie: " + err.message);

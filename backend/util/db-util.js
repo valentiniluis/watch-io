@@ -17,7 +17,7 @@ export async function discoverMovies({ page, user = {}, limit }) {
         SELECT inter.movie_id
         FROM interaction AS inter
         WHERE inter.user_id = $3
-        AND inter.type = 'not interested'
+        AND inter.type_id = (SELECT id FROM interaction_type WHERE "type" = 'not interested')
       )
       SELECT *, COUNT(*) OVER() AS row_count 
       FROM movie AS mov
@@ -57,6 +57,7 @@ export async function searchMovie({ movie, user = {}, limit, page }) {
         SELECT inter.movie_id
         FROM interaction AS inter
         WHERE inter.user_id = $4
+        AND inter.type_id = (SELECT id FROM interaction_type WHERE "type" = 'not interested')
       )
       AND mov.title ILIKE $1
       OR mov.original_title ILIKE $1
@@ -135,7 +136,7 @@ export const getMovieGenreQuery = (orderBy, authenticated, parameters) => {
         SELECT inter.movie_id
         FROM interaction AS inter
         WHERE inter.user_id = $${queryParams.length}
-        AND inter.type = 'not interested'
+        AND inter.type_id = (SELECT id FROM interaction_type WHERE "type" = 'not interested')
       )
     `;
   }

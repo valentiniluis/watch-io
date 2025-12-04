@@ -65,6 +65,7 @@ export const postInteraction = async (req, res, next) => {
         [movieId, title, poster_path, year, tmdb_rating.toFixed(2)]
       );
 
+      // IMPL
       // const values = genre_ids.map((_, index) => `($1, $${index + 2})`).join(', '); 
       // await client.query(`
       //   INSERT INTO

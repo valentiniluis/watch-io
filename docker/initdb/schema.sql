@@ -1,34 +1,31 @@
 -- create user watchio_user password 'applicationadministrator';
-
 -- create database watchio owner = watchio_user;
-
 -- grant all on watchio to watchio_user;
-
 create table
 	if not exists user_account (
-		"id" varchar(100) unique not null,
-		"name" varchar(255) not null,
-		email varchar(255) unique,
+		id varchar(100) unique not null,
+		username varchar(255) not null,
+		email varchar(255) unique not null,
 		create_account date default (now ()) not null,
-		constraint pk_user_account primary key ("id")
+		constraint pk_user_account primary key (id)
 	);
 
 create table
 	if not exists movie (
-		"id" integer unique not null,
+		id integer unique not null,
 		title varchar(255) not null,
 		original_title varchar(255) not null,
 		original_language varchar(50) not null,
 		poster_path text null,
-		"year" integer null,
+		release_year integer null,
 		tmdb_rating numeric(2, 1) null,
-		constraint pk_movie primary key ("id")
+		constraint pk_movie primary key (id)
 	);
 
 create table
 	if not exists interaction_type (
 		id serial not null,
-		"type" varchar(50) not null,
+		interaction_type varchar(50) not null,
 		constraint pk_interaction_type primary key (id)
 	);
 
@@ -38,16 +35,16 @@ create table
 		user_id varchar(100) not null,
 		type_id integer not null,
 		constraint pk_interaction primary key (user_id, movie_id),
-		constraint fk_interaction_user foreign key (user_id) references user_account ("id"),
-		constraint fk_interaction_movie foreign key (movie_id) references movie ("id"),
-		constraint fk_interaction_interaction_type foreign key (type_id) references interaction_type ("id")
+		constraint fk_interaction_user foreign key (user_id) references user_account (id),
+		constraint fk_interaction_movie foreign key (movie_id) references movie (id),
+		constraint fk_interaction_interaction_type foreign key (type_id) references interaction_type (id)
 	);
 
 create table
 	if not exists genre (
-		"id" integer not null,
-		"name" varchar(50) not null,
-		constraint pk_genre primary key ("id")
+		id integer not null,
+		genre_name varchar(50) not null,
+		constraint pk_genre primary key (id)
 	);
 
 create table
@@ -55,8 +52,8 @@ create table
 		movie_id integer not null,
 		genre_id integer not null,
 		constraint pk_movie_genre primary key (movie_id, genre_id),
-		constraint fk_movie_genre_genre foreign key (genre_id) references genre ("id"),
-		constraint fk_movie_genre_movie foreign key (movie_id) references movie ("id")
+		constraint fk_movie_genre_genre foreign key (genre_id) references genre (id),
+		constraint fk_movie_genre_movie foreign key (movie_id) references movie (id)
 	);
 
 create table
@@ -73,16 +70,68 @@ create table
 		constraint fk_movie_rating_movie foreign key (movie_id) references movie (id)
 	);
 
+create table
+	if not exists artist (
+		id integer not null,
+		artist_name varchar(100) not null,
+		known_for varchar(100) not null,
+		popularity numeric(5, 2) not null,
+		constraint pk_artist primary key (id)
+	);
+
+create table
+	if not exists movie_cast (
+		movie_id integer not null,
+		artist_id integer not null,
+		character_name varchar(100) not null,
+		constraint pk_movie_cast primary key (movie_id, artist_id),
+		constraint fk_movie_cast_movie foreign key (movie_id) references movie (id),
+		constraint fk_movie_cast_artist foreign key (artist_id) references artist (id)
+	);
+
+create table
+	if not exists crew (
+		movie_id integer not null,
+		artist_id integer not null,
+		department varchar(100) not null,
+		job varchar(100) not null,
+		constraint pk_crew primary key (movie_id, artist_id),
+		constraint fk_crew_movie foreign key (movie_id) references movie (id),
+		constraint fk_crew_artist foreign key (artist_id) references artist (id)
+	);
+
+create table
+	if not exists keyword (
+		id integer not null,
+		keyword varchar(100) not null,
+		constraint pk_keyword primary key (id)
+	);
+
+
+create table
+	if not exists movie_keyword (
+		movie_id integer not null,
+		keyword_id integer unique not null,
+		constraint pk_movie_keyword primary key (movie_id, keyword_id),
+		constraint fk_movie_keyword_movie foreign key (movie_id) references movie (id),
+		constraint fk_movie_keyword_keyword foreign key (keyword_id) references keyword (id)
+	);
+
+insert into
+	interaction_type (interaction_type)
+values
+	('like'),
+	('not interested'),
+	('watchlist');
 
 -- indexes:
--- index para ordenar filmes pela média de avaliação
--- torna mais rápidas as consultas de filmes melhor avaliados
+-- index para ordenar filmes pela média de avaliação, tornando mais rápidas as consultas de filmes melhor avaliados
 create index idx_movie_tmdb_rating on movie using btree (tmdb_rating);
 
--- index para id do gênero dos filmes
--- torna mais rápidas as consultas de filmes por gênero
+-- index para id do gênero dos filmes, tornando mais rápidas as consultas de filmes por gênero
 create index idx_movie_genre_genre_id on movie_genre using btree (genre_id);
 
 -- index para id do usuário na tabela de interações
 -- facilita a consulta de filmes interagidos por um usuário
+-- desativado por enquanto
 -- create index idx_interaction_user_id on interaction using btree (user_id);

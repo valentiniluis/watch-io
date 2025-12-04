@@ -12,6 +12,7 @@ export default function MovieInfo({ movie }) {
   const [error, setError] = useState();
   const { isLoggedIn } = auth;
 
+  // IMPL
   // overview accordion ?
   const { title, poster_path, tagline, year, runtime, genres } = movie;
   const poster = poster_path || noPoster;

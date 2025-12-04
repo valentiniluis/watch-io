@@ -45,8 +45,8 @@ async function ingestRecentMovies() {
     try {
       const movies = await fetchAndSanitizeMovies(url + '&page=' + page);
 
-      // try to insert one by one. If it's duplicate, db trigger catches it.
       movies.forEach(async (movie) => {
+        // IMPL
         // should be a transaction as well
         const { id, title, poster_path, year, tmdb_rating } = movie;
         if (!id || !title) return;
