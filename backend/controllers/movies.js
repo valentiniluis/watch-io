@@ -1,10 +1,10 @@
 import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
 import pool from '../model/postgres.js';
-import { getFullPosterPath, getRuntimeString, filterOMDBData, fillAllLogoPaths } from '../util/api-util.js';
+import { getFullPosterPath, getRuntimeString, filterOMDBData, fillAllLogoPaths, fetchAndSanitizeMovies } from '../util/api-util.js';
 import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData } from '../util/db-util.js';
-import { getReleaseYear, throwError, validatePage } from '../util/util-functions.js';
-import { movieIdSchema, genreIdSchema, orderByValidation, countryValidation } from '../util/validationSchemas.js';
+import { throwError, validatePage } from '../util/util-functions.js';
+import { genreIdSchema, orderByValidation, countryValidation, movieIdValidation } from '../util/validationSchemas.js';
 
 
 export const getSearchedMovies = async (req, res, next) => {
@@ -26,9 +26,8 @@ export const getSearchedMovies = async (req, res, next) => {
 export const getMovieData = async (req, res, next) => {
   try {
     const { user } = req;
-    const { value, error } = movieIdSchema.validate(req.params);
+    const { value: movieId, error } = movieIdValidation.required().validate(req.params.movieId);
     if (error) throwError(400, "Invalid Movie: " + error.message);
-    const { movieId } = value;
 
     const { value: country, error: countryErr } = countryValidation.validate(req.query.country);
     if (countryErr) throwError(400, 'Invalid country: ' + countryErr.message);
@@ -61,7 +60,7 @@ export const getMovieData = async (req, res, next) => {
       const interactions = await getInteraction({ movieId, userId: user.id });
       if (interactions.length) {
         const [interaction] = interactions;
-        userData[interaction.type] = true;
+        userData[interaction.interaction_type] = true;
       }
     }
 
@@ -75,20 +74,11 @@ export const getMovieData = async (req, res, next) => {
 
 export const getRecommendations = async (req, res, next) => {
   try {
-    const { value, error } = movieIdSchema.validate(req.params);
+    const { value: movieId, error } = movieIdValidation.required().validate(req.params.movieId);
     if (error) throwError(400, "Invalid Movie: " + error.message);
-
-    const { movieId } = value;
     const urlTMDB = `/movie/${movieId}/recommendations`;
-    const responseTMDB = await tmdbAPI.get(urlTMDB);
-    const dataTMDB = { ...responseTMDB.data };
-    dataTMDB.results = dataTMDB.results.map(rec => ({
-      ...rec,
-      poster_path: getFullPosterPath(rec.poster_path),
-      year: getReleaseYear(rec.release_date),
-      tmdb_rating: (rec.vote_average) ? rec.vote_average.toFixed(1) : 'N/A'
-    }));
-    res.status(200).json({ success: true, recommendations: dataTMDB.results });
+    const recommendations = await fetchAndSanitizeMovies(urlTMDB);
+    res.status(200).json({ success: true, recommendations });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
     next(err);
@@ -98,7 +88,7 @@ export const getRecommendations = async (req, res, next) => {
 
 export const getMovieGenres = async (req, res, next) => {
   try {
-    const { rows: genres } = await pool.query('SELECT * FROM genre ORDER BY name;');
+    const { rows: genres } = await pool.query('SELECT * FROM genre ORDER BY genre_name;');
     res.status(200).json({ success: true, genres });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;

@@ -1,6 +1,6 @@
 import pool from '../model/postgres.js';
 import { getInteraction, getPagesAndClearData } from '../util/db-util.js';
-import { interactionSchema, movieSchema, movieIdSchema, interactionTypeValidation } from '../util/validationSchemas.js';
+import { interactionSchema, interactionTypeValidation, movieIdValidation } from '../util/validationSchemas.js';
 import { calculateOffset, getInteractionMessage, throwError, validatePage } from '../util/util-functions.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
 
@@ -17,7 +17,7 @@ export const getInteractions = async (req, res, next) => {
     const offset = calculateOffset(page, limit);
     const queryArgs = [user.id, limit, offset];
     let query = `
-      SELECT ity.type, mov.*, COUNT(*) OVER() AS row_count
+      SELECT ity.interaction_type, mov.*, COUNT(*) OVER() AS row_count
       FROM interaction AS inter
       INNER JOIN movie AS mov
       ON inter.movie_id = mov.id
@@ -27,7 +27,7 @@ export const getInteractions = async (req, res, next) => {
     `;
 
     if (interactionType) {
-      query += ' AND ity.type = $4';
+      query += ' AND ity.interaction_type = $4';
       queryArgs.push(interactionType);
     }
 
@@ -43,64 +43,28 @@ export const getInteractions = async (req, res, next) => {
 
 // create interaction between user and movie
 export const postInteraction = async (req, res, next) => {
-  const client = await pool.connect();
-
   try {
-    const { error, value } = movieSchema.validate(req.body);
+    const { error, value } = interactionSchema.validate(req.body);
     if (error) throwError(400, 'Invalid Input: ' + error.message);
 
-    const { id: movieId, title, poster_path, year, tmdb_rating } = value;
     const { user } = req;
-    const { interactionType } = req.params;
+    const { interactionType, movieId } = value;
 
-    await client.query("BEGIN");
-
-    try {
-      await client.query(`
-        INSERT INTO
-        movie(id, title, poster_path, year, tmdb_rating)
-        VALUES
-        ($1, $2, $3, $4, $5);
-        `,
-        [movieId, title, poster_path, year, tmdb_rating.toFixed(2)]
-      );
-
-      // IMPL
-      // const values = genre_ids.map((_, index) => `($1, $${index + 2})`).join(', '); 
-      // await client.query(`
-      //   INSERT INTO
-      //   movie_genre(movie_id, genre_id)
-      //   VALUES
-      //   ${values};
-      //   `,
-      //   [movieId, genreId ??]
-      // );
-    } catch (err) {
-      // if it's not a 'unique' constraint error, the movie may not be available in the database, causing inconsistency
-      if (err && err.code !== PG_UNIQUE_ERR) throw err;
-    }
-
-    await client.query(`
+    await pool.query(`
       INSERT INTO
-      interaction(movie_id, user_id, type)
-      VALUES ($1, $2, $3);`,
+      interaction(movie_id, user_id, type_id)
+      VALUES ($1, $2, (SELECT id FROM interaction_type WHERE interaction_type = $3));`,
       [movieId, user.id, interactionType]
     );
-
-    await client.query("COMMIT");
 
     const message = getInteractionMessage(interactionType);
     res.status(201).json({ success: true, message });
   } catch (err) {
-    await client.query("ROLLBACK");
     if (err.code === PG_UNIQUE_ERR) {
       err.message = "User has already interacted with this movie.";
       err.statusCode = 400;
     }
     next(err);
-  }
-  finally {
-    client.release();
   }
 }
 
@@ -108,15 +72,13 @@ export const postInteraction = async (req, res, next) => {
 export const hasInteraction = async (req, res, next) => {
   try {
     const { user } = req;
-    const { error, value } = movieIdSchema.validate(req.params);
-    if (error) throwError(400, 'Invalid movie id provided. ' + error.message);
-
-    const { movieId } = value;
+    const { error, value: movieId } = movieIdValidation.required().validate(req.params.movieId);
+    if (error) throwError(400, 'Invalid movie id provided: ' + error.message);
 
     const interaction = await getInteraction({ userId: user.id, movieId });
     const hasInteraction = (interaction.length > 0);
     const responseData = { hasInteraction };
-    if (hasInteraction) responseData.type = interaction[0].type;
+    if (hasInteraction) responseData.type = interaction[0].interaction_type;
 
     return res.status(200).json({ success: true, ...responseData });
   } catch (err) {
@@ -136,15 +98,11 @@ export const deleteInteraction = async (req, res, next) => {
       DELETE FROM interaction
       WHERE user_id = $1
       AND movie_id = $2
-      AND type_id = (SELECT id FROM interaction_type WHERE type = $3);`,
+      AND type_id = (SELECT id FROM interaction_type WHERE interaction_type = $3);`,
       [user.id, movieId, interactionType]
     );
 
-    if (rowCount === 0) {
-      const err = new Error(`User has no '${interactionType}' interaction with movie.`);
-      err.statusCode = 401;
-      throw err;
-    }
+    if (rowCount === 0) throwError(401, `User has no '${interactionType}' interaction with movie.`);
 
     return res.status(200).json({ success: true, message: `Deleted '${interactionType}' interaction successfully.` });
   } catch (err) {

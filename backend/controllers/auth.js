@@ -1,21 +1,15 @@
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import { loginSchema } from '../util/validationSchemas.js';
-import { tryInsert } from '../util/db-util.js';
-import { PG_UNIQUE_ERR } from '../util/constants.js';
 import { throwError } from '../util/util-functions.js';
+import pool from '../model/postgres.js';
 
 
 export const postLogin = async (req, res, next) => {
   try {
     const loginData = { credential: req.body.credential, clientId: req.body.clientId };
     const { value, error } = loginSchema.validate(loginData);
-
-    if (error) {
-      const err = new Error("Invalid Input: " + error.message);
-      err.statusCode = 400;
-      throw err;
-    }
+    if (error) throwError(400, `Invalid Input: ${error.message}`);
 
     const { credential, clientId } = value;
     const client = new OAuth2Client(clientId);
@@ -27,16 +21,14 @@ export const postLogin = async (req, res, next) => {
 
     const payload = ticket.getPayload();
 
-    const queryArguments = [payload.sub, payload.email, payload.name];
-    const statement = `
+    await pool.query(`
       INSERT INTO
-      user_account(id, email, name)
+      user_account(id, email, username)
       VALUES
-      ($1, $2, $3);
-    `;
-
-    const insertionErr = tryInsert(statement, queryArguments);
-    if (insertionErr.code !== PG_UNIQUE_ERR) throwError(500, insertionErr.message);
+      ($1, $2, $3)
+      ON CONFLICT (id) DO NOTHING;`,
+      [payload.sub, payload.email, payload.name]
+    )
 
     const token = jwt.sign({
       sub: payload.sub,
@@ -50,8 +42,6 @@ export const postLogin = async (req, res, next) => {
     res.cookie('WATCHIO_JWT', token, { httpOnly: true });
     res.status(200).json({ success: true, message: 'Authentication successful', token, user: payload });
   } catch (err) {
-    err.statusCode = 401;
-    err.message = "Invalid Google Token";
     next(err);
   }
 }

@@ -9,9 +9,18 @@ const toastSlice = createSlice({
   name: 'toast',
   initialState,
   reducers: {
-    setToast(state, { payload }) {
-      state.message = payload.message;
-      state.variant = payload.variant;
+    // easier to use approach, no typos can occur
+    setSuccessToast(state, { payload }) {
+      state.message = payload;
+      state.variant = "success";
+    },
+    setErrorToast(state, { payload }) {
+      state.message = payload;
+      state.variant = "error";
+    },
+    setInfoToast(state, { payload }) {
+      state.message = payload;
+      state.variant = "info";
     },
     clearToast(state) {
       state.message = null;

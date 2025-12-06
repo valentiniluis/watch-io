@@ -3,14 +3,13 @@ import { addInteraction, getInteractions, removeInteraction } from "../../util/m
 import ToggleInteraction from './ToggleInteraction';
 import queryClient from '../../util/query';
 import Spinner from "../UI/Spinner";
-import { useSelector } from "react-redux";
-
-
-const interactionTypes = ['watchlist', 'like', 'not interested'];
-
+import { useDispatch, useSelector } from "react-redux";
+import { interactionTypes } from "../../util/constants";
+import { toastActions } from '../../store/toast';
 
 export default function MovieInteractions({ onError }) {
   const movie = useSelector(state => state.movie);
+  const dispatch = useDispatch();
   const { id: movieId } = movie;
 
   const {
@@ -24,14 +23,14 @@ export default function MovieInteractions({ onError }) {
 
   const { mutate: add, error: addError, isError: isAddError } = useMutation({
     mutationFn: addInteraction,
-    onSuccess: async () => await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] })
+    onSuccess: async () => await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] }),
+    onError: (ctx) => dispatch(toastActions.setErrorToast(ctx?.message || "Sorry, failed to add interaction."))
   });
 
   const { mutate: remove, error: removeError, isError: isRemoveError } = useMutation({
     mutationFn: removeInteraction,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] });
-    }
+    onSuccess: async () => await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] }),
+    onError: (ctx) => dispatch(toastActions.setErrorToast(ctx?.message || "Sorry, failed to remove interaction."))
   });
 
   if (isAddError || isRemoveError) {
@@ -40,7 +39,7 @@ export default function MovieInteractions({ onError }) {
   }
 
   function handleAddInteraction(type) {
-    add({ movie, type });
+    add({ type, movieId });
   }
 
   function handleRemoveInteraction() {

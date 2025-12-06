@@ -1,8 +1,9 @@
 import cron from 'node-cron';
-import { tryInsert } from '../util/db-util.js';
 import { MIN_RATING, MIN_VOTES } from '../util/constants.js';
 import tmdbAPI from '../api/tmdb-api.js';
-import { fetchAndSanitizeMovies } from '../util/api-util.js';
+import { fetchAndSanitizeMovies, fetchMovie } from '../util/api-util.js';
+import pool from '../model/postgres.js';
+import { insertMovie } from '../util/db-util.js';
 
 // inserting newly released movies to the database. shouldn't take longer than a few seconds
 async function ingestRecentMovies() {
@@ -30,35 +31,24 @@ async function ingestRecentMovies() {
   const pages = await getPages();
   if (!pages) return;
 
+  const client = await pool.connect();
   let successCount = 0;
-  const movie_statement = `
-    INSERT INTO movie(id, title, poster_path, year, tmdb_rating)
-    VALUES ($1, $2, $3, $4, $5);
-  `;
-
-  const genre_statement = `
-    INSERT INTO movie_genre(movie_id, genre_id)
-    VALUES ($1, $2);
-  `;
 
   for (let page = 1; page <= pages; page++) {
     try {
       const movies = await fetchAndSanitizeMovies(url + '&page=' + page);
-
+      
+      // IMPL - fetch all information needed to insert movie
       movies.forEach(async (movie) => {
-        // IMPL
-        // should be a transaction as well
-        const { id, title, poster_path, year, tmdb_rating } = movie;
-        if (!id || !title) return;
-        const args = [id, title, poster_path, (year === 'N/A') ? null : year, (tmdb_rating === 'N/A') ? null : tmdb_rating];
-        const error = await tryInsert(movie_statement, args);
-        if (error) return;
+        const data = await fetchMovie(movie.id);
+        client.query("BEGIN");
+        await insertMovie(client, data);
+        client.query("COMMIT");
         successCount++;
-        const genres = movie.genre_ids;
-        if (Array.isArray(genres)) genres.forEach(async (genre) => tryInsert(genre_statement, [id, genre]));
-        console.log(genres);
       });
+
     } catch (err) {
+      client.query("ROLLBACK");
       console.log(new Date().toISOString() + ' - [ingestion task]: Failed to get movie page #' + page);
       console.log(err);
     }

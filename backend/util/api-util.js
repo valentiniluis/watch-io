@@ -17,9 +17,9 @@ export function fillAllLogoPaths(providers) {
   if (!providers) return;
 
   if (typeof providers !== 'object') throw Error('Unexpected argument, unable to fill logo paths.');
-  
+
   const entries = Object.entries(providers);
-  
+
   entries.forEach(([key, providerArray]) => {
     if (Array.isArray(providerArray)) providers[key] = mapPaths(providerArray, 'logo_path', getFullLogoPath);
   });
@@ -37,12 +37,12 @@ export async function fetchAndSanitizeMovies(url) {
   if (!data.results) throw new Error('Failed to load movies');
   const movies = data.results.map(item => ({
     ...item,
-    year: getReleaseYear(item.release_date),
+    poster_path: getFullPosterPath(item.poster_path),
+    release_year: getReleaseYear(item.release_date),
     tmdb_rating: (item.vote_average) ? item.vote_average.toFixed(1) : 'N/A'
   }));
   movies.sort((a, b) => b?.vote_average - a?.vote_average);
-  const moviesWithPosters = mapPaths(movies, 'poster_path', getFullPosterPath);
-  return moviesWithPosters;
+  return movies;
 }
 
 
@@ -81,4 +81,11 @@ export function filterOMDBData(data) {
     imdb_rating: data.imdbRating,
     imdb_votes: data.imdb_votes
   };
+}
+
+export async function fetchMovie(movieId) {
+  const url = `https://api.themoviedb.org/3/movie/${movieId}?append_to_response=credits,keywords`;
+  const response = await tmdbAPI.get(url);
+  const data = response.data;
+  return data;
 }

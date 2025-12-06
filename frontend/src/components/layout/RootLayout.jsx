@@ -20,8 +20,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (data?.success) dispatch(authActions.login(data.user));
-    if (isError && error.code === 'ERR_NETWORK') dispatch(toastActions.setToast({ message: "Network issues detected!", variant: "error" }));
-    else if (isError) dispatch(toastActions.setToast({ message: 'Please authenticate for a better experience!', variant: "info" }));
+    if (isError && error.code === 'ERR_NETWORK') dispatch(toastActions.setErrorToast("Network issues detected!"));
+    else if (isError) dispatch(toastActions.setInfoToast('Please authenticate for a better experience!'));
   }, [data, error, isError, dispatch]);
 
   return (

@@ -1,4 +1,4 @@
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { createPortal } from "react-dom";
 import { useMutation } from "@tanstack/react-query";
 import queryClient from '../../util/query';
@@ -6,10 +6,12 @@ import Input from "../UI/Input";
 import { addRating, editRating } from "../../util/movie-query";
 import Modal from "../layout/Modal";
 import RatingInput from './RatingInput';
+import { toastActions } from '../../store/toast';
 
 
 export default function RatingModal({ ref, editMode, data }) {
-  const movie = useSelector(state => state.movie);
+  const { id: movieId, title, year } = useSelector(state => state.movie);
+  const dispatch = useDispatch();
 
   function handleClose() {
     ref.current?.querySelector("form").reset();
@@ -18,7 +20,8 @@ export default function RatingModal({ ref, editMode, data }) {
 
   const { mutate } = useMutation({
     mutationFn: editMode ? editRating : addRating,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ratings'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ratings'] }),
+    onError: (ctx) => dispatch(toastActions.setErrorToast(ctx?.response?.data?.message || "Failed to rate movie. Sorry!"))
   });
 
   async function submitAndClose(event) {
@@ -30,7 +33,7 @@ export default function RatingModal({ ref, editMode, data }) {
       score: +rating.score,
       note: rating.note.length > 0 ? rating.note : undefined
     };
-    mutate({ movie, rating });
+    mutate({ rating, movieId });
     event.target.reset();
     handleClose();
   }
@@ -42,9 +45,9 @@ export default function RatingModal({ ref, editMode, data }) {
           <div>
             <h4 className="text-stone-700 m-0 text-sm">{editMode ? "Editing rating" : "Rating movie"}</h4>
             <h2 className="font-medium text-lg flex items-center gap-2">
-              {movie.title}
+              {title}
               <span className="text-stone-600 font-normal text-sm">
-                ({movie.year})
+                ({year})
               </span>
             </h2>
           </div>

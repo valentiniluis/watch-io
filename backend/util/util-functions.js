@@ -40,7 +40,7 @@ export function calculateOffset(page, limit) {
 
 export function getInteractionMessage(type) {
   let message;
-  switch (interactionType) {
+  switch (type) {
     case 'watchlist':
       message = "Movie added to watchlist successfully!";
       break;

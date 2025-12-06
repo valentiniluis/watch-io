@@ -18,7 +18,7 @@ create table
 		original_language varchar(50) not null,
 		poster_path text null,
 		release_year integer null,
-		tmdb_rating numeric(2, 1) null,
+		tmdb_rating numeric(4, 3) null,
 		constraint pk_movie primary key (id)
 	);
 
@@ -74,6 +74,7 @@ create table
 	if not exists artist (
 		id integer not null,
 		artist_name varchar(100) not null,
+		original_name varchar(100) not null,
 		known_for varchar(100) not null,
 		popularity numeric(5, 2) not null,
 		constraint pk_artist primary key (id)
@@ -93,9 +94,10 @@ create table
 	if not exists crew (
 		movie_id integer not null,
 		artist_id integer not null,
+		credit_id varchar(100) not null,
 		department varchar(100) not null,
 		job varchar(100) not null,
-		constraint pk_crew primary key (movie_id, artist_id),
+		constraint pk_crew primary key (movie_id, artist_id, credit_id),
 		constraint fk_crew_movie foreign key (movie_id) references movie (id),
 		constraint fk_crew_artist foreign key (artist_id) references artist (id)
 	);
@@ -103,15 +105,14 @@ create table
 create table
 	if not exists keyword (
 		id integer not null,
-		keyword varchar(100) not null,
+		keyword varchar(100) unique not null,
 		constraint pk_keyword primary key (id)
 	);
-
 
 create table
 	if not exists movie_keyword (
 		movie_id integer not null,
-		keyword_id integer unique not null,
+		keyword_id integer not null,
 		constraint pk_movie_keyword primary key (movie_id, keyword_id),
 		constraint fk_movie_keyword_movie foreign key (movie_id) references movie (id),
 		constraint fk_movie_keyword_keyword foreign key (keyword_id) references keyword (id)

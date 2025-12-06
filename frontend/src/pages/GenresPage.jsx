@@ -19,7 +19,7 @@ export default function GenresPage() {
     content = <ErrorSection message="Failed to load genres" />
   }
   else if (data) {
-    const genres = data.map(item => ({ ...item, 'data-genre-id': item.id, 'data-genre': item.name }));
+    const genres = data.map(item => ({ id: item.id, name: item.genre_name, 'data-genre-id': item.id, 'data-genre': item.genre_name }));
     content = <GenresPageContent genres={genres} />
   }
 

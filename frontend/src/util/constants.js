@@ -22,3 +22,5 @@ export const myAreaCategories = [
   { id: 'not interested', name: 'Not Interested', 'data-label': 'Not Interested', 'data-category': 'not interested' },
   { id: 'ratings', name: 'Ratings', 'data-label': 'Ratings', 'data-category': 'ratings' },
 ];
+
+export const interactionTypes = ['watchlist', 'like', 'not interested'];

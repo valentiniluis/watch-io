@@ -13,7 +13,7 @@ export default function AuthButton() {
     mutationFn: authUser,
     // invalidate all cached data once authetication succeeds (refetch everything)
     onSuccess: async () => await queryClient.invalidateQueries(),
-    onError: () => dispatch(toastActions.setToast({ message: "Failed to authenticate!", variant: "error" })),
+    onError: () => dispatch(toastActions.setErrorToast("Failed to authenticate!")),
   });
 
   async function handleLogin(response) {

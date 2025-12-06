@@ -7,7 +7,7 @@ const router = Router();
 
 router.get('/', authenticateJWT, interactionControllers.getInteractions);
 
-router.post('/:interactionType', authenticateJWT, interactionControllers.postInteraction);
+router.post('/', authenticateJWT, interactionControllers.postInteraction);
 
 router.get('/:movieId', authenticateJWT, interactionControllers.hasInteraction);
 

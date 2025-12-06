@@ -11,8 +11,9 @@ export async function fetchMovies({ queryKey }) {
 }
 
 
-export async function addInteraction({ movie, type }) {
-  const response = await api.post(`/interactions/${type}`, movie);
+export async function addInteraction({ type, movieId }) {
+  const body = { movieId, interactionType: type };
+  const response = await api.post(`/interactions`, body);
   return response.data;
 }
 
@@ -29,8 +30,9 @@ export async function getRatings({ queryKey }) {
 }
 
 
-export async function addRating({ movie, rating }) {
-  const response = await api.post('/ratings', { movie, rating });
+export async function addRating({ rating, movieId }) {
+  const body = { ...rating, movieId };
+  const response = await api.post('/ratings', body);
   return response.data;
 }
 
@@ -109,6 +111,6 @@ export const loadMoviesByGenre = async ({ queryKey }) => {
 export const loadGenres = async () => {
   const response = await api.get('/movies/genres');
   const { genres } = response.data;
-  const filtered = genres.filter(genre => genre.name !== 'Documentary');
+  const filtered = genres.filter(({ genre_name }) => genre_name !== 'Documentary');
   return filtered;
 }

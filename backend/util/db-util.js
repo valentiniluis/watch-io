@@ -2,13 +2,15 @@ import pool from '../model/postgres.js';
 import { calculateOffset } from './util-functions.js';
 
 
-// Dados de 10 mil filmes migrados para o postgreSQL, consultas locais
-
 export async function discoverMovies({ page, user = {}, limit }) {
-  let query;
   const id = user?.id;
   const offset = calculateOffset(page, limit);
   const queryArgs = [limit, offset];
+
+  let query = `
+    SELECT *, ROUND(mov.tmdb_rating, 1) AS tmdb_rating, COUNT(*) OVER() AS row_count 
+    FROM movie AS mov
+  `;
 
   if (id && id.length) {
     queryArgs.push(id);
@@ -17,26 +19,13 @@ export async function discoverMovies({ page, user = {}, limit }) {
         SELECT inter.movie_id
         FROM interaction AS inter
         WHERE inter.user_id = $3
-        AND inter.type_id = (SELECT id FROM interaction_type WHERE "type" = 'not interested')
+        AND inter.type_id = (SELECT id FROM interaction_type WHERE interaction_type = 'not interested')
       )
-      SELECT *, COUNT(*) OVER() AS row_count 
-      FROM movie AS mov
-      WHERE mov.id NOT IN (
-        SELECT movie_id FROM not_interested
-      )
-      ORDER BY mov.tmdb_rating DESC, mov.title
-      LIMIT $1
-      OFFSET $2;
-    `;
-  } else {
-    query = `
-      SELECT *, COUNT(*) OVER() AS row_count 
-      FROM movie AS mov
-      ORDER BY mov.tmdb_rating DESC, mov.title
-      LIMIT $1
-      OFFSET $2;
+      ` + query + `
+      WHERE mov.id NOT IN (SELECT movie_id FROM not_interested)
     `;
   }
+  query += " ORDER BY mov.tmdb_rating DESC, mov.title LIMIT $1 OFFSET $2";
 
   const { rows } = await pool.query(query, queryArgs);
   return rows;
@@ -44,39 +33,32 @@ export async function discoverMovies({ page, user = {}, limit }) {
 
 
 export async function searchMovie({ movie, user = {}, limit, page }) {
-  let query;
   const id = user?.id;
   const offset = calculateOffset(page, limit);
   const queryArgs = [`%${movie}%`, limit, offset];
 
+  let query = `
+    SELECT *, ROUND(tmdb_rating, 1) AS tmdb_rating, COUNT(*) OVER() AS row_count
+    FROM movie AS mov
+    WHERE (mov.title ILIKE $1 OR mov.original_title ILIKE $1)
+  `;
+
   if (id && id.length) {
-    query = `
-      SELECT *, COUNT(*) OVER() AS row_count
-      FROM movie AS mov
-      WHERE mov.id NOT IN (
+    query += `
+      AND mov.id NOT IN (
         SELECT inter.movie_id
         FROM interaction AS inter
         WHERE inter.user_id = $4
-        AND inter.type_id = (SELECT id FROM interaction_type WHERE "type" = 'not interested')
+        AND inter.type_id = (SELECT id FROM interaction_type WHERE interaction_type = 'not interested')
       )
-      AND mov.title ILIKE $1
-      OR mov.original_title ILIKE $1
-      ORDER BY mov.tmdb_rating DESC, mov.title
-      LIMIT $2
-      OFFSET $3;
     `;
     queryArgs.push(id);
-  } else {
-    query = `
-      SELECT *, COUNT(*) OVER() AS row_count
-      FROM movie AS mov
-      WHERE mov.title ILIKE $1
-      OR mov.original_title ILIKE $1
-      ORDER BY mov.tmdb_rating DESC, mov.title
-      LIMIT $2
-      OFFSET $3;
-    `;
   }
+
+  query += `
+    ORDER BY mov.tmdb_rating DESC, mov.title
+    LIMIT $2
+    OFFSET $3;`;
 
   const { rows } = await pool.query(query, queryArgs);
   return rows;
@@ -94,7 +76,7 @@ export function getPagesAndClearData(data, limit, key = 'data') {
 
 export async function getInteraction({ movieId, userId }) {
   const { rows: interaction } = await pool.query(`
-    SELECT ity.type 
+    SELECT ity.interaction_type 
     FROM interaction AS inter
     INNER JOIN interaction_type AS ity
     ON inter.type_id = ity.id
@@ -123,7 +105,7 @@ export async function tryInsert(stmt, args) {
 export const getMovieGenreQuery = (orderBy, authenticated, parameters) => {
   const queryParams = [parameters.genreId];
   let query = `
-    SELECT mov.*, COUNT(*) OVER() AS row_count
+    SELECT mov.*, ROUND(mov.tmdb_rating, 1) AS tmdb_rating, COUNT(*) OVER() AS row_count
     FROM movie AS mov
     INNER JOIN movie_genre AS mg
     ON mov.id = mg.movie_id
@@ -136,7 +118,7 @@ export const getMovieGenreQuery = (orderBy, authenticated, parameters) => {
         SELECT inter.movie_id
         FROM interaction AS inter
         WHERE inter.user_id = $${queryParams.length}
-        AND inter.type_id = (SELECT id FROM interaction_type WHERE "type" = 'not interested')
+        AND inter.type_id = (SELECT id FROM interaction_type WHERE interaction_type = 'not interested')
       )
     `;
   }
@@ -154,3 +136,63 @@ export const getMovieGenreQuery = (orderBy, authenticated, parameters) => {
   }
   return [query, queryParams];
 };
+
+
+export const insertMovie = async (client, movie) => {
+  let values, args;
+
+  const {
+    movieId, title, original_title, original_language,
+    poster_path, release_year, tmdb_rating, genre_ids,
+    keywords
+  } = movie;
+
+  await client.query(`
+    INSERT INTO
+    movie (id, title, original_title, original_language, poster_path, year, tmdb_rating)
+    VALUES
+    ($1, $2, $3, $4, $5, $6, $7)
+    ON CONFLICT (id) DO NOTHING;
+    `,
+    [movieId, title, original_title, original_language, poster_path, release_year, tmdb_rating.toFixed(2)]
+  );
+
+  values = genre_ids.map((_, index) => `($1, $${index + 2})`).join(', ');
+  args = [movieId].concat(genre_ids);
+  await client.query(`
+    INSERT INTO
+    movie_genre (movie_id, genre_id)
+    VALUES
+    ${values}
+    ON CONFLICT (id) DO NOTHING;
+    `,
+    args
+  );
+
+  const idKeyword = [];
+  values = keywords.map((_, index) => `($1, $${index + 2})`).join(', ');
+  args = keywords.forEach(({ id, keyword }) => idKeyword.push(id, keyword));
+  await client.query(`
+    INSERT INTO
+    keyword ()
+    VALUES
+    ${values}
+    ON CONFLICT (id) DO NOTHING;
+    `,
+    args
+  );
+
+  values = keywords.map((_, index) => `($1, $${index + 2})`).join(', ');
+  args = [movieId].concat(keywords);
+  await client.query(`
+    INSERT INTO
+    movie_keyword (movie_id, keyword_id)
+    VALUES
+    ${values}
+    ON CONFLICT (id) DO NOTHING;
+    `,
+    args
+  );
+
+  // insert cast and crew...
+}
