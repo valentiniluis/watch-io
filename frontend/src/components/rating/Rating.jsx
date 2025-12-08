@@ -17,10 +17,10 @@ export default function Rating({ rating }) {
   const deleteModalRef = useRef();
   const dispatch = useDispatch();
 
-  const { created_at, headline, note, score, poster_path, title, year } = rating;
+  const { rate_date, headline, note, score, poster_path, title, release_year } = rating;
 
   const posterImageUrl = poster_path ? `${poster_path}` : NoPoster;
-  const formattedDate = formatDate(created_at);
+  const formattedDate = formatDate(rate_date);
 
   function handleOpenModal(ref) {
     dispatch(movieActions.setMovie(rating));
@@ -45,7 +45,7 @@ export default function Rating({ rating }) {
             <h3 className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-bold tracking-tight text-white text-base sm:text-lg lg:text-xl">
               {title}{" "}
               <span className="text-sm sm:text-base lg:text-lg font-normal text-gray-400">
-                ({year})
+                ({release_year})
               </span>
             </h3>
 

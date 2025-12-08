@@ -17,7 +17,7 @@ export const getInteractions = async (req, res, next) => {
     const offset = calculateOffset(page, limit);
     const queryArgs = [user.id, limit, offset];
     let query = `
-      SELECT ity.interaction_type, mov.*, COUNT(*) OVER() AS row_count
+      SELECT ity.interaction_type, mov.*, ROUND(mov.tmdb_rating, 1) AS tmdb_rating, COUNT(*) OVER() AS row_count
       FROM interaction AS inter
       INNER JOIN movie AS mov
       ON inter.movie_id = mov.id

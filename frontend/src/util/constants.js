@@ -12,8 +12,8 @@ export const sortOptions = [
   { id: 'title.desc', name: 'Title (↓)', 'data-attribute': 'title.desc', 'data-label': 'Title ↓' },
   { id: 'tmdb_rating.asc', name: "Rating (↑)", 'data-attribute': 'tmdb_rating.asc', 'data-label': "Rating ↑" },
   { id: 'tmdb_rating.desc', name: "Rating (↓)", 'data-attribute': 'tmdb_rating.desc', 'data-label': "Rating ↓" },
-  { id: 'year.asc', name: "Year (↑)", 'data-attribute': 'year.asc', 'data-label': "Year ↑" },
-  { id: 'year.desc', name: "Year (↓)", 'data-attribute': 'year.desc', 'data-label': "Year ↓" },
+  { id: 'release_year.asc', name: "Year (↑)", 'data-attribute': 'release_year.asc', 'data-label': "Year ↑" },
+  { id: 'release_year.desc', name: "Year (↓)", 'data-attribute': 'release_year.desc', 'data-label': "Year ↓" },
 ];
 
 export const myAreaCategories = [

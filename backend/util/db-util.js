@@ -1,4 +1,5 @@
 import pool from '../model/postgres.js';
+import { fetchMovie, sanitizeMovie } from './api-util.js';
 import { calculateOffset } from './util-functions.js';
 
 
@@ -88,20 +89,6 @@ export async function getInteraction({ movieId, userId }) {
 }
 
 
-// try to insert and ignore the error. caller function should handle it.
-export async function tryInsert(stmt, args) {
-  let err = null;
-
-  try {
-    await pool.query(stmt, args);
-  } catch (error) {
-    err = error;
-  }
-
-  return err;
-}
-
-
 export const getMovieGenreQuery = (orderBy, authenticated, parameters) => {
   const queryParams = [parameters.genreId];
   let query = `
@@ -132,67 +119,133 @@ export const getMovieGenreQuery = (orderBy, authenticated, parameters) => {
     const offset = calculateOffset(parameters.page, parameters.limit);
     queryParams.push(offset);
     const [attr, sort] = orderBy.split('.');
-    query += ` ORDER BY ${attr} ${sort}, mov.id ASC LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length};`;
+    query += ` ORDER BY mov.${attr} ${sort}, mov.id ASC LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length};`;
   }
   return [query, queryParams];
 };
 
 
-export const insertMovie = async (client, movie) => {
-  let values, args;
+const constructValues = (valuesQty, dataArray) => {
+  const values = dataArray.map((_, index) => {
+    const valuesArray = [];
 
-  const {
-    movieId, title, original_title, original_language,
-    poster_path, release_year, tmdb_rating, genre_ids,
-    keywords
-  } = movie;
+    // add '$1', '$2', '$3', ..., '$n' to array
+    for (let i = 1; i <= valuesQty; i++) valuesArray.push(`$${index * valuesQty + i}`);
 
-  await client.query(`
+    // join '$n' values and separate by comma
+    return '(' + valuesArray.join(', ') + ')';
+  });
+  return values.join(', ');
+}
+
+
+export const insertMovie = async (movie) => {
+  let error = null;
+  const client = await pool.connect();
+
+  try {
+    let values, args;
+
+    const {
+      movieId, title, original_title, original_language,
+      poster_path, release_year, tmdb_rating, genres,
+      keywords, cast, crew
+    } = movie;
+
+    // inserting a movie must be an atomic transaction
+    await client.query("BEGIN");
+
+    await client.query(`
     INSERT INTO
-    movie (id, title, original_title, original_language, poster_path, year, tmdb_rating)
+    movie (id, title, original_title, original_language, poster_path, release_year, tmdb_rating)
     VALUES
     ($1, $2, $3, $4, $5, $6, $7)
-    ON CONFLICT (id) DO NOTHING;
-    `,
-    [movieId, title, original_title, original_language, poster_path, release_year, tmdb_rating.toFixed(2)]
-  );
+    ON CONFLICT (id) DO NOTHING;`,
+      [movieId, title, original_title, original_language, poster_path, release_year, tmdb_rating.toFixed(2)]
+    );
 
-  values = genre_ids.map((_, index) => `($1, $${index + 2})`).join(', ');
-  args = [movieId].concat(genre_ids);
-  await client.query(`
+    values = genres.map((_, index) => `($1, $${index + 2})`).join(', ');
+    const genre_ids = genres.map(genre => genre.id);
+    args = [movieId].concat(genre_ids);
+    await client.query(`
     INSERT INTO
     movie_genre (movie_id, genre_id)
     VALUES
     ${values}
-    ON CONFLICT (id) DO NOTHING;
-    `,
-    args
-  );
+    ON CONFLICT (movie_id, genre_id) DO NOTHING;`,
+      args
+    );
 
-  const idKeyword = [];
-  values = keywords.map((_, index) => `($1, $${index + 2})`).join(', ');
-  args = keywords.forEach(({ id, keyword }) => idKeyword.push(id, keyword));
-  await client.query(`
+    const idKeyword = [];
+    values = constructValues(2, keywords);
+    args = keywords.forEach(({ id, keyword }) => idKeyword.push(id, keyword));
+    await client.query(`
     INSERT INTO
-    keyword ()
+    keyword (id, keyword)
     VALUES
     ${values}
-    ON CONFLICT (id) DO NOTHING;
-    `,
-    args
-  );
+    ON CONFLICT (id) DO NOTHING;`,
+      args
+    );
 
-  values = keywords.map((_, index) => `($1, $${index + 2})`).join(', ');
-  args = [movieId].concat(keywords);
-  await client.query(`
+    values = keywords.map((_, index) => `($1, $${index + 2})`).join(', ');
+    const keyword_ids = keywords.map(keyword => keyword.id);
+    args = [movieId].concat(keyword_ids);
+    await client.query(`
     INSERT INTO
     movie_keyword (movie_id, keyword_id)
     VALUES
     ${values}
-    ON CONFLICT (id) DO NOTHING;
-    `,
-    args
-  );
+    ON CONFLICT (movie_id, keyword_id) DO NOTHING;`,
+      args
+    );
 
-  // insert cast and crew...
+    const artistData = [];
+    const artists = [...cast, ...crew];
+    values = constructValues(5, artists);
+    args = artists.forEach(({ id, name, original_name, known_for_department, popularity }) =>
+      artistData.push(id, name, original_name, known_for_department, popularity)
+    );
+    await client.query(`
+    INSERT INTO 
+    artist (id, artist_name, original_name, known_for, popularity) 
+    VALUES 
+    ${values} 
+    ON CONFLICT (id) DO NOTHING;`,
+      args
+    );
+
+    const castArgs = [];
+    values = cast.forEach((_, index) => `($1, $${index * 2 + 2}), $${index * 2 + 3})`).join(", ");
+    cast.forEach(({ id, character }) => castArgs.push(id, character));
+    args = [movieId].concat(castArgs);
+    await client.query(`
+    INSERT INTO 
+    movie_cast (movie_id, artist_id, character_name) 
+    VALUES 
+    ${values}
+    ON CONFLICT (movie_id, artist_id) DO NOTHING;`,
+      args
+    );
+
+    const crewArgs = [];
+    values = crew.forEach((_, index) => `($1, $${index * 4 + 2}), $${index * 4 + 3}, $${index * 4 + 4}), $${index * 4 + 5})`).join(", ");
+    crew.forEach(({ id, credit_id, department, job }) => castArgs.push(id, credit_id, department, job));
+    args = [movieId].concat(crewArgs);
+    await client.query(`
+    INSERT INTO 
+    crew (movie_id, artist_id, credit_id, department, job) 
+    VALUES 
+    ${values};`,
+      args
+    );
+
+    await client.query("COMMIT");
+  } catch (err) {
+    error = err;
+    client.query("ROLLBACK");
+  } finally {
+    client.release();
+    return err;
+  }
 }

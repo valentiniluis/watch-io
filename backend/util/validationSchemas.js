@@ -1,7 +1,7 @@
 import Joi from "joi";
 
 
-export const orderByValidation = Joi.string().valid('title.asc', 'title.desc', 'year.asc', 'year.desc', 'tmdb_rating.asc', 'tmdb_rating.desc', 'random').optional().default('random');
+export const orderByValidation = Joi.string().valid('title.asc', 'title.desc', 'release_year.asc', 'release_year.desc', 'tmdb_rating.asc', 'tmdb_rating.desc', 'random').optional().default('random');
 
 export const limitValidation = Joi.number().integer().positive().optional().max(50).default(30);
 
@@ -16,14 +16,6 @@ export const interactionTypeValidation = Joi.string().valid('not interested', 'w
 export const loginSchema = Joi.object({
   credential: Joi.string().required(),
   clientId: Joi.string().required()
-});
-
-export const movieSchema = Joi.object({
-  id: Joi.number().positive().required(),
-  title: Joi.string().required(),
-  poster_path: Joi.string().uri(),
-  year: Joi.number().positive(),
-  tmdb_rating: Joi.number().positive().max(10)
 });
 
 export const interactionSchema = Joi.object({

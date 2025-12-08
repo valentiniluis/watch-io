@@ -24,7 +24,7 @@ export default function DeleteRatingModal({ ref }) {
       <p className="text-sm text-stone-500">Deleting movie rating</p>
       <h2 className="text-semibold text-xl flex items-center gap-2 mb-4">
         {movie.title}{" "}
-        <span className="text-sm text-stone-600">({movie.year})</span>
+        <span className="text-sm text-stone-600">({movie.release_year})</span>
       </h2>
       <p className="text-gray-600 mb-4">Are you sure?</p>
       <div className="flex justify-end gap-2">

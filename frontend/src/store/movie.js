@@ -5,7 +5,7 @@ const initialState = {
   id: null,
   title: null,
   poster_path: null,
-  year: null,
+  release_year: null,
   tmdb_rating: null
 };
 
@@ -17,14 +17,14 @@ const movieSlice = createSlice({
       state.id = payload.id;
       state.title = payload.title;
       state.poster_path = payload.poster_path;
-      state.year = payload.year;
+      state.release_year = payload.release_year;
       state.tmdb_rating = payload.tmdb_rating;
     },
     clearMovie(state) {
       state.id = null;
       state.title = null;
       state.poster_path = null;
-      state.year = null;
+      state.release_year = null;
       state.tmdb_rating = null;
     }
   }

@@ -1,8 +1,8 @@
 import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
 import pool from '../model/postgres.js';
-import { getFullPosterPath, getRuntimeString, filterOMDBData, fillAllLogoPaths, fetchAndSanitizeMovies } from '../util/api-util.js';
-import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData } from '../util/db-util.js';
+import { getFullPosterPath, getRuntimeString, filterOMDBData, fillAllLogoPaths, fetchAndSanitizeMovies, fetchMovie, sanitizeMovie } from '../util/api-util.js';
+import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData, insertMovie } from '../util/db-util.js';
 import { throwError, validatePage } from '../util/util-functions.js';
 import { genreIdSchema, orderByValidation, countryValidation, movieIdValidation } from '../util/validationSchemas.js';
 
@@ -28,6 +28,11 @@ export const getMovieData = async (req, res, next) => {
     const { user } = req;
     const { value: movieId, error } = movieIdValidation.required().validate(req.params.movieId);
     if (error) throwError(400, "Invalid Movie: " + error.message);
+
+    let movieData;
+    movieData = await fetchMovie(movieId);
+    movieData = sanitizeMovie(movieData);
+    console.log(movieData);
 
     const { value: country, error: countryErr } = countryValidation.validate(req.query.country);
     if (countryErr) throwError(400, 'Invalid country: ' + countryErr.message);
@@ -113,7 +118,7 @@ export const getMoviesByGenre = async (req, res, next) => {
     const parameters = { genreId, userId: id, limit, page };
     const [query, args] = getMovieGenreQuery(orderBy, id?.length > 0, parameters);
 
-    const { rows: results } = await pool.query(query,args);
+    const { rows: results } = await pool.query(query, args);
     const finalData = getPagesAndClearData(results, limit, 'movies');
     return res.status(200).json({ success: true, ...finalData });
   } catch (err) {

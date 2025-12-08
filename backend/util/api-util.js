@@ -77,15 +77,47 @@ export function filterOMDBData(data) {
     plot: data.Plot,
     rated: data.Rated,
     ratings: data.Ratings,
-    year: data.Year,
+    release_year: data.Year,
     imdb_rating: data.imdbRating,
     imdb_votes: data.imdb_votes
   };
 }
 
+
 export async function fetchMovie(movieId) {
   const url = `https://api.themoviedb.org/3/movie/${movieId}?append_to_response=credits,keywords`;
   const response = await tmdbAPI.get(url);
   const data = response.data;
+  return data;
+}
+
+
+export function sanitizeMovie(movie) {
+  const { 
+    genres, id, original_language, original_title, 
+    title, overview, poster_path, release_date, runtime, 
+    tagline, vote_average, credits, keywords: nestedKeywords
+  } = movie;
+
+  const { cast, crew } = credits;
+  const { keywords } = nestedKeywords;
+
+  const data = {
+    genres,
+    id,
+    original_language,
+    original_title,
+    title,
+    overview,
+    poster_path: getFullPosterPath(poster_path),
+    release_date: getReleaseYear(release_date),
+    runtime: getRuntimeString(runtime),
+    tagline,
+    tmdb_rating: vote_average,
+    cast,
+    crew,
+    keywords
+  };
+
   return data;
 }

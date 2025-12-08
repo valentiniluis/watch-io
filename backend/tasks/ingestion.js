@@ -1,9 +1,11 @@
 import cron from 'node-cron';
 import { MIN_RATING, MIN_VOTES } from '../util/constants.js';
 import tmdbAPI from '../api/tmdb-api.js';
-import { fetchAndSanitizeMovies, fetchMovie } from '../util/api-util.js';
+import { fetchAndSanitizeMovies, fetchMovie, sanitizeMovie } from '../util/api-util.js';
 import pool from '../model/postgres.js';
 import { insertMovie } from '../util/db-util.js';
+
+// TEST
 
 // inserting newly released movies to the database. shouldn't take longer than a few seconds
 async function ingestRecentMovies() {
@@ -38,17 +40,15 @@ async function ingestRecentMovies() {
     try {
       const movies = await fetchAndSanitizeMovies(url + '&page=' + page);
       
-      // IMPL - fetch all information needed to insert movie
       movies.forEach(async (movie) => {
         const data = await fetchMovie(movie.id);
-        client.query("BEGIN");
-        await insertMovie(client, data);
-        client.query("COMMIT");
-        successCount++;
+        const sanitizedMovie = sanitizeMovie(data);
+        const error = await insertMovie(client, sanitizedMovie);
+        if (!error) successCount++;
+        else console.log(`Failed to insert movie of id ${movie.id}: ${error.message}`);
       });
 
     } catch (err) {
-      client.query("ROLLBACK");
       console.log(new Date().toISOString() + ' - [ingestion task]: Failed to get movie page #' + page);
       console.log(err);
     }

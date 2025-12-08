@@ -10,7 +10,7 @@ import { toastActions } from '../../store/toast';
 
 
 export default function RatingModal({ ref, editMode, data }) {
-  const { id: movieId, title, year } = useSelector(state => state.movie);
+  const { id: movieId, title, release_year } = useSelector(state => state.movie);
   const dispatch = useDispatch();
 
   function handleClose() {
@@ -47,7 +47,7 @@ export default function RatingModal({ ref, editMode, data }) {
             <h2 className="font-medium text-lg flex items-center gap-2">
               {title}
               <span className="text-stone-600 font-normal text-sm">
-                ({year})
+                ({release_year})
               </span>
             </h2>
           </div>
