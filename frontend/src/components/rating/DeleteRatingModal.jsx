@@ -1,14 +1,19 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Modal from "../layout/Modal";
 import { useMutation } from "@tanstack/react-query";
 import { deleteRating } from "../../util/movie-query";
 import queryClient from "../../util/query";
+import { toastActions } from '../../store/toast';
+
 
 export default function DeleteRatingModal({ ref }) {
+  const dispatch = useDispatch();
   const movie = useSelector(state => state.movie);
+
   const { mutate } = useMutation({
     mutationFn: deleteRating,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ratings'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ratings'] }),
+    onError: ctx => dispatch(toastActions.setErrorToast(`Failed to delete rating: ${ctx?.response?.data?.message || ctx.message}`))
   });
 
   function handleClose() {

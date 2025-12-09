@@ -3,7 +3,7 @@ import omdbAPI from '../api/omdb-api.js';
 import pool from '../model/postgres.js';
 import { getFullPosterPath, getRuntimeString, filterOMDBData, fillAllLogoPaths } from '../util/api-util.js';
 import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData } from '../util/db-util.js';
-import { getMovieBasedRecommendationQuery, throwError, validatePage } from '../util/util-functions.js';
+import { getMovieBasedRecommendationQuery, getUserBasedRecommendationQuery, throwError, validatePage } from '../util/util-functions.js';
 import { genreIdSchema, orderByValidation, countryValidation, movieIdValidation } from '../util/validationSchemas.js';
 
 
@@ -73,16 +73,16 @@ export const getMovieData = async (req, res, next) => {
 
 
 export const getMovieRecommendations = async (req, res, next) => {
-  try {
+  try {    
     const { value: movieId, error } = movieIdValidation.required().validate(req.params.movieId);
     if (error) throwError(400, "Invalid Movie: " + error.message);
 
-    const limit = 25;
-    const [query, args] = getMovieBasedRecommendationQuery({ movieId, limit });
-    const { rows: recommendations } = await pool.query(query, args);
+    const { user } = req;
+    const userId = (user && user.id) ? user.id : null;
 
-    // const urlTMDB = `/movie/${movieId}/recommendations`;
-    // const recommendations = await fetchAndSanitizeMovies(urlTMDB);
+    const limit = 25;
+    const [query, args] = getMovieBasedRecommendationQuery({ movieId, limit, userId });
+    const { rows: recommendations } = await pool.query(query, args);
 
     res.status(200).json({ success: true, recommendations });
   } catch (err) {
@@ -95,11 +95,29 @@ export const getMovieRecommendations = async (req, res, next) => {
 export const getUserRecommendations = async (req, res, next) => {
   try {
     const { user } = req;
-
     const limit = 25;
-    const [query, args] = getUserRecommendations({ userId: user.id, limit });
-    const { rows: recommendations } = await pool.query(query, args);
 
+    let result;
+    if (!user) {
+      // take 250 best rated movies and use random 25 movies sample
+      result = await pool.query(`
+        WITH best_rated AS (
+          SELECT *, ROUND(tmdb_rating, 1) AS tmdb_rating
+          FROM movie AS mo
+          ORDER BY mo.tmdb_rating DESC
+          LIMIT 250
+        )
+        SELECT *
+        FROM best_rated
+        ORDER BY RANDOM()
+        LIMIT 25;`
+      );
+    } else {
+      const [query, args] = getUserBasedRecommendationQuery({ userId: user.id, limit });
+      result = await pool.query(query, args);
+    }
+
+    const { rows: recommendations } = result;
     res.status(200).json({ success: true, recommendations });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;

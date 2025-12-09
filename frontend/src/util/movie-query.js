@@ -92,6 +92,12 @@ export const loadRecommendations = async ({ queryKey }) => {
 }
 
 
+export const loadUserRecommendations = async () => {
+  const response = await api.get('/movies/user-recommendations');
+  return response.data;
+}
+
+
 export const loadMoviesByGenre = async ({ queryKey }) => {
   const { genre, orderBy='random', page = 1 } = queryKey[1];
 

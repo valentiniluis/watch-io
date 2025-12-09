@@ -6,58 +6,47 @@ import Spinner from "../UI/Spinner";
 import { useDispatch, useSelector } from "react-redux";
 import { interactionTypes } from "../../util/constants";
 import { toastActions } from '../../store/toast';
+import ErrorSection from "../UI/ErrorSection";
 
-export default function MovieInteractions({ onError }) {
+export default function MovieInteractions() {
   const movie = useSelector(state => state.movie);
   const dispatch = useDispatch();
   const { id: movieId } = movie;
 
-  const {
-    data: interactionData,
-    isPending: interactionDataPending,
-    isError: interactionDataIsError
-  } = useQuery({
+  const { data, isPending, isError } = useQuery({
     queryKey: ['interaction', { movieId }],
     queryFn: getInteractions
   });
 
-  const { mutate: add, error: addError, isError: isAddError } = useMutation({
+  const { mutate: add } = useMutation({
     mutationFn: addInteraction,
     onSuccess: async () => await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] }),
-    onError: (ctx) => dispatch(toastActions.setErrorToast(ctx?.message || "Sorry, failed to add interaction."))
+    onError: (ctx) => dispatch(toastActions.setErrorToast(`Failed to add interaction: ${ctx?.response?.data?.message || ctx.message}`))
   });
 
-  const { mutate: remove, error: removeError, isError: isRemoveError } = useMutation({
+  const { mutate: remove } = useMutation({
     mutationFn: removeInteraction,
     onSuccess: async () => await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] }),
-    onError: (ctx) => dispatch(toastActions.setErrorToast(ctx?.message || "Sorry, failed to remove interaction."))
+    onError: (ctx) => dispatch(toastActions.setErrorToast(`Failed to remove interaction: ${ctx?.response?.data?.message || ctx.message}`))
   });
-
-  if (isAddError || isRemoveError) {
-    const message = (isAddError) ? addError.message : removeError.message;
-    onError(message || 'Failed to interact with movie');
-  }
 
   function handleAddInteraction(type) {
     add({ type, movieId });
   }
 
   function handleRemoveInteraction() {
-    remove({ type: interactionData?.type, movieId });
+    remove({ type: data?.type, movieId });
   }
 
   let content;
-  if (interactionDataPending) content = <Spinner />;
-
-  else if (interactionDataIsError) {
-    onError('Failed to fetch your movie interactions');
-    content = <p>Failed to get movie interactions...</p>;
+  if (isPending) {
+    content = <Spinner />
   }
-
-  else if (interactionData?.hasInteraction) {
-    content = (
-      <ToggleInteraction active={true} type={interactionData.type} onClick={handleRemoveInteraction} />
-    );
+  else if (isError) {
+    content = <ErrorSection message="Failed to load interactions." />
+  }
+  else if (data?.hasInteraction) {
+    content = <ToggleInteraction active={true} type={data.type} onClick={handleRemoveInteraction} />
   } else {
     content = (
       <>

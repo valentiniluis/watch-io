@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import MovieRatings from './MovieRatings.jsx';
-import Toast from '../UI/Toast.jsx';
 import MovieInteractions from './MovieInteractions.jsx';
 import noPoster from '/no-movie.png';
 import MovieDetailsSection from './MovieDetailsSection.jsx';
@@ -9,17 +7,15 @@ import MovieDetailsSection from './MovieDetailsSection.jsx';
 
 export default function MovieInfo({ movie }) {
   const auth = useSelector(reduxState => reduxState.auth);
-  const [error, setError] = useState();
   const { isLoggedIn } = auth;
 
   // IMPL
   // overview accordion ?
-  const { title, poster_path, tagline, year, runtime, genres } = movie;
+  const { title, poster_path, tagline, release_year, runtime, genres } = movie;
   const poster = poster_path || noPoster;
 
   return (
     <>
-      {error && <Toast message={error} />}
       <div className='movie-info-container'>
 
         <div className='text-container xl:hidden'>
@@ -36,10 +32,10 @@ export default function MovieInfo({ movie }) {
             : <MovieRatings ratings={movie.ratings} />
           }
           {/* <p className='text-justify mb-6 text-[.9rem] md:text-[1rem]'>{overview}</p> */}
-          {isLoggedIn && <MovieInteractions movie={movie} onError={setError} />}
+          {isLoggedIn && <MovieInteractions movie={movie} />}
           <div className='additional-info mt-8'>
             <p>{genres.map(genre => genre.name).join(', ')}</p>
-            <p className='tracking-wide'>{year}</p>
+            <p className='tracking-wide'>{release_year}</p>
             <p className='tracking-wider'>{runtime}</p>
           </div>
         </div>

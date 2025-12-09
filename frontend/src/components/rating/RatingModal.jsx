@@ -21,7 +21,7 @@ export default function RatingModal({ ref, editMode, data }) {
   const { mutate } = useMutation({
     mutationFn: mutateRating,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ratings'] }),
-    onError: (ctx) => dispatch(toastActions.setErrorToast(ctx?.response?.data?.message || "Failed to rate movie. Sorry!"))
+    onError: (ctx) => dispatch(toastActions.setErrorToast(`Failed to rate movie: ${ctx?.response?.data?.message || ctx.message}`))
   });
 
   async function submitAndClose(event) {

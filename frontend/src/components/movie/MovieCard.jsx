@@ -3,16 +3,22 @@ import star from '/star.svg';
 import noPoster from '/no-movie.png';
 import { useRef } from 'react';
 
+const DRAG_THRESHOLD_PIXELS = 10;
 
 export default function MovieCard({ movie, linkTo }) {
+  const startPositionRef = useRef();
   const draggingRef = useRef(false);
 
-  function handleMouseDown() {
+  function handleMouseDown(e) {
+    console.log(e);
+    startPositionRef.current = e.clientX;
     draggingRef.current = false;
   }
 
-  function handleMouseMove() {
-    draggingRef.current = true;
+  function handleMouseMove(e) {
+    if (startPositionRef.current === null) return;
+    const distanceX = Math.abs(startPositionRef.current - e.clientX);
+    if (distanceX > DRAG_THRESHOLD_PIXELS) draggingRef.current = true;
   }
 
   function handleClick(e) {
@@ -20,6 +26,7 @@ export default function MovieCard({ movie, linkTo }) {
       e.preventDefault();
       e.stopPropagation();
     }
+    startPositionRef.current = null;
     draggingRef.current = false;
   }
 

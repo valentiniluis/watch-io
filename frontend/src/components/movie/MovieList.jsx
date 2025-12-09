@@ -9,7 +9,7 @@ export default function MovieList({ title, movies, fallback }) {
   if (movies?.length === 0) {
     return (
       <div className="my-24 text-center">
-        <h3 className='section-title'>{title}</h3>
+        {title && <h3 className='section-title'>{title}</h3>}
         <h3 className="text-xl text-stone-300">{fallback}</h3>
       </div>
     );
@@ -27,8 +27,8 @@ export default function MovieList({ title, movies, fallback }) {
 
   return (
     <section className='relative my-4 md:my-8 lg:my-12'>
-      <h3 className='section-title'>{title}</h3>
-      <ScrollContainer className="movie-list" horizontal vertical={false} innerRef={recommendationsRef} >
+      {title && <h3 className='section-title'>{title}</h3>}
+      <ScrollContainer className="movie-list" horizontal vertical={false} innerRef={recommendationsRef}  >
         <button
           className={scrollBtnClass + ' left-0 -translate-x-full'}
           onClick={() => handleScroll('left')}

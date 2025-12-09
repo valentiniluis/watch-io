@@ -5,6 +5,7 @@ import ErrorSection from '../components/UI/ErrorSection';
 import MovieList from '../components/movie/MovieList';
 import { mainGenres } from '../util/constants.js';
 import { loadMoviesByGenre } from '../util/movie-query.js';
+import RecommendationsSection from '../components/movie/RecommendationsSection.jsx';
 
 
 export default function HomePage() {
@@ -52,7 +53,6 @@ export default function HomePage() {
     return () => observers.forEach(observer => observer.disconnect());
   }, [enabledQueries]);
 
-
   const content = results.map((result, i) => {
     if (!enabledQueries[i]) return null;
     const { data, isPending, isError, error } = result;
@@ -71,10 +71,7 @@ export default function HomePage() {
 
   return (
     <section className='content-wrapper'>
-      <section className="text-center my-40" id='recommendations-section'>
-        <h1 className='text-2xl font-bold'>Our Recommendations For You</h1>
-        <p>...</p>
-      </section>
+      <RecommendationsSection />
       <section id='genres-section'>
         {content}
       </section>

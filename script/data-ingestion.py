@@ -15,7 +15,7 @@ HEADERS = {
 REQUEST_LIMIT = { 'PERIOD': 1, 'LIMIT': 50 }
 MIN_VOTES = 300
 MIN_VOTE_AVG = 5
-MIN_POPULARITY = 1
+MIN_POPULARITY = 0.5
 
 
 def connectDB(retries=3):
@@ -91,7 +91,7 @@ def requestAndStoreMovieDetails(movieId, cursor, conn):
     cursor.executemany(statement, data)
 
     def filterArtist(person):
-      return person['popularity'] > MIN_POPULARITY
+      return person['popularity'] > MIN_POPULARITY or person.get('job') == 'Director'
     
     cast = list(filter(filterArtist, movieData['credits']['cast']))
     crew = list(filter(filterArtist, movieData['credits']['crew']))

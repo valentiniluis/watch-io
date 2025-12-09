@@ -10,16 +10,17 @@ router.get('/search', optionallyAuthenticateJWT, moviesControllers.getSearchedMo
 // get all possible genres
 router.get('/genres', moviesControllers.getMovieGenres);
 
+// get recommendations based on user profile
+router.get('/user-recommendations', optionallyAuthenticateJWT, moviesControllers.getUserRecommendations);
+
+// get only movies of a certain genre
+router.get('/genre/:genreId', optionallyAuthenticateJWT, moviesControllers.getMoviesByGenre);
+
 // get data for a particular movie
 router.get('/:movieId', optionallyAuthenticateJWT, moviesControllers.getMovieData);
 
 // get recommendations based on a particular movie
 router.get('/:movieId/recommendations', optionallyAuthenticateJWT, moviesControllers.getMovieRecommendations);
 
-// get recommendations based on user profile
-router.get('/user-recommendations', authenticateJWT, moviesControllers.getUserRecommendations);
-
-// get only movies of a certain genre
-router.get('/genre/:genreId', optionallyAuthenticateJWT, moviesControllers.getMoviesByGenre);
 
 export default router;
