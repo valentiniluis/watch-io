@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useMutation } from "@tanstack/react-query";
 import queryClient from '../../util/query';
 import Input from "../UI/Input";
-import { addRating, editRating } from "../../util/movie-query";
+import { mutateRating } from "../../util/movie-query";
 import Modal from "../layout/Modal";
 import RatingInput from './RatingInput';
 import { toastActions } from '../../store/toast';
@@ -19,7 +19,7 @@ export default function RatingModal({ ref, editMode, data }) {
   }
 
   const { mutate } = useMutation({
-    mutationFn: editMode ? editRating : addRating,
+    mutationFn: mutateRating,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ratings'] }),
     onError: (ctx) => dispatch(toastActions.setErrorToast(ctx?.response?.data?.message || "Failed to rate movie. Sorry!"))
   });
@@ -33,7 +33,7 @@ export default function RatingModal({ ref, editMode, data }) {
       score: +rating.score,
       note: rating.note.length > 0 ? rating.note : undefined
     };
-    mutate({ rating, movieId });
+    mutate({ rating, movieId, method: (editMode === true) ? "PUT" : "POST" });
     event.target.reset();
     handleClose();
   }

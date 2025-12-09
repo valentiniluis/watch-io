@@ -22,8 +22,8 @@ export default function MovieRecommendations() {
     content = <ErrorSection message="Failed to Load Recommendations." />;
   }
   else if (data) {
-    const movies = data.recommendations;
-    content = <MovieList title="You May Like" fallback="Failed to load recommendations" movies={movies} />
+    const { recommendations } = data;
+    content = <MovieList title="You May Like" fallback="Failed to load recommendations" movies={recommendations} />
   }
 
   return content;

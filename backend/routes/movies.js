@@ -2,7 +2,7 @@ import express from 'express';
 const router = express.Router();
 
 import * as moviesControllers from '../controllers/movies.js';
-import { optionallyAuthenticateJWT } from '../middleware/auth.js';
+import { authenticateJWT, optionallyAuthenticateJWT } from '../middleware/auth.js';
 
 // search/discover movies
 router.get('/search', optionallyAuthenticateJWT, moviesControllers.getSearchedMovies);
@@ -14,7 +14,10 @@ router.get('/genres', moviesControllers.getMovieGenres);
 router.get('/:movieId', optionallyAuthenticateJWT, moviesControllers.getMovieData);
 
 // get recommendations based on a particular movie
-router.get('/:movieId/recommendations', optionallyAuthenticateJWT, moviesControllers.getRecommendations);
+router.get('/:movieId/recommendations', optionallyAuthenticateJWT, moviesControllers.getMovieRecommendations);
+
+// get recommendations based on user profile
+router.get('/user-recommendations', authenticateJWT, moviesControllers.getUserRecommendations);
 
 // get only movies of a certain genre
 router.get('/genre/:genreId', optionallyAuthenticateJWT, moviesControllers.getMoviesByGenre);

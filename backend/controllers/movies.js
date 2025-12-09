@@ -1,9 +1,9 @@
 import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
 import pool from '../model/postgres.js';
-import { getFullPosterPath, getRuntimeString, filterOMDBData, fillAllLogoPaths, fetchAndSanitizeMovies, fetchMovie, sanitizeMovie } from '../util/api-util.js';
-import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData, insertMovie } from '../util/db-util.js';
-import { throwError, validatePage } from '../util/util-functions.js';
+import { getFullPosterPath, getRuntimeString, filterOMDBData, fillAllLogoPaths } from '../util/api-util.js';
+import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData } from '../util/db-util.js';
+import { getMovieBasedRecommendationQuery, throwError, validatePage } from '../util/util-functions.js';
 import { genreIdSchema, orderByValidation, countryValidation, movieIdValidation } from '../util/validationSchemas.js';
 
 
@@ -28,11 +28,6 @@ export const getMovieData = async (req, res, next) => {
     const { user } = req;
     const { value: movieId, error } = movieIdValidation.required().validate(req.params.movieId);
     if (error) throwError(400, "Invalid Movie: " + error.message);
-
-    let movieData;
-    movieData = await fetchMovie(movieId);
-    movieData = sanitizeMovie(movieData);
-    console.log(movieData);
 
     const { value: country, error: countryErr } = countryValidation.validate(req.query.country);
     if (countryErr) throwError(400, 'Invalid country: ' + countryErr.message);
@@ -77,12 +72,34 @@ export const getMovieData = async (req, res, next) => {
 }
 
 
-export const getRecommendations = async (req, res, next) => {
+export const getMovieRecommendations = async (req, res, next) => {
   try {
     const { value: movieId, error } = movieIdValidation.required().validate(req.params.movieId);
     if (error) throwError(400, "Invalid Movie: " + error.message);
-    const urlTMDB = `/movie/${movieId}/recommendations`;
-    const recommendations = await fetchAndSanitizeMovies(urlTMDB);
+
+    const limit = 25;
+    const [query, args] = getMovieBasedRecommendationQuery({ movieId, limit });
+    const { rows: recommendations } = await pool.query(query, args);
+
+    // const urlTMDB = `/movie/${movieId}/recommendations`;
+    // const recommendations = await fetchAndSanitizeMovies(urlTMDB);
+
+    res.status(200).json({ success: true, recommendations });
+  } catch (err) {
+    if (!err.statusCode) err.statusCode = 500;
+    next(err);
+  }
+}
+
+
+export const getUserRecommendations = async (req, res, next) => {
+  try {
+    const { user } = req;
+
+    const limit = 25;
+    const [query, args] = getUserRecommendations({ userId: user.id, limit });
+    const { rows: recommendations } = await pool.query(query, args);
+
     res.status(200).json({ success: true, recommendations });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;

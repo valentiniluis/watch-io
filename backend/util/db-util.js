@@ -1,5 +1,4 @@
 import pool from '../model/postgres.js';
-import { fetchMovie, sanitizeMovie } from './api-util.js';
 import { calculateOffset } from './util-functions.js';
 
 

@@ -9,7 +9,7 @@ router.get('/', authenticateJWT, ratingControllers.getRatings);
 
 router.post('/', authenticateJWT, ratingControllers.postRating);
 
-router.put('/:movieId', authenticateJWT, ratingControllers.putRating);
+router.put('/', authenticateJWT, ratingControllers.putRating);
 
 router.delete('/:movieId', authenticateJWT, ratingControllers.deleteRating);
 

@@ -30,15 +30,13 @@ export async function getRatings({ queryKey }) {
 }
 
 
-export async function addRating({ rating, movieId }) {
+export async function mutateRating({ rating, movieId, method }) {
   const body = { ...rating, movieId };
-  const response = await api.post('/ratings', body);
-  return response.data;
-}
-
-
-export async function editRating({ movie, rating }) {
-  const response = await api.put(`/ratings/${movie.id}`, rating);
+  if (!['POST', 'PUT'].includes(method)) throw new Error("Invalid method!");
+  let response;
+  const url = "/ratings";
+  if (method === 'POST') response = await api.post(url, body);
+  else if (method === 'PUT') response = await api.put(url, body);
   return response.data;
 }
 
