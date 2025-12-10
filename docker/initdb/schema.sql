@@ -125,14 +125,20 @@ values
 	('not interested'),
 	('watchlist');
 
+
 -- indexes:
+
 -- index para ordenar filmes pela média de avaliação, tornando mais rápidas as consultas de filmes melhor avaliados
 create index idx_movie_tmdb_rating on movie using btree (tmdb_rating);
 
 -- index para id do gênero dos filmes, tornando mais rápidas as consultas de filmes por gênero
 create index idx_movie_genre_genre_id on movie_genre using btree (genre_id);
 
--- index para id do usuário na tabela de interações
--- facilita a consulta de filmes interagidos por um usuário
--- desativado por enquanto
--- create index idx_interaction_user_id on interaction using btree (user_id);
+-- índices para tornar mais rápida a pesquisa de filmes por título, organizando os títulos em ordem alfabética.
+create index idx_movie_title on movie using btree (title);
+create index idx_movie_original_title on movie using btree (original_title);
+
+-- índices para agilizar os joins de cast e crew
+create index idx_movie_cast_artist_id on movie_cast using btree (artist_id);
+create index idx_crew_artist_id on crew using btree (artist_id);
+create index idx_movie_keyword_keyword_id on movie_keyword using btree (keyword_id);

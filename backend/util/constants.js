@@ -14,3 +14,5 @@ export const RECOMMENDATION_WEIGHTS = {
   genres: 1,
   rating: 3
 }
+
+export const JWT_EXPIRY_HOURS = 6;

@@ -3,6 +3,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { loginSchema } from '../util/validationSchemas.js';
 import { throwError } from '../util/util-functions.js';
 import pool from '../model/postgres.js';
+import { JWT_EXPIRY_HOURS } from '../util/constants.js';
 
 
 export const postLogin = async (req, res, next) => {
@@ -28,19 +29,24 @@ export const postLogin = async (req, res, next) => {
       ($1, $2, $3)
       ON CONFLICT (id) DO NOTHING;`,
       [payload.sub, payload.email, payload.name]
-    )
+    );
 
+    const expiry = JWT_EXPIRY_HOURS + 'h';
     const token = jwt.sign({
       sub: payload.sub,
       email: payload.email,
       name: payload.name
     },
       process.env.JWT_SECRET,
-      { expiresIn: '4h' }
+      { expiresIn: expiry }
     );
 
+    const expireTime = new Date();
+    expireTime.setHours(expireTime.getHours() + JWT_EXPIRY_HOURS);
+    const tokenExpire = expireTime.getTime();
+
     res.cookie('WATCHIO_JWT', token, { httpOnly: true });
-    res.status(200).json({ success: true, message: 'Authentication successful', token, user: payload });
+    res.status(200).json({ success: true, message: 'Authentication successful', token, user: payload, tokenExpire });
   } catch (err) {
     next(err);
   }

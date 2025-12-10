@@ -9,9 +9,10 @@ export const authenticateJWT = (req, res, next) => {
   let decodedToken;
   try {
     decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decodedToken) throw new Error();
+    if (!decodedToken) throw new Error('Invalid Credentials');
   } catch (err) {
-    return res.status(401).json({ success: false, message: 'Invalid Credentials'});
+    err.statusCode = 401;
+    return next(err);
   }
 
   let userData = { ...decodedToken, id: decodedToken.sub };

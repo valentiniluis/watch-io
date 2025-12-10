@@ -23,7 +23,7 @@ O projeto consiste num website recomendador de filmes. Responsivo para telas de 
 
 ## Stack
 
-Estão sendo usadas as seguintes tecnologias no desenvolvimento do projeto:
+Foram usadas as seguintes tecnologias no desenvolvimento do projeto:
 
 ### Front-End
 

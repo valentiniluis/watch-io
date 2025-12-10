@@ -3,7 +3,7 @@ import Joi from "joi";
 
 export const orderByValidation = Joi.string().valid('title.asc', 'title.desc', 'release_year.asc', 'release_year.desc', 'tmdb_rating.asc', 'tmdb_rating.desc', 'random').optional().default('random');
 
-export const limitValidation = Joi.number().integer().positive().optional().max(50).default(30);
+export const limitValidation = Joi.number().integer().positive().optional().max(50).default(25);
 
 export const pageValidation = Joi.number().integer().positive().optional().default(1);
 

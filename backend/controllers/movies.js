@@ -4,7 +4,7 @@ import pool from '../model/postgres.js';
 import { getFullPosterPath, getRuntimeString, filterOMDBData, fillAllLogoPaths } from '../util/api-util.js';
 import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData } from '../util/db-util.js';
 import { getMovieBasedRecommendationQuery, getUserBasedRecommendationQuery, throwError, validatePage } from '../util/util-functions.js';
-import { genreIdSchema, orderByValidation, countryValidation, movieIdValidation } from '../util/validationSchemas.js';
+import { genreIdSchema, orderByValidation, countryValidation, movieIdValidation, limitValidation } from '../util/validationSchemas.js';
 
 
 export const getSearchedMovies = async (req, res, next) => {
@@ -73,14 +73,16 @@ export const getMovieData = async (req, res, next) => {
 
 
 export const getMovieRecommendations = async (req, res, next) => {
-  try {    
-    const { value: movieId, error } = movieIdValidation.required().validate(req.params.movieId);
-    if (error) throwError(400, "Invalid Movie: " + error.message);
+  try {
+    const { value: movieId, error: movieErr } = movieIdValidation.required().validate(req.params.movieId);
+    if (movieErr) throwError(400, "Invalid Movie: " + movieErr.message);
+
+    const { value: limit, limitErr } = limitValidation.validate(req.query.limit);
+    if (limitErr) throwError(400, `Invalid limit: ${limitErr.message}`);
 
     const { user } = req;
     const userId = (user && user.id) ? user.id : null;
 
-    const limit = 25;
     const [query, args] = getMovieBasedRecommendationQuery({ movieId, limit, userId });
     const { rows: recommendations } = await pool.query(query, args);
 
@@ -94,27 +96,49 @@ export const getMovieRecommendations = async (req, res, next) => {
 
 export const getUserRecommendations = async (req, res, next) => {
   try {
+    const { value: limit, error } = limitValidation.validate(req.query.limit);
+    if (error) throwError(400, `Invalid limit: ${error.message}`);
+
     const { user } = req;
-    const limit = 25;
+
+    // fallback query will be used if the user's not logged in or has no liked/well-rated movies
+    // take 250 best rated movies and use random 25 movies sample
+    const fallbackQuery = `
+      WITH best_rated AS (
+        SELECT *, ROUND(tmdb_rating, 1) AS tmdb_rating
+        FROM movie AS mo
+        ORDER BY mo.tmdb_rating DESC
+        LIMIT 250
+      )
+      SELECT *
+      FROM best_rated
+      ORDER BY RANDOM()
+      LIMIT 25;
+    `;
 
     let result;
     if (!user) {
-      // take 250 best rated movies and use random 25 movies sample
-      result = await pool.query(`
-        WITH best_rated AS (
-          SELECT *, ROUND(tmdb_rating, 1) AS tmdb_rating
-          FROM movie AS mo
-          ORDER BY mo.tmdb_rating DESC
-          LIMIT 250
-        )
-        SELECT *
-        FROM best_rated
-        ORDER BY RANDOM()
-        LIMIT 25;`
-      );
+      result = await pool.query(fallbackQuery);
     } else {
-      const [query, args] = getUserBasedRecommendationQuery({ userId: user.id, limit });
-      result = await pool.query(query, args);
+      const { rows } = await pool.query(`
+        SELECT 1
+        FROM interaction AS itr
+        WHERE user_id = $1
+        AND itr.type_id = (SELECT id FROM interaction_type WHERE interaction_type = 'like')
+        UNION ALL
+        SELECT 1
+        FROM movie_rating
+        WHERE user_id = $1
+        AND score >= 7;
+        `,
+        [user.id]
+      );
+
+      if (rows.length === 0) result = await pool.query(fallbackQuery);
+      else {
+        const [query, args] = getUserBasedRecommendationQuery({ userId: user.id, limit });
+        result = await pool.query(query, args);
+      }
     }
 
     const { rows: recommendations } = result;

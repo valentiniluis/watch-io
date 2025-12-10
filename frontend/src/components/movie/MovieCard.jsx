@@ -10,7 +10,6 @@ export default function MovieCard({ movie, linkTo }) {
   const draggingRef = useRef(false);
 
   function handleMouseDown(e) {
-    console.log(e);
     startPositionRef.current = e.clientX;
     draggingRef.current = false;
   }
