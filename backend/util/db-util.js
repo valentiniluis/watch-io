@@ -155,11 +155,10 @@ export const insertMovie = async (movie) => {
     await client.query("BEGIN");
 
     await client.query(`
-    INSERT INTO
-    movie (id, title, original_title, original_language, poster_path, release_year, tmdb_rating)
-    VALUES
-    ($1, $2, $3, $4, $5, $6, $7)
-    ON CONFLICT (id) DO NOTHING;`,
+      INSERT INTO
+      movie (id, title, original_title, original_language, poster_path, release_year, tmdb_rating)
+      VALUES
+      ($1, $2, $3, $4, $5, $6, $7);`,
       [movieId, title, original_title, original_language, poster_path, release_year, tmdb_rating.toFixed(2)]
     );
 
@@ -167,11 +166,10 @@ export const insertMovie = async (movie) => {
     const genre_ids = genres.map(genre => genre.id);
     args = [movieId].concat(genre_ids);
     await client.query(`
-    INSERT INTO
-    movie_genre (movie_id, genre_id)
-    VALUES
-    ${values}
-    ON CONFLICT (movie_id, genre_id) DO NOTHING;`,
+      INSERT INTO
+      movie_genre (movie_id, genre_id)
+      VALUES
+      ${values};`,
       args
     );
 
@@ -179,11 +177,11 @@ export const insertMovie = async (movie) => {
     values = constructValues(2, keywords);
     args = keywords.forEach(({ id, keyword }) => idKeyword.push(id, keyword));
     await client.query(`
-    INSERT INTO
-    keyword (id, keyword)
-    VALUES
-    ${values}
-    ON CONFLICT (id) DO NOTHING;`,
+      INSERT INTO
+      keyword (id, keyword)
+      VALUES
+      ${values}
+      ON CONFLICT (id) DO NOTHING;`,
       args
     );
 
@@ -191,11 +189,10 @@ export const insertMovie = async (movie) => {
     const keyword_ids = keywords.map(keyword => keyword.id);
     args = [movieId].concat(keyword_ids);
     await client.query(`
-    INSERT INTO
-    movie_keyword (movie_id, keyword_id)
-    VALUES
-    ${values}
-    ON CONFLICT (movie_id, keyword_id) DO NOTHING;`,
+      INSERT INTO
+      movie_keyword (movie_id, keyword_id)
+      VALUES
+      ${values};`,
       args
     );
 
@@ -206,36 +203,35 @@ export const insertMovie = async (movie) => {
       artistData.push(id, name, original_name, known_for_department, popularity)
     );
     await client.query(`
-    INSERT INTO 
-    artist (id, artist_name, original_name, known_for, popularity) 
-    VALUES 
-    ${values} 
-    ON CONFLICT (id) DO NOTHING;`,
+      INSERT INTO 
+      artist (id, artist_name, original_name, known_for, popularity) 
+      VALUES 
+      ${values} 
+      ON CONFLICT (id) DO NOTHING;`,
       args
     );
 
     const castArgs = [];
-    values = cast.forEach((_, index) => `($1, $${index * 2 + 2}), $${index * 2 + 3})`).join(", ");
-    cast.forEach(({ id, character }) => castArgs.push(id, character));
+    values = cast.forEach((_, index) => `($1, $${index * 3 + 2}, $${index * 3 + 3}, $${index * 3 + 4})`).join(", ");
+    cast.forEach(({ id, character, credit_id }) => castArgs.push(id, character, credit_id));
     args = [movieId].concat(castArgs);
     await client.query(`
-    INSERT INTO 
-    movie_cast (movie_id, artist_id, character_name) 
-    VALUES 
-    ${values}
-    ON CONFLICT (movie_id, artist_id) DO NOTHING;`,
+      INSERT INTO 
+      movie_cast (movie_id, artist_id, credit_id, character_name) 
+      VALUES 
+      ${values};`,
       args
     );
 
     const crewArgs = [];
-    values = crew.forEach((_, index) => `($1, $${index * 4 + 2}), $${index * 4 + 3}, $${index * 4 + 4}), $${index * 4 + 5})`).join(", ");
+    values = crew.forEach((_, index) => `($1, $${index * 4 + 2}, $${index * 4 + 3}, $${index * 4 + 4}, $${index * 4 + 5})`).join(", ");
     crew.forEach(({ id, credit_id, department, job }) => castArgs.push(id, credit_id, department, job));
     args = [movieId].concat(crewArgs);
     await client.query(`
-    INSERT INTO 
-    crew (movie_id, artist_id, credit_id, department, job) 
-    VALUES 
-    ${values};`,
+      INSERT INTO 
+      crew (movie_id, artist_id, credit_id, department, job) 
+      VALUES 
+      ${values};`,
       args
     );
 

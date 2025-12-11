@@ -6,14 +6,13 @@ import BlockIcon from '/block.svg';
 
 
 export default function ToggleInteraction({ className, type, active=false, ...props }) {
-  let cssClass = 'w-fit rounded-md py-2 px-4 uppercase text-[.7rem] text-nowrap tracking-wider mt-4 font-semibold';
+  let cssClass = 'w-fit rounded-md py-1.5 px-2.5 uppercase text-[.7rem] text-nowrap tracking-wider mt-4 font-semibold';
   if (className) cssClass += ' ' + className;
 
-  let text;
-  let icon;
+  let text, icon;
   switch (type) {
     case 'watchlist':
-      text = (active) ? 'Remove From Watchlist' : 'Add to Watchlist';
+      text = (active) ? 'Remove From Watchlist' : 'Watchlist';
       icon = (active) ? RemoveIcon : AddWatchlistIcon;
       cssClass += ' border-1 border-stone-400 bg-transparent text-stone-200 hover:bg-stone-700';
       break;
@@ -31,8 +30,8 @@ export default function ToggleInteraction({ className, type, active=false, ...pr
 
   return (
     <button {...props} className={cssClass}>
-      <p className="flex justify-center items-center gap-2">
-        <img src={icon} alt={type + ' Icon'} className='h-3.5 w-min' />
+      <p className="flex justify-center items-center gap-1.5">
+        <img src={icon} alt={type + ' Icon'} className='h-3 w-min' />
         <span>{text}</span>
       </p>
     </button>

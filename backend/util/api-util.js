@@ -71,14 +71,11 @@ export function getRuntimeString(totalMinutes) {
 export function filterOMDBData(data) {
   return {
     actors: data.Actors,
-    awards: data.Awards,
     director: data.Director,
-    metascore: data.Metascore,
-    plot: data.Plot,
+    awards: data.Awards,
     rated: data.Rated,
     ratings: data.Ratings,
     release_year: data.Year,
-    imdb_rating: data.imdbRating,
     imdb_votes: data.imdb_votes
   };
 }

@@ -89,7 +89,7 @@ body {
     @apply flex flex-col items-center justify-center xl:flex-row xl:items-stretch;
 
     & img {
-      @apply max-h-[225px] sm:max-h-[400px] md:max-h-[450px] lg:max-h-[500px] rounded-sm;
+      @apply max-h-[250px] sm:max-h-[350px] md:max-h-[400px] lg:max-h-[450px] xl:max-h-[500px] rounded-sm;
     }
 
     & .text-container {
@@ -101,7 +101,7 @@ body {
     }
 
     & .tagline {
-      @apply text-center font-medium text-[1rem] text-stone-200 mb-5 md:mb-8 lg:mb-10 xl:mb-0 text-base sm:text-lg md:text-xl;
+      @apply text-center font-medium mt-2 text-[1rem] text-stone-200 mb-5 md:mb-8 lg:mb-10 xl:mb-0 text-base sm:text-lg md:text-xl;
     }
 
     & .additional-info {

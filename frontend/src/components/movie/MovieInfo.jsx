@@ -3,15 +3,14 @@ import MovieRatings from './MovieRatings.jsx';
 import MovieInteractions from './MovieInteractions.jsx';
 import noPoster from '/no-movie.png';
 import MovieDetailsSection from './MovieDetailsSection.jsx';
+import Overview from '../UI/Overview.jsx';
 
 
 export default function MovieInfo({ movie }) {
   const auth = useSelector(reduxState => reduxState.auth);
   const { isLoggedIn } = auth;
 
-  // IMPL
-  // overview accordion ?
-  const { title, poster_path, tagline, release_year, runtime, genres } = movie;
+  const { title, poster_path, tagline, release_year, runtime, genres, overview } = movie;
   const poster = poster_path || noPoster;
 
   return (
@@ -23,16 +22,16 @@ export default function MovieInfo({ movie }) {
           {tagline && <h4 className='tagline'>{tagline}</h4>}
         </div>
 
-        <img src={poster} alt={title + ' Movie Poster'} />
+        <div className='flex flex-col items-center xl:min-w-[400px]'>
+          <img src={poster} alt={title + ' Movie Poster'} />
+          {isLoggedIn && <MovieInteractions movie={movie} />}
+        </div>
+
         <div className='text-container'>
           <h1 className='movie-name hidden xl:inline-block'>{title}</h1>
           {tagline && <h4 className='tagline hidden xl:inline-block'>{tagline}</h4>}
-          {movie.ratings?.length === 0 ?
-            <p className='text-center small-text'>No ratings available.</p>
-            : <MovieRatings ratings={movie.ratings} />
-          }
-          {/* <p className='text-justify mb-6 text-[.9rem] md:text-[1rem]'>{overview}</p> */}
-          {isLoggedIn && <MovieInteractions movie={movie} />}
+          <MovieRatings ratings={movie.ratings} />
+          <Overview overviewText={overview} />
           <div className='additional-info mt-8'>
             <p>{genres.map(genre => genre.name).join(', ')}</p>
             <p className='tracking-wide'>{release_year}</p>

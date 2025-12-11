@@ -107,8 +107,8 @@ def requestAndStoreMovieDetails(movieId, cursor, conn):
     cursor.executemany(statement, data)
 
     # associate actors to movie
-    statement = "INSERT INTO movie_cast (movie_id, artist_id, character_name) VALUES (%s, %s, %s);"
-    data = [(movieId, actor['id'], actor['character']) for actor in cast]
+    statement = "INSERT INTO movie_cast (movie_id, artist_id, credit_id, character_name) VALUES (%s, %s, %s, %s);"
+    data = [(movieId, actor['id'], actor['credit_id'], actor['character']) for actor in cast]
     cursor.executemany(statement, data)
 
     # associate crew (director, writers, producers) to the movie
@@ -209,18 +209,18 @@ if __name__ == '__main__':
     print("Movies already in the local database. Exiting successfully.")
     exit(0)
 
-  # genres = None
-  # try:
-  #   GENRES_URL = f'{BASE_URL}/genre/movie/list'
-  #   genres = makeRequest(GENRES_URL)
-  #   storeGenres(genres, cursor, connection)
-  #   print('Stored movie genres successfully.')
-  # except Exception as err:
-  #   print("Fatal error - exiting...")
-  #   print('Failed to request and store genres: ' + err)
-  #   exit(1)
+  genres = None
+  try:
+    GENRES_URL = f'{BASE_URL}/genre/movie/list'
+    genres = makeRequest(GENRES_URL)
+    storeGenres(genres, cursor, connection)
+    print('Stored movie genres successfully.')
+  except Exception as err:
+    print("Fatal error - exiting...")
+    print('Failed to request and store genres: ' + err)
+    exit(1)
 
-  # documentaryId = getGenreId('Documentary', genres)
+  documentaryId = getGenreId('Documentary', genres)
   MOVIES_ENDPOINT = f'{BASE_URL}/discover/movie?sort_by=vote_average.desc&vote_average.gte={MIN_VOTE_AVG}&vote_count.gte={MIN_VOTES}&without_genres={99}'
 
   sample = makeRequest(MOVIES_ENDPOINT)
@@ -241,7 +241,8 @@ if __name__ == '__main__':
       if page % tenPercent == 0:
         print(f"Progress: {page / pagesToRequest * 100}% of pages requested and stored. {pagesToRequest - page} pages left.")
     except Exception as error:
-      print(f"Failed to fetch or store page of movies #{page}: " + error)
+      print(f"Failed to fetch or store page of movies #{page}. Error:")
+      print(error)
   
   markAsInitialized(cursor, connection)
   cursor.close()

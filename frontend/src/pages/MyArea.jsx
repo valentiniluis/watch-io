@@ -30,7 +30,7 @@ export default function MyArea() {
 
   let content;
   if (isPending) {
-    const message = getMyAreaLoadingMessage(contentType);
+    const message = getMyAreaLoadingMessage(contentType.label);
     content = <Spinner text={message} />;
   }
   else if (isError) {

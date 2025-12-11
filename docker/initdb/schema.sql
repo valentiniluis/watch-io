@@ -84,8 +84,9 @@ create table
 	if not exists movie_cast (
 		movie_id integer not null,
 		artist_id integer not null,
-		character_name varchar(100) not null,
-		constraint pk_movie_cast primary key (movie_id, artist_id),
+		credit_id varchar(100) not null,
+		character_name text not null,
+		constraint pk_movie_cast primary key (movie_id, artist_id, credit_id),
 		constraint fk_movie_cast_movie foreign key (movie_id) references movie (id),
 		constraint fk_movie_cast_artist foreign key (artist_id) references artist (id)
 	);
