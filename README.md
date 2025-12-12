@@ -50,6 +50,8 @@ Visando uma interface simples mas agradável e responsiva e um back-end rápido 
 
 ![Segunda Gravação de Tela](./docs/media/recording-two.gif)
 
+A pesquisa considera o título do filme traduzido para inglês e o título original do filme. Portanto, é possível pesquisar filmes brasileiros em português, por exemplo.
+
 * Interagir com filmes: há a opção de 'Curtir', 'Adicionar à Minha Lista' (Watchlist) e marcar como 'Não Interessado'. Filmes marcados como 'Não Interessado' não serão mostrados ao usuário em recomendações ou pesquisas. Filmes na Watchlist são armazenados para que o usuário possa vê-los mais tarde. Já os filmes curtidos são usados para fornecer novas recomedações ao usuário. Os filmes interagidos (de cada tipo de interação) podem ser vistos na página 'My Area' (Minha Área), de forma separada e as interações podem ser feitas/desfeitas com um clique.
 
 * Avaliar filmes: o usuário pode avaliar, de 1 a 10, todos os filmes do catálogo. É permitida uma avaliação de um usuário por filme, além de um título e descrição para a avaliação. As avaliações podem ser editadas/excluídas na página _My Area_.
@@ -71,6 +73,8 @@ Os pesos utilizados de fato estão no arquivo [/backend/util/constants.js](./bac
 * Utilização de react-query no front-end para otimização de performance por meio de cache de dados e redução de utilização de rede.
 
 * Utilização de react-redux no front-end para gerenciamento de estados globais de forma rápida e eficiente.
+
+* Uso de Node-cron para executar script a cada 2 semanas, atualizando o catálogo de filmes da aplicação com os mais novos lançamentos.
 
 * Experiência personalizada, visualização de interações (Like, Watchlist e Not Interested) de forma fácil e centralizada, como mostrado a seguir:
 
