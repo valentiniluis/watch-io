@@ -107,7 +107,7 @@ export function sanitizeMovie(movie) {
     title,
     overview,
     poster_path: getFullPosterPath(poster_path),
-    release_date: getReleaseYear(release_date),
+    release_year: getReleaseYear(release_date),
     runtime: getRuntimeString(runtime),
     tagline,
     tmdb_rating: vote_average,

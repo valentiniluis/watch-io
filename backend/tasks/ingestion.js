@@ -2,10 +2,8 @@ import cron from 'node-cron';
 import { MIN_RATING, MIN_VOTES } from '../util/constants.js';
 import tmdbAPI from '../api/tmdb-api.js';
 import { fetchAndSanitizeMovies, fetchMovie, sanitizeMovie } from '../util/api-util.js';
-import pool from '../model/postgres.js';
 import { insertMovie } from '../util/db-util.js';
 
-// TEST
 
 // inserting newly released movies to the database. shouldn't take longer than a few seconds
 async function ingestRecentMovies() {
@@ -33,7 +31,6 @@ async function ingestRecentMovies() {
   const pages = await getPages();
   if (!pages) return;
 
-  const client = await pool.connect();
   let successCount = 0;
 
   for (let page = 1; page <= pages; page++) {
@@ -43,7 +40,7 @@ async function ingestRecentMovies() {
       movies.forEach(async (movie) => {
         const data = await fetchMovie(movie.id);
         const sanitizedMovie = sanitizeMovie(data);
-        const error = await insertMovie(client, sanitizedMovie);
+        const error = await insertMovie(sanitizedMovie);
         if (!error) successCount++;
         else console.log(`Failed to insert movie of id ${movie.id}: ${error.message}`);
       });

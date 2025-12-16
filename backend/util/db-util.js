@@ -146,14 +146,14 @@ export const insertMovie = async (movie) => {
     let values, args;
 
     const {
-      movieId, title, original_title, original_language,
+      id: movieId, title, original_title, original_language,
       poster_path, release_year, tmdb_rating, genres,
       keywords, cast, crew
     } = movie;
 
     // inserting a movie must be an atomic transaction
     await client.query("BEGIN");
-
+    
     await client.query(`
       INSERT INTO
       movie (id, title, original_title, original_language, poster_path, release_year, tmdb_rating)
@@ -241,6 +241,6 @@ export const insertMovie = async (movie) => {
     client.query("ROLLBACK");
   } finally {
     client.release();
-    return err;
+    return error;
   }
 }

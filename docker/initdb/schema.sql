@@ -137,7 +137,6 @@ create index idx_movie_genre_genre_id on movie_genre using btree (genre_id);
 
 -- índices para tornar mais rápida a pesquisa de filmes por título, organizando os títulos em ordem alfabética.
 create index idx_movie_title on movie using btree (title);
-create index idx_movie_original_title on movie using btree (original_title);
 
 -- índices para agilizar os joins de cast e crew
 create index idx_movie_cast_artist_id on movie_cast using btree (artist_id);
