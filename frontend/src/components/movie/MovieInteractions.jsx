@@ -20,13 +20,19 @@ export default function MovieInteractions() {
 
   const { mutate: add } = useMutation({
     mutationFn: addInteraction,
-    onSuccess: async () => await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] }),
+    onSuccess: async () => {
+      dispatch(toastActions.setSuccessToast("Interaction added successfully!"));
+      await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] });
+    },
     onError: (ctx) => dispatch(toastActions.setErrorToast(`Failed to add interaction: ${ctx?.response?.data?.message || ctx.message}`))
   });
 
   const { mutate: remove } = useMutation({
     mutationFn: removeInteraction,
-    onSuccess: async () => await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] }),
+    onSuccess: async () => {
+      dispatch(toastActions.setSuccessToast("Interaction removed successfully!"));
+      await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] });
+    },
     onError: (ctx) => dispatch(toastActions.setErrorToast(`Failed to remove interaction: ${ctx?.response?.data?.message || ctx.message}`))
   });
 

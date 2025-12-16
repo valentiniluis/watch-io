@@ -35,19 +35,19 @@ export default function Toast() {
 
   if (!message || !variant) return null;
 
-  let cssClass = 'text-white absolute z-50 top-18 right-1/2 translate-x-1/2 rounded-md text-center w-full min-w-90 max-w-120';
+  let cssClass = 'text-white fixed z-50 top-18 right-1/2 translate-x-1/2 rounded-md text-center w-full min-w-90 max-w-120';
   let progressBarColor;
   if (variant === 'info') {
     cssClass += ' bg-blue-500';
     progressBarColor = 'bg-blue-700';
   }
   else if (variant === 'success') {
-    cssClass += ' bg-green-400';
-    progressBarColor = 'bg-green-600';
+    cssClass += ' bg-green-700';
+    progressBarColor = 'bg-green-800';
   }
   else if (variant === 'error') {
-    cssClass += ' bg-red-700';
-    progressBarColor = 'bg-red-900';
+    cssClass += ' bg-red-600';
+    progressBarColor = 'bg-red-800';
   }
 
   return createPortal(

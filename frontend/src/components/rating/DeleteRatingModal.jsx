@@ -12,7 +12,10 @@ export default function DeleteRatingModal({ ref }) {
 
   const { mutate } = useMutation({
     mutationFn: deleteRating,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ratings'] }),
+    onSuccess: () => {
+      dispatch(toastActions.setSuccessToast("Removed rating successfully!"));
+      queryClient.invalidateQueries({ queryKey: ['ratings'] });
+    },
     onError: ctx => dispatch(toastActions.setErrorToast(`Failed to delete rating: ${ctx?.response?.data?.message || ctx.message}`))
   });
 

@@ -20,7 +20,11 @@ export default function RatingModal({ ref, editMode, data }) {
 
   const { mutate } = useMutation({
     mutationFn: mutateRating,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ratings'] }),
+    onSuccess: () => {
+      const successMessage = (editMode ? "Edited" : "Added") + " rating successfully!";
+      dispatch(toastActions.setSuccessToast(successMessage));
+      queryClient.invalidateQueries({ queryKey: ['ratings'] });
+    },
     onError: (ctx) => dispatch(toastActions.setErrorToast(`Failed to rate movie: ${ctx?.response?.data?.message || ctx.message}`))
   });
 

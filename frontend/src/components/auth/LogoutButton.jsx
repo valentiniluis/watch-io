@@ -14,6 +14,7 @@ export default function LogoutButton() {
     mutationFn: logoutMutation,
     onSuccess: () => {
       dispatch(authActions.logout());
+      dispatch(toastActions.setSuccessToast("Logged out successfully!"));
       queryClient.invalidateQueries();
     },
     onError: () => dispatch(toastActions.setErrorToast("Failed to logout!"))
