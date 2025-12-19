@@ -16,3 +16,8 @@ export const RECOMMENDATION_WEIGHTS = {
 }
 
 export const JWT_EXPIRY_HOURS = 6;
+
+// constant strings to avoid typos in other files
+export const SERIES = 'TV_SERIES';
+
+export const MOVIES = 'MOVIES';

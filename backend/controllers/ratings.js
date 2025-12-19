@@ -1,5 +1,5 @@
 import pool from '../model/postgres.js';
-import { movieIdValidation, ratingSchema } from '../util/validationSchemas.js';
+import { mediaIdValidation, ratingSchema } from '../util/validationSchemas.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
 import { throwError, calculateOffset, validatePage } from '../util/util-functions.js';
 import { getPagesAndClearData } from '../util/db-util.js';
@@ -9,7 +9,7 @@ export const getRatings = async (req, res, next) => {
   try {
     const { user } = req;
 
-    const { value: movieId, error: movieIdErr } = movieIdValidation.validate(req.query.movieId);
+    const { value: movieId, error: movieIdErr } = mediaIdValidation.validate(req.query.movieId);
     if (movieIdErr) throwError(400, 'Invalid movie: ' + movieIdErr.message);
 
     const [page, limit] = validatePage(req.query.page, req.query.limit);
@@ -97,7 +97,7 @@ export const putRating = async (req, res, next) => {
 export const deleteRating = async (req, res, next) => {
   try {
     const { user } = req;
-    const { error, value: movieId } = movieIdValidation.required().validate(req.params.movieId);
+    const { error, value: movieId } = mediaIdValidation.required().validate(req.params.movieId);
     if (error) throwError(400, 'Invalid movie: ' + error.message);
 
     const { rowCount } = await pool.query(`

@@ -1,5 +1,7 @@
 import tmdbAPI from '../api/tmdb-api.js';
-import { getGenreId, getReleaseYear } from './util-functions.js';
+import omdbAPI from '../api/omdb-api.js';
+import { getGenreId, getReleaseYear, throwError } from './util-functions.js';
+import { MOVIES, SERIES } from './constants.js';
 
 const TMDB_IMAGE_PATH = 'https://image.tmdb.org/t/p';
 
@@ -90,9 +92,9 @@ export async function fetchMovie(movieId) {
 
 
 export function sanitizeMovie(movie) {
-  const { 
-    genres, id, original_language, original_title, 
-    title, overview, poster_path, release_date, runtime, 
+  const {
+    genres, id, original_language, original_title,
+    title, overview, poster_path, release_date, runtime,
     tagline, vote_average, credits, keywords: nestedKeywords
   } = movie;
 
@@ -117,4 +119,46 @@ export function sanitizeMovie(movie) {
   };
 
   return data;
+}
+
+
+export async function getMediaData(type, mediaId, country) {
+  if (![MOVIES, SERIES].includes(type)) throw new Error('Invalid media type.');
+  const urlSegment = getTMDbUrlSegment(type);
+  const urlTMDB = `/${urlSegment}/${mediaId}?append_to_response=watch/providers`;
+  
+  const responseTMDB = await tmdbAPI.get(urlTMDB);
+  const dataTMDB = { ...responseTMDB.data };
+  dataTMDB.available = dataTMDB['watch/providers'].results[country];
+  fillAllLogoPaths(dataTMDB.available);
+  delete dataTMDB['watch/providers'];
+  dataTMDB.poster_path = getFullPosterPath(dataTMDB.poster_path);
+  dataTMDB.tmdb_rating = dataTMDB.vote_average;
+  dataTMDB.tmdb_votes = dataTMDB.vote_count;
+  delete dataTMDB['vote_average'];
+  delete dataTMDB['vote_count'];
+  const { imdb_id } = dataTMDB;
+
+  // if there's no IMDb id, then it's not possible to fetch info from OMDb. Return before OMDb request
+  if (!imdb_id) return dataTMDB;
+
+  const urlOMDB = `/?i=${imdb_id}`;
+  const responseOMDB = await omdbAPI.get(urlOMDB);
+  const dataOMDB = filterOMDBData(responseOMDB.data);
+  const responseData = {
+    ...dataTMDB,
+    ...dataOMDB,
+    runtime: getRuntimeString(dataTMDB.runtime),
+  };
+  return responseData;
+}
+
+
+function getTMDbUrlSegment(type) {
+  switch (type) {
+    case MOVIES:
+      return 'movie';
+    case SERIES:
+      return 'tv';
+  }
 }

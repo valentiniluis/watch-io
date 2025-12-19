@@ -73,18 +73,25 @@ services:
     build:
       context: ../frontend
       dockerfile: Dockerfile
+      # Altere para 'production' para testar o build com Nginx
+      target: development
+      args:
+        - VITE_BACKEND_BASE=http://localhost:${BACKEND_PORT}
+        - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
     container_name: watchio_frontend
     environment:
       - VITE_BACKEND_BASE=http://localhost:${BACKEND_PORT}
       - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+    # entrypoint:
+    #   [
+    #     "/bin/sh", 
+    #     "-c", 
+    #     "chmod +x /app/entrypoint.sh && /app/entrypoint.sh"
+    #   ]
     ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
-    entrypoint: 
-      [
-        "/bin/sh", 
-        "-c", 
-        "chmod +x /app/entrypoint.sh && /app/entrypoint.sh"
-      ]
+      # Se target for 'development', use a porta 5173 à direita
+      # Se target for 'production', use a porta 80 à direita
+      - "${FRONTEND_PORT}:5173"
     depends_on:
       - backend
     working_dir: /app

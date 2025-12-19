@@ -1,6 +1,6 @@
 import pool from '../model/postgres.js';
 import { getInteraction, getPagesAndClearData } from '../util/db-util.js';
-import { interactionSchema, interactionTypeValidation, movieIdValidation } from '../util/validationSchemas.js';
+import { interactionSchema, interactionTypeValidation, mediaIdValidation } from '../util/validationSchemas.js';
 import { calculateOffset, getInteractionMessage, throwError, validatePage } from '../util/util-functions.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
 
@@ -72,7 +72,7 @@ export const postInteraction = async (req, res, next) => {
 export const hasInteraction = async (req, res, next) => {
   try {
     const { user } = req;
-    const { error, value: movieId } = movieIdValidation.required().validate(req.params.movieId);
+    const { error, value: movieId } = mediaIdValidation.required().validate(req.params.movieId);
     if (error) throwError(400, 'Invalid movie id provided: ' + error.message);
 
     const interaction = await getInteraction({ userId: user.id, movieId });

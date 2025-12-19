@@ -1,8 +1,9 @@
-import express from 'express';
-const router = express.Router();
-
+import { Router } from 'express';
 import * as moviesControllers from '../controllers/movies.js';
-import { authenticateJWT, optionallyAuthenticateJWT } from '../middleware/auth.js';
+import { optionallyAuthenticateJWT } from '../middleware/auth.js';
+
+const router = Router();
+
 
 // search/discover movies
 router.get('/search', optionallyAuthenticateJWT, moviesControllers.getSearchedMovies);

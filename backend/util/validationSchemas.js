@@ -9,7 +9,7 @@ export const pageValidation = Joi.number().integer().positive().optional().defau
 
 export const countryValidation = Joi.string().length(2).uppercase().default('US');
 
-export const movieIdValidation = Joi.number().integer().positive();
+export const mediaIdValidation = Joi.number().integer().positive();
 
 export const interactionTypeValidation = Joi.string().valid('not interested', 'watchlist', 'like').optional();
 
@@ -28,7 +28,7 @@ export const genreIdSchema = Joi.object({
 });
 
 export const ratingSchema = Joi.object({
-  movieId: movieIdValidation.required(),
+  movieId: mediaIdValidation.required(),
   score: Joi.number().min(1).max(10).integer().required(),
   headline: Joi.string().required(),
   note: Joi.string().max(511).optional()

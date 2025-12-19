@@ -1,10 +1,9 @@
-import tmdbAPI from '../api/tmdb-api.js';
-import omdbAPI from '../api/omdb-api.js';
 import pool from '../model/postgres.js';
-import { getFullPosterPath, getRuntimeString, filterOMDBData, fillAllLogoPaths } from '../util/api-util.js';
+import { getMediaData } from '../util/api-util.js';
 import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData } from '../util/db-util.js';
 import { getMovieBasedRecommendationQuery, getUserBasedRecommendationQuery, throwError, validatePage } from '../util/util-functions.js';
-import { genreIdSchema, orderByValidation, countryValidation, movieIdValidation, limitValidation } from '../util/validationSchemas.js';
+import { genreIdSchema, orderByValidation, countryValidation, mediaIdValidation, limitValidation } from '../util/validationSchemas.js';
+import { MOVIES } from '../util/constants.js';
 
 
 export const getSearchedMovies = async (req, res, next) => {
@@ -26,36 +25,13 @@ export const getSearchedMovies = async (req, res, next) => {
 export const getMovieData = async (req, res, next) => {
   try {
     const { user } = req;
-    const { value: movieId, error } = movieIdValidation.required().validate(req.params.movieId);
+    const { value: movieId, error } = mediaIdValidation.required().validate(req.params.movieId);
     if (error) throwError(400, "Invalid Movie: " + error.message);
 
     const { value: country, error: countryErr } = countryValidation.validate(req.query.country);
     if (countryErr) throwError(400, 'Invalid country: ' + countryErr.message);
 
-    const urlTMDB = `/movie/${movieId}?append_to_response=watch/providers`;
-    const responseTMDB = await tmdbAPI.get(urlTMDB);
-    const dataTMDB = { ...responseTMDB.data };
-    dataTMDB.available = dataTMDB['watch/providers'].results[country];
-    fillAllLogoPaths(dataTMDB.available);
-    delete dataTMDB['watch/providers'];
-    dataTMDB.poster_path = getFullPosterPath(dataTMDB.poster_path);
-    dataTMDB.tmdb_rating = dataTMDB.vote_average;
-    dataTMDB.tmdb_votes = dataTMDB.vote_count;
-    delete dataTMDB['vote_average'];
-    delete dataTMDB['vote_count'];
-    const { imdb_id } = dataTMDB;
-    // if there's no id for IMDb, then it's not possible to fetch info from OMDb. The request ends here
-    if (!imdb_id) return res.status(200).json({ success: true, movieData: dataTMDB });
-
-    const urlOMDB = `/?i=${imdb_id}`;
-    const responseOMDB = await omdbAPI.get(urlOMDB);
-    const dataOMDB = filterOMDBData(responseOMDB.data);
-    const responseData = {
-      ...dataTMDB,
-      ...dataOMDB,
-      runtime: getRuntimeString(dataTMDB.runtime),
-    };
-
+    const responseData = await getMediaData(MOVIES, movieId, country);
     const userData = {};
     if (user) {
       userData.authenticated = true;
@@ -76,7 +52,7 @@ export const getMovieData = async (req, res, next) => {
 
 export const getMovieRecommendations = async (req, res, next) => {
   try {
-    const { value: movieId, error: movieErr } = movieIdValidation.required().validate(req.params.movieId);
+    const { value: movieId, error: movieErr } = mediaIdValidation.required().validate(req.params.movieId);
     if (movieErr) throwError(400, "Invalid Movie: " + movieErr.message);
 
     const { value: limit, limitErr } = limitValidation.validate(req.query.limit);
