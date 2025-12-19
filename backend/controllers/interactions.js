@@ -1,7 +1,7 @@
 import pool from '../model/postgres.js';
 import { getInteraction, getPagesAndClearData } from '../util/db-util.js';
 import { interactionSchema, interactionTypeValidation, mediaIdValidation } from '../util/validationSchemas.js';
-import { calculateOffset, getInteractionMessage, throwError, validatePage } from '../util/util-functions.js';
+import { calculateOffset, deleteInteractionMessage, postInteractionMessage, throwError, validatePage } from '../util/util-functions.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
 
 
@@ -57,7 +57,7 @@ export const postInteraction = async (req, res, next) => {
       [movieId, user.id, interactionType]
     );
 
-    const message = getInteractionMessage(interactionType);
+    const message = postInteractionMessage(interactionType);
     res.status(201).json({ success: true, message });
   } catch (err) {
     if (err.code === PG_UNIQUE_ERR) {
@@ -102,9 +102,12 @@ export const deleteInteraction = async (req, res, next) => {
       [user.id, movieId, interactionType]
     );
 
-    if (rowCount === 0) throwError(401, `User has no '${interactionType}' interaction with movie.`);
+    console.log(interactionType);
 
-    return res.status(200).json({ success: true, message: `Deleted '${interactionType}' interaction successfully.` });
+    if (rowCount === 0) throwError(401, `User has no '${interactionType}' interaction with movie.`);
+    const message = deleteInteractionMessage(interactionType);
+
+    return res.status(200).json({ success: true, message });
   } catch (err) {
     next(err);
   }

@@ -1,3 +1,5 @@
+import { EMPTY_MY_AREA_MESSAGE, INTERACTION_BUTTON_CONTENT, LOADING_MY_AREA_MESSAGE } from "./constants";
+
 export function formatDate(dateString) {
   const date = new Date(dateString);
   return date.toLocaleDateString('en-US', {
@@ -10,40 +12,22 @@ export function formatDate(dateString) {
 
 
 export function getMyAreaLoadingMessage(contentType) {
-  let messageComplement;
-  switch (contentType) {
-    case 'like':
-      messageComplement = 'liked movies';
-      break;
-    case 'not interested':
-      messageComplement = '"Not Interested" list';
-      break;
-    default:
-      messageComplement = contentType;
-      break;
-  }
-  return `Loading ${messageComplement}...`;
+  return LOADING_MY_AREA_MESSAGE[contentType];
 }
 
 
 export function getMyAreaEmptyMessage(contentType) {
-  let message;
-  switch (contentType) {
-    case 'watchlist':
-      message = 'Your watchlist is empty.';
-      break;
-    case 'like':
-      message = 'You have no liked movies yet.';
-      break;
-    case 'not interested':
-      message = 'No movies added to the "Not Interested" list yet.';
-      break;
-    case 'ratings':
-      message = 'No movie ratings yet!';
-      break;
-  }
-  return message;
+  return EMPTY_MY_AREA_MESSAGE[contentType];
 }
 
+export function getInteractionBtnContent(type, isActive) {
+  const content = INTERACTION_BUTTON_CONTENT[type];
+  if (!content) return null;
+
+  const { style } = content;
+  const { label, icon } = content.states[isActive];
+  
+  return { label, icon, style };
+}
 
 export const capitalize = str => (!str.length) ? "" : str.charAt(0).toUpperCase() + str.slice(1);

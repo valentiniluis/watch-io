@@ -8,7 +8,7 @@ import Ratings from "../components/rating/Ratings";
 import DropdownMenu from '../components/UI/DropdownMenu';
 import { getMyAreaEmptyMessage, getMyAreaLoadingMessage } from "../util/functions";
 import { getRatings, getInteractedMovies } from "../util/movie-query";
-import { myAreaCategories } from "../util/constants";
+import { myAreaCategories, RATINGS } from "../util/constants";
 
 const initialState = {
   label: myAreaCategories[0]["data-label"],
@@ -20,9 +20,11 @@ export default function MyArea() {
   const [contentType, setContentType] = useState(initialState);
   const [page, setPage] = useState(1);
 
+  const { category, label } = contentType;
+
   const { data, isPending, isError, error } = useQuery({
-    queryFn: (contentType.category === 'ratings') ? getRatings : getInteractedMovies,
-    queryKey: (contentType.category === 'ratings') ? ['ratings', { page }] : ['interactions', { interactionType: contentType.category, page }],
+    queryFn: (category === RATINGS) ? getRatings : getInteractedMovies,
+    queryKey: (category === RATINGS) ? ['ratings', { page }] : ['interactions', { interactionType: category, page }],
     retry: false
   });
 
@@ -30,17 +32,17 @@ export default function MyArea() {
 
   let content;
   if (isPending) {
-    const message = getMyAreaLoadingMessage(contentType.label);
+    const message = getMyAreaLoadingMessage(category);
     content = <Spinner text={message} />;
   }
   else if (isError) {
     content = <ErrorSection message={error.response?.data?.message || 'Failed to load data.'} />;
   }
   else if (data?.interactions?.length === 0 || data?.ratings?.length === 0) {
-    const message = getMyAreaEmptyMessage(contentType.category);
+    const message = getMyAreaEmptyMessage(category);
     content = <ErrorSection message={message} />;
   }
-  else if (contentType.category === 'ratings') {
+  else if (category === 'ratings') {
     const { ratings, pages } = data;
     content = <Ratings ratings={ratings} currentPage={page} maxPages={pages} setPage={setPage} />
   }
@@ -58,7 +60,7 @@ export default function MyArea() {
   return (
     <section id="interacted-movies" className="catalog-container">
       <div className="flex justify-center">
-        <DropdownMenu label="Category" options={myAreaCategories} text={contentType.label} onUpdate={updateContentType} className="bg-cyan-900 font-semibold text-white rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide focus:ring-cyan-950 hover:bg-cyan-950" />
+        <DropdownMenu label="Category" options={myAreaCategories} text={label} onUpdate={updateContentType} className="bg-cyan-900 font-semibold text-white rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide focus:ring-cyan-950 hover:bg-cyan-950" />
       </div>
       {content}
     </section>

@@ -19,5 +19,24 @@ export const JWT_EXPIRY_HOURS = 6;
 
 // constant strings to avoid typos in other files
 export const SERIES = 'TV_SERIES';
-
 export const MOVIES = 'MOVIES';
+export const WATCHLIST = 'WATCHLIST';
+export const NOT_INTERESTED = 'NOT_INTERESTED';
+export const LIKE = 'LIKE';
+
+export const URL_SEGMENTS = {
+  [MOVIES]: 'movie',
+  [SERIES]: 'tv'
+};
+
+export const POST_INTERACTION_MESSAGE = {
+  [WATCHLIST]: "Movie added to watchlist successfully!",
+  [NOT_INTERESTED]: "Movie added to not interested list. This movie won't be recommended to you anymore.",
+  [LIKE]: "Movie added to likes!"
+};
+
+export const DELETE_INTERACTION_MESSAGE = {
+  [WATCHLIST]: "Removed from Watchlist successfully!",
+  [NOT_INTERESTED]: "Removed from 'Not Interested' list!",
+  [LIKE]: "Removed from 'Liked' list successfully!"
+}

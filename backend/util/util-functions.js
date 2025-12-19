@@ -1,6 +1,6 @@
-import data from './movie-genres.json' with { type: 'json' };
 import { pageValidation, limitValidation } from './validationSchemas.js';
-import { RECOMMENDATION_WEIGHTS } from './constants.js';
+import { DELETE_INTERACTION_MESSAGE, POST_INTERACTION_MESSAGE, RECOMMENDATION_WEIGHTS } from './constants.js';
+import pool from '../model/postgres.js';
 
 
 export function getReleaseYear(releaseDate) {
@@ -9,9 +9,9 @@ export function getReleaseYear(releaseDate) {
 }
 
 
-export function getGenreId(searchGenre) {
-  const { genres } = data;
-  const found = genres.find(genre => genre.name === searchGenre);
+export async function getGenreId(searchGenre) {
+  const { rows: genres } = await pool.query('SELECT * FROM genre;');
+  const found = genres.find(genre => genre.genre_name === searchGenre);
   return (found) ? found.id : -1;
 }
 
@@ -40,20 +40,13 @@ export function calculateOffset(page, limit) {
 }
 
 
-export function getInteractionMessage(type) {
-  let message;
-  switch (type) {
-    case 'watchlist':
-      message = "Movie added to watchlist successfully!";
-      break;
-    case 'likes':
-      message = "Movie added to likes!";
-      break;
-    case 'uninterested':
-      message = "Movie added to not interested list. This movie won't be recommended to you anymore.";
-      break;
-  }
-  return message;
+export function postInteractionMessage(type) {
+  return POST_INTERACTION_MESSAGE[type];
+}
+
+
+export function deleteInteractionMessage(type) {
+  return DELETE_INTERACTION_MESSAGE[type];
 }
 
 

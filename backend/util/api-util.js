@@ -1,7 +1,7 @@
 import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
-import { getGenreId, getReleaseYear, throwError } from './util-functions.js';
-import { MOVIES, SERIES } from './constants.js';
+import { getGenreId, getReleaseYear } from './util-functions.js';
+import { MOVIES, SERIES, URL_SEGMENTS } from './constants.js';
 
 const TMDB_IMAGE_PATH = 'https://image.tmdb.org/t/p';
 
@@ -155,10 +155,5 @@ export async function getMediaData(type, mediaId, country) {
 
 
 function getTMDbUrlSegment(type) {
-  switch (type) {
-    case MOVIES:
-      return 'movie';
-    case SERIES:
-      return 'tv';
-  }
+  return URL_SEGMENTS[type];
 }

@@ -122,9 +122,9 @@ create table
 insert into
 	interaction_type (interaction_type)
 values
-	('like'),
-	('not interested'),
-	('watchlist');
+	('LIKE'),
+	('NOT_INTERESTED'),
+	('WATCHLIST');
 
 
 -- indexes:
