@@ -1,5 +1,5 @@
 import { pageValidation, limitValidation } from './validationSchemas.js';
-import { DELETE_INTERACTION_MESSAGE, POST_INTERACTION_MESSAGE, RECOMMENDATION_WEIGHTS } from './constants.js';
+import { DELETE_INTERACTION_MESSAGE, LIKE, POST_INTERACTION_MESSAGE, RECOMMENDATION_WEIGHTS } from './constants.js';
 import pool from '../model/postgres.js';
 
 
@@ -243,7 +243,7 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
       select movie_id
       from interaction as itr
       where itr.user_id = $1
-      and itr.type_id = (select id from interaction_type where interaction_type = 'like')
+      and itr.type_id = (select id from interaction_type where interaction_type = '${LIKE}')
       and itr.movie_id not in (select movie_id from movie_rating)
     ),
     cast_score as (

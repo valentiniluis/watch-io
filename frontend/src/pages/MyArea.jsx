@@ -42,7 +42,7 @@ export default function MyArea() {
     const message = getMyAreaEmptyMessage(category);
     content = <ErrorSection message={message} />;
   }
-  else if (category === 'ratings') {
+  else if (category === RATINGS) {
     const { ratings, pages } = data;
     content = <Ratings ratings={ratings} currentPage={page} maxPages={pages} setPage={setPage} />
   }

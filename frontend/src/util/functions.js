@@ -1,4 +1,4 @@
-import { EMPTY_MY_AREA_MESSAGE, INTERACTION_BUTTON_CONTENT, LOADING_MY_AREA_MESSAGE } from "./constants";
+import { EMPTY_MY_AREA_MESSAGE, INTERACTION_BTN_CONTENT, LOADING_MY_AREA_MESSAGE } from "./constants";
 
 export function formatDate(dateString) {
   const date = new Date(dateString);
@@ -21,7 +21,7 @@ export function getMyAreaEmptyMessage(contentType) {
 }
 
 export function getInteractionBtnContent(type, isActive) {
-  const content = INTERACTION_BUTTON_CONTENT[type];
+  const content = INTERACTION_BTN_CONTENT[type];
   if (!content) return null;
 
   const { style } = content;

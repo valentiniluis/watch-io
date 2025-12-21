@@ -20,9 +20,7 @@ export default function MovieInteractions() {
 
   const { mutate: add } = useMutation({
     mutationFn: addInteraction,
-    onSuccess: async (ctx) => {
-      console.log(ctx);
-      const { message } = ctx;
+    onSuccess: async ({ message }) => {
       dispatch(toastActions.setSuccessToast(message || "Interaction added successfully!"));
       await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] });
     },

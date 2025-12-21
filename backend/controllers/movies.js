@@ -3,7 +3,7 @@ import { getMediaData } from '../util/api-util.js';
 import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData } from '../util/db-util.js';
 import { getMovieBasedRecommendationQuery, getUserBasedRecommendationQuery, throwError, validatePage } from '../util/util-functions.js';
 import { genreIdSchema, orderByValidation, countryValidation, mediaIdValidation, limitValidation } from '../util/validationSchemas.js';
-import { MOVIES } from '../util/constants.js';
+import { MOVIES, LIKE } from '../util/constants.js';
 
 
 export const getSearchedMovies = async (req, res, next) => {
@@ -102,7 +102,7 @@ export const getUserRecommendations = async (req, res, next) => {
         SELECT 1
         FROM interaction AS itr
         WHERE user_id = $1
-        AND itr.type_id = (SELECT id FROM interaction_type WHERE interaction_type = 'like')
+        AND itr.type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${LIKE}')
         UNION ALL
         SELECT 1
         FROM movie_rating
