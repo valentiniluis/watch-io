@@ -76,7 +76,8 @@ def requestAndStoreMovieDetails(movieId, cursor, conn):
     cursor.execute(statement, data)
 
     # insert movie genres
-    statement = "INSERT INTO movie_genre (movie_id, genre_id) VALUES (%s, %s);"
+    # CORRECT - there's one value missing
+    statement = "INSERT INTO media_genre (media_id, genre_id) VALUES (%s, %s);"
     data = [(movieId, genreId['id']) for genreId in movieData['genres']]
     cursor.executemany(statement, data)
 
@@ -86,7 +87,7 @@ def requestAndStoreMovieDetails(movieId, cursor, conn):
     cursor.executemany(statement, data)
     
     # associate keywords to the movie
-    statement = "INSERT INTO movie_keyword (movie_id, keyword_id) VALUES (%s, %s);"
+    statement = "INSERT INTO media_keyword (media_id, keyword_id) VALUES (%s, %s);"
     data = [(movieId, keyword['id']) for keyword in movieData['keywords']['keywords']]
     cursor.executemany(statement, data)
 
@@ -107,12 +108,12 @@ def requestAndStoreMovieDetails(movieId, cursor, conn):
     cursor.executemany(statement, data)
 
     # associate actors to movie
-    statement = "INSERT INTO movie_cast (movie_id, artist_id, credit_id, character_name) VALUES (%s, %s, %s, %s);"
+    statement = "INSERT INTO media_cast (media_id, artist_id, credit_id, character_name) VALUES (%s, %s, %s, %s);"
     data = [(movieId, actor['id'], actor['credit_id'], actor['character']) for actor in cast]
     cursor.executemany(statement, data)
 
     # associate crew (director, writers, producers) to the movie
-    statement = "INSERT INTO crew (movie_id, artist_id, credit_id, department, job) VALUES (%s, %s, %s, %s, %s);"
+    statement = "INSERT INTO crew (media_id, artist_id, credit_id, department, job) VALUES (%s, %s, %s, %s, %s);"
     data = [(movieId, member['id'], member['credit_id'], member['department'], member['job']) for member in crew]
     cursor.executemany(statement, data)
 

@@ -1,6 +1,6 @@
 import pool from '../model/postgres.js';
 import { getMediaData } from '../util/api-util.js';
-import { discoverMovies, getInteraction, searchMovie, getMovieGenreQuery, getPagesAndClearData } from '../util/db-util.js';
+import { discoverMedia, getInteraction, getMovieGenreQuery, getPagesAndClearData, searchMedia } from '../util/db-util.js';
 import { getMovieBasedRecommendationQuery, getUserBasedRecommendationQuery, throwError, validatePage } from '../util/util-functions.js';
 import { genreIdSchema, orderByValidation, countryValidation, mediaIdValidation, limitValidation } from '../util/validationSchemas.js';
 import { MOVIES } from '../util/constants.js';
@@ -12,7 +12,11 @@ export const getSearchedMovies = async (req, res, next) => {
     const [page, limit] = validatePage(req.query.page, req.query.limit);
     const { movie } = req.query;
 
-    const data = (movie) ? await searchMovie({ movie, page, user, limit }) : await discoverMovies({ page, user, limit });
+    const data = (movie)
+      ? await searchMedia({ movie, mediaType: MOVIES, page, user, limit })
+      : await discoverMedia({ page, mediaType: MOVIES, user, limit })
+      ;
+
     const finalData = getPagesAndClearData(data, limit, 'movies');
     res.status(200).json({ success: true, ...finalData });
   } catch (err) {
@@ -84,8 +88,8 @@ export const getUserRecommendations = async (req, res, next) => {
     const fallbackQuery = `
       WITH best_rated AS (
         SELECT *, ROUND(tmdb_rating, 1) AS tmdb_rating
-        FROM movie AS mo
-        ORDER BY mo.tmdb_rating DESC
+        FROM media AS med
+        ORDER BY med.tmdb_rating DESC
         LIMIT 250
       )
       SELECT *
@@ -105,7 +109,7 @@ export const getUserRecommendations = async (req, res, next) => {
         AND itr.type_id = (SELECT id FROM interaction_type WHERE interaction_type = 'like')
         UNION ALL
         SELECT 1
-        FROM movie_rating
+        FROM rating
         WHERE user_id = $1
         AND score >= 7;
         `,

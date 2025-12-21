@@ -1,5 +1,5 @@
 import { pageValidation, limitValidation } from './validationSchemas.js';
-import { DELETE_INTERACTION_MESSAGE, POST_INTERACTION_MESSAGE, RECOMMENDATION_WEIGHTS } from './constants.js';
+import { DELETE_INTERACTION_MESSAGE, LIKE, POST_INTERACTION_MESSAGE, RECOMMENDATION_WEIGHTS } from './constants.js';
 import pool from '../model/postgres.js';
 
 
@@ -59,24 +59,24 @@ export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
     with cast_score as (
       with casted as (
         select mc.artist_id
-        from movie_cast as mc
-        inner join movie as mv
-        on mc.movie_id = mv.id
+        from media_cast as mc
+        inner join media as med
+        on mc.media_id = med.id
         inner join artist as ar
         on mc.artist_id = ar.id
-        where mv.id = $1
+        where med.id = $1
       ),
       cast_careers as (
-        select mc.movie_id, ca.artist_id
-        from movie_cast as mc
+        select mc.media_id, ca.artist_id
+        from media_cast as mc
         inner join casted as ca
         on mc.artist_id = ca.artist_id
-        where mc.movie_id != $1
+        where mc.media_id != $1
       ),
       scores as (
-        select movie_id, count(*) as cast_score
+        select media_id, count(*) as cast_score
         from cast_careers as cc
-        group by cc.movie_id
+        group by cc.media_id
       )
       select
         sc.*, (cast(cast_score as float) / (select max(cast_score) from scores)) as normal_cast_score
@@ -87,43 +87,43 @@ export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
         select artist_id
         from crew as cr
         where job = 'Director'
-        and movie_id = $1
+        and media_id = $1
       ),
       careers as (
-        select cr.movie_id, cr.artist_id
+        select cr.media_id, cr.artist_id
         from crew as cr
         inner join directors as di
         on cr.artist_id = di.artist_id
         where cr.job = 'Director'
-        and cr.movie_id != $1
+        and cr.media_id != $1
       ),
       scores as (
-        select ca.movie_id, count(*) as score
+        select ca.media_id, count(*) as score
         from careers as ca
-        group by ca.movie_id
+        group by ca.media_id
       )
       select 
-        movie_id, score / (select max(score) from scores) as normal_director_score
+        media_id, score / (select max(score) from scores) as normal_director_score
       from scores
     ),
     crew_score as (
       with crew_members as (
         select cr.artist_id
         from crew as cr
-        where cr.movie_id = $1
+        where cr.media_id = $1
         and cr.job != 'Director'
       ),
       crew_careers as (
-        select cr.movie_id, cr.artist_id
+        select cr.media_id, cr.artist_id
         from crew_members as cm
         inner join crew as cr
         on cm.artist_id = cr.artist_id
-        where cr.movie_id != $1
+        where cr.media_id != $1
       ),
       scores as (
-        select movie_id, count(*) as crew_score
+        select media_id, count(*) as crew_score
         from crew_careers
-        group by movie_id
+        group by media_id
       )
       select 
         sc.*, (cast(crew_score as float) / (select max(crew_score) from scores)) as normal_crew_score
@@ -132,20 +132,20 @@ export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
     keyword_score as (
       with keywords as (
         select keyword_id
-        from movie_keyword as mk
-        where mk.movie_id = $1
+        from media_keyword as mk
+        where mk.media_id = $1
       ),
       keyword_movies as (
-        select mk.movie_id, mk.keyword_id
+        select mk.media_id, mk.keyword_id
         from keywords as ke
-        inner join movie_keyword as mk
+        inner join media_keyword as mk
         on ke.keyword_id = mk.keyword_id
-        where mk.movie_id != $1
+        where mk.media_id != $1
       ),
       scores as (
-        select movie_id, count(*) as keyword_score
+        select media_id, count(*) as keyword_score
         from keyword_movies as kem
-        group by movie_id
+        group by media_id
       )
       select 
         sc.*, (cast(keyword_score as float) / (select max(keyword_score) from scores)) as normal_keyword_score
@@ -154,27 +154,27 @@ export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
     genre_score as (
       with genres as (
         select genre_id
-        from movie_genre as mg
-        where mg.movie_id = $1
+        from media_genre as mg
+        where mg.media_id = $1
       ),
       genre_movies as (
-        select mg.movie_id, mg.genre_id
+        select mg.media_id, mg.genre_id
         from genres as gs
-        inner join movie_genre as mg
+        inner join media_genre as mg
         on gs.genre_id = mg.genre_id
-        where mg.movie_id != $1
+        where mg.media_id != $1
       ),
       scores as (
-        select movie_id, count(*) as genre_score
+        select media_id, count(*) as genre_score
         from genre_movies as gem
-        group by movie_id
+        group by media_id
       )
       select 
         sc.*, (cast(genre_score as float) / (select max(genre_score) from scores)) as normal_genre_score
       from scores as sc	
     ),
     language_score as (
-      select id as movie_id, 1 as normal_language_score
+      select id as media_id, 1 as normal_language_score
       from movie
       where original_language = (
         select original_language
@@ -196,20 +196,20 @@ export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
         ) as final_score
       from movie as mo
       left join cast_score as cas
-      on mo.id = cas.movie_id
+      on mo.id = cas.media_id
       left join director_score as dis
-      on mo.id = dis.movie_id
+      on mo.id = dis.media_id
       left join crew_score as crs
-      on mo.id = crs.movie_id
+      on mo.id = crs.media_id
       left join keyword_score as kes
-      on mo.id = kes.movie_id
+      on mo.id = kes.media_id
       left join genre_score as ges
-      on mo.id = ges.movie_id
+      on mo.id = ges.media_id
       left join language_score as las
-      on mo.id = las.movie_id
+      on mo.id = las.media_id
       ${userId ? `
       where mo.id not in (
-        select movie_id 
+        select media_id 
         from interaction 
         where user_id = $10
         and type_id = (select id from interaction_type where interaction_type = 'not interested')
@@ -235,38 +235,38 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
   const args = [userId, cast, director, crew, keywords, genres, language, rating, limit];
   const query = `
     with favorites as (
-      select mr.movie_id
-      from movie_rating as mr
-      where mr.user_id = $1
-      and mr.score >= 7
+      select mr.media_id
+      from rating as rt
+      where rt.user_id = $1
+      and rt.score >= 7
       union
-      select movie_id
+      select media_id
       from interaction as itr
       where itr.user_id = $1
-      and itr.type_id = (select id from interaction_type where interaction_type = 'like')
-      and itr.movie_id not in (select movie_id from movie_rating)
+      and itr.type_id = (select id from interaction_type where interaction_type = ${LIKE})
+      and itr.media_id not in (select media_id from rating)
     ),
     cast_score as (
       with casted as (
         select mc.artist_id
-        from movie_cast as mc
+        from media_cast as mc
         inner join movie as mv
-        on mc.movie_id = mv.id
+        on mc.media_id = mv.id
         inner join artist as ar
         on mc.artist_id = ar.id
-        where mv.id in (select movie_id from favorites)
+        where mv.id in (select media_id from favorites)
       ),
       cast_careers as (
-        select movie_id, ca.artist_id
-        from movie_cast as mc
+        select media_id, ca.artist_id
+        from media_cast as mc
         inner join casted as ca
         on mc.artist_id = ca.artist_id
-        where mc.movie_id not in (select movie_id from favorites)
+        where mc.media_id not in (select media_id from favorites)
       ),
       scores as (
-        select movie_id, count(*) as cast_score
+        select media_id, count(*) as cast_score
         from cast_careers as cc
-        group by cc.movie_id
+        group by cc.media_id
       )
       select
         sc.*, (cast(cast_score as float) / (select max(cast_score) from scores)) as normal_cast_score
@@ -277,23 +277,23 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
         select artist_id
         from crew as cr
         where job = 'Director'
-        and movie_id in (select movie_id from favorites)
+        and media_id in (select media_id from favorites)
       ),
       careers as (
-        select cr.movie_id, cr.artist_id
+        select cr.media_id, cr.artist_id
         from crew as cr
         inner join directors as di
         on cr.artist_id = di.artist_id
         where cr.job = 'Director'
-        and cr.movie_id not in (select movie_id from favorites)
+        and cr.media_id not in (select media_id from favorites)
       ),
       scores as (
-        select ca.movie_id, count(*) as score
+        select ca.media_id, count(*) as score
         from careers as ca
-        group by ca.movie_id
+        group by ca.media_id
       )
       select 
-        movie_id, score / (select max(score) from scores) as normal_director_score
+        media_id, score / (select max(score) from scores) as normal_director_score
       from scores
     ),
     crew_score as (
@@ -301,20 +301,20 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
         select cr.artist_id
         from crew as cr
         where cr.job != 'Director'
-        and cr.movie_id in (select movie_id from favorites)
+        and cr.media_id in (select media_id from favorites)
       ),
       crew_careers as (
-        select cr.movie_id, cr.artist_id
+        select cr.media_id, cr.artist_id
         from crew_members as cm
         inner join crew as cr
         on cm.artist_id = cr.artist_id
-        where cr.movie_id not in (select movie_id from favorites)
+        where cr.media_id not in (select media_id from favorites)
       ),
       scores as (
         select
-          movie_id, count(*) as crew_score
+          media_id, count(*) as crew_score
         from crew_careers
-        group by movie_id
+        group by media_id
       )
       select 
         sc.*, (cast(crew_score as float) / (select max(crew_score) from scores)) as normal_crew_score
@@ -323,20 +323,20 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
     keyword_score as (
       with keywords as (
         select keyword_id
-        from movie_keyword as mk
-        where mk.movie_id in (select movie_id from favorites)
+        from media_keyword as mk
+        where mk.media_id in (select media_id from favorites)
       ),
       keyword_movies as (
-        select mk.movie_id, mk.keyword_id
+        select mk.media_id, mk.keyword_id
         from keywords as ke
-        inner join movie_keyword as mk
+        inner join media_keyword as mk
         on ke.keyword_id = mk.keyword_id
-        where mk.movie_id not in (select movie_id from favorites)
+        where mk.media_id not in (select media_id from favorites)
       ),
       scores as (
-        select movie_id, count(*) as keyword_score
+        select media_id, count(*) as keyword_score
         from keyword_movies as kem
-        group by movie_id
+        group by media_id
       )
       select 
         sc.*, (cast(keyword_score as float) / (select max(keyword_score) from scores)) as normal_keyword_score
@@ -345,32 +345,32 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
     genre_score as (
       with genres as (
         select genre_id
-        from movie_genre as mg
-        where mg.movie_id in (select movie_id from favorites)
+        from media_genre as mg
+        where mg.media_id in (select media_id from favorites)
       ),
       genre_movies as (
-        select mg.movie_id, mg.genre_id
+        select mg.media_id, mg.genre_id
         from genres as gs
-        inner join movie_genre as mg
+        inner join media_genre as mg
         on gs.genre_id = mg.genre_id
-        where mg.movie_id not in (select movie_id from favorites)
+        where mg.media_id not in (select media_id from favorites)
       ),
       scores as (
-        select movie_id, count(*) as genre_score
+        select media_id, count(*) as genre_score
         from genre_movies as gem
-        group by movie_id
+        group by media_id
       )
       select 
         sc.*, (cast(genre_score as float) / (select max(genre_score) from scores)) as normal_genre_score
       from scores as sc	
     ),
     language_score as (
-      select id as movie_id, 1 as normal_language_score
+      select id as media_id, 1 as normal_language_score
       from movie
       where original_language in (
         select original_language
         from movie as mo
-        where mo.id in (select movie_id from favorites)
+        where mo.id in (select media_id from favorites)
       )
     ),
     ranks as (
@@ -387,19 +387,19 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
         ) as final_score
       from movie as mo
       left join cast_score as cas
-      on mo.id = cas.movie_id
+      on mo.id = cas.media_id
       left join director_score as dis
-      on mo.id = dis.movie_id
+      on mo.id = dis.media_id
       left join crew_score as crs
-      on mo.id = crs.movie_id
+      on mo.id = crs.media_id
       left join keyword_score as kes
-      on mo.id = kes.movie_id
+      on mo.id = kes.media_id
       left join genre_score as ges
-      on mo.id = ges.movie_id
+      on mo.id = ges.media_id
       left join language_score as las
-      on mo.id = las.movie_id
+      on mo.id = las.media_id
       where mo.id not in (
-        select movie_id 
+        select media_id 
         from interaction as itr 
         where itr.user_id = $1 
         and itr.type_id = (select id from interaction_type where interaction_type = 'not interested')

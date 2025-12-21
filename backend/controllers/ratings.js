@@ -18,14 +18,14 @@ export const getRatings = async (req, res, next) => {
     const queryArgs = [user.id, limit, offset];
     let query = `
       SELECT *, rt.last_update AS rate_date, COUNT(*) OVER() AS row_count
-      FROM movie_rating AS rt
-      INNER JOIN movie AS mov
-      ON rt.movie_id = mov.id
+      FROM rating AS rt
+      INNER JOIN media AS med
+      ON rt.media_id = med.id
       WHERE rt.user_id = $1
     `;
 
     if (movieId) {
-      query += ' AND rt.movie_id = $4';
+      query += ' AND rt.media_id = $4';
       queryArgs.push(movieId);
     }
 
@@ -49,7 +49,7 @@ export const postRating = async (req, res, next) => {
 
     await pool.query(`
       INSERT INTO
-      movie_rating (user_id, movie_id, score, headline, note)
+      rating (user_id, media_id, score, headline, note)
       VALUES ($1, $2, $3, $4, $5);`,
       [user.id, movieId, score, headline, note]
     );
@@ -75,14 +75,14 @@ export const putRating = async (req, res, next) => {
     const now = new Date().toISOString();
 
     await pool.query(`
-      UPDATE movie_rating
+      UPDATE rating
       SET
       score = $1,
       headline = $2,
       note = $3,
       last_update = $4
       WHERE
-      movie_id = $5 AND
+      media_id = $5 AND
       user_id = $6;`,
       [score, headline, note, now, movieId, user.id]
     );
@@ -101,8 +101,8 @@ export const deleteRating = async (req, res, next) => {
     if (error) throwError(400, 'Invalid movie: ' + error.message);
 
     const { rowCount } = await pool.query(`
-      DELETE FROM movie_rating
-      WHERE movie_id = $1 AND
+      DELETE FROM rating
+      WHERE media_id = $1 AND
       user_id = $2;`,
       [movieId, user.id]
     );

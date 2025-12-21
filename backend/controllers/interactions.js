@@ -17,10 +17,10 @@ export const getInteractions = async (req, res, next) => {
     const offset = calculateOffset(page, limit);
     const queryArgs = [user.id, limit, offset];
     let query = `
-      SELECT ity.interaction_type, mov.*, ROUND(mov.tmdb_rating, 1) AS tmdb_rating, COUNT(*) OVER() AS row_count
+      SELECT ity.interaction_type, med.*, ROUND(med.tmdb_rating, 1) AS tmdb_rating, COUNT(*) OVER() AS row_count
       FROM interaction AS inter
-      INNER JOIN movie AS mov
-      ON inter.movie_id = mov.id
+      INNER JOIN media AS med
+      ON inter.media_id = med.id
       INNER JOIN interaction_type AS ity
       ON inter.type_id = ity.id
       WHERE inter.user_id = $1
@@ -52,7 +52,7 @@ export const postInteraction = async (req, res, next) => {
 
     await pool.query(`
       INSERT INTO
-      interaction(movie_id, user_id, type_id)
+      interaction(media_id, user_id, type_id)
       VALUES ($1, $2, (SELECT id FROM interaction_type WHERE interaction_type = $3));`,
       [movieId, user.id, interactionType]
     );
@@ -97,7 +97,7 @@ export const deleteInteraction = async (req, res, next) => {
     const { rowCount } = await pool.query(`
       DELETE FROM interaction
       WHERE user_id = $1
-      AND movie_id = $2
+      AND media_id = $2
       AND type_id = (SELECT id FROM interaction_type WHERE interaction_type = $3);`,
       [user.id, movieId, interactionType]
     );
