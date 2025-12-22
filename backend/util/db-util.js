@@ -21,7 +21,7 @@ export async function discoverMedia({ mediaType, page, user = {}, limit }) {
         SELECT inter.media_id
         FROM interaction AS inter
         WHERE inter.user_id = $3
-        AND inter.type_id = (SELECT id FROM interaction_type WHERE interaction_type = ${NOT_INTERESTED})
+        AND inter.type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
       )
       ` + query + `
       WHERE med.id NOT IN (SELECT media_id FROM not_interested)
@@ -37,7 +37,7 @@ export async function discoverMedia({ mediaType, page, user = {}, limit }) {
 export async function searchMedia({ title, mediaType, user = {}, limit, page }) {
   const id = user?.id;
   const offset = calculateOffset(page, limit);
-  const queryArgs = [`%${title}%`, mediaType, limit, offset];
+  const queryArgs = [mediaType, `%${title}%`, limit, offset];
 
   let query = `
     SELECT *, ROUND(tmdb_rating, 1) AS tmdb_rating, COUNT(*) OVER() AS row_count
@@ -52,7 +52,7 @@ export async function searchMedia({ title, mediaType, user = {}, limit, page }) 
         SELECT inter.media_id
         FROM interaction AS inter
         WHERE inter.user_id = $5
-        AND inter.type_id = (SELECT id FROM interaction_type WHERE interaction_type = ${NOT_INTERESTED})
+        AND inter.type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
       )
     `;
     queryArgs.push(id);
@@ -107,7 +107,7 @@ export const getMovieGenreQuery = (orderBy, authenticated, parameters) => {
         SELECT inter.media_id
         FROM interaction AS inter
         WHERE inter.user_id = $${queryParams.length}
-        AND inter.type_id = (SELECT id FROM interaction_type WHERE interaction_type = ${NOT_INTERESTED})
+        AND inter.type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
       )
     `;
   }

@@ -16,7 +16,8 @@ REQUEST_LIMIT = { 'PERIOD': 1, 'LIMIT': 50 }
 MIN_VOTES = 300
 MIN_VOTE_AVG = 5
 MIN_POPULARITY = 0.5
-
+SERIES = 'TV_SERIES'
+MOVIES = 'MOVIE'
 
 def connectDB(retries=3):
   err = None
@@ -64,8 +65,13 @@ def requestAndStoreMovieDetails(movieId, cursor, conn):
 
   try:
     movieData = makeRequest(MOVIE_URL)
-    # insert essential movie information
-    statement = "INSERT INTO movie (id, title, original_title, original_language, poster_path, release_year, tmdb_rating) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+    # insert essential movie/tv show information
+    statement = """
+      INSERT INTO 
+      media 
+      (tmdb_id, type_id, title, original_title, original_language, poster_path, release_year, tmdb_rating, seasons) 
+      VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+    """
     data = (movieData['id'], 
             movieData['title'], 
             movieData['original_title'],
@@ -138,22 +144,24 @@ def storeMovies(data, cursor, connection):
 
 
 def storeGenres(data, cursor, connection):
-  try:
-    genres = data['genres']
-    insert_query = """
+  for mediaKey, genres in data.items():
+    statement = """
     INSERT INTO genre(id, genre_name)
-    VALUES (%s, %s);
+    VALUES (%s, %s)
+    ON CONFLICT (id) DO NOTHING;
     """
-    data = [
-      (genre['id'], genre['name'])
-      for genre in genres
-    ]
-    cursor.executemany(insert_query, data)
+    arguments = [(genre['id'], genre['name']) for genre in genres]
+    cursor.executemany(statement, arguments)
+
+    statement = """
+    INSERT INTO
+    media_type_genre(media_type_id, genre_id)
+    VALUES ((SELECT id FROM media_type AS mt WHERE mt.media_name = %s), %s);
+    """
+    arguments = [(mediaKey, genre['id']) for genre in genres]
+    cursor.executemany(statement, arguments)
+
     connection.commit()
-  except Exception as e:
-    print(e)
-    connection.rollback()
-    exit(1)
 
 
 def testIfInitialized(cursor):
@@ -213,7 +221,12 @@ if __name__ == '__main__':
   genres = None
   try:
     GENRES_URL = f'{BASE_URL}/genre/movie/list'
-    genres = makeRequest(GENRES_URL)
+    movieGenres = makeRequest(GENRES_URL)['genres']
+
+    GENRES_URL = f'{BASE_URL}/genre/tv/list'
+    seriesGenres = makeRequest(GENRES_URL)['genres']
+
+    genres = { MOVIES: movieGenres, SERIES: seriesGenres }
     storeGenres(genres, cursor, connection)
     print('Stored movie genres successfully.')
   except Exception as err:

@@ -243,7 +243,7 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
       select media_id
       from interaction as itr
       where itr.user_id = $1
-      and itr.type_id = (select id from interaction_type where interaction_type = ${LIKE})
+      and itr.type_id = (select id from interaction_type where interaction_type = '${LIKE}')
       and itr.media_id not in (select media_id from rating)
     ),
     cast_score as (

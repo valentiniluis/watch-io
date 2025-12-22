@@ -1,6 +1,7 @@
 import { getMediaData } from "../util/api-util.js";
 import { SERIES } from "../util/constants.js";
 import { mediaIdValidation } from "../util/validationSchemas.js";
+import { searchMedia } from "../util/db-util.js";
 
 
 export const getSeriesData = async (req, res, next) => {
@@ -38,7 +39,7 @@ export const getSearchedSeries = async (req, res, next) => {
     const { series } = req.query;
 
     const data = (series)
-      ? await searchMedia({ movie, mediaType: SERIES, page, user, limit })
+      ? await searchMedia({ series, mediaType: SERIES, page, user, limit })
       : await discoverMedia({ page, mediaType: SERIES, user, limit })
       ;
 

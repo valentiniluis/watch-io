@@ -169,12 +169,12 @@ create index idx_media_tmdb_rating on media using btree (type_id, tmdb_rating);
 create index idx_media_tmdb_id on media using btree (type_id, tmdb_id);
 
 -- índices para tornar mais rápida a pesquisa de filmes por título, organizando os títulos em ordem alfabética.
-
+-- o índice a seguir só funciona para pesquisas do tipo ILIKE '<valor>%'
 -- create index idx_media_title on media using btree (title);
 
-CREATE INDEX idx_media_title_trgm ON media USING GIN (title gin_trgm_ops);
+create index idx_media_title_trgm on media using GIN (title gin_trgm_ops);
 
-CREATE INDEX idx_media_original_title_trgm ON media USING GIN (original_title gin_trgm_ops);
+create index idx_media_original_title_trgm on media using GIN (original_title gin_trgm_ops);
 
 -- index para id do gênero dos filmes, tornando mais rápidas as consultas de filmes por gênero
 create index idx_media_genre_genre_id on media_genre using btree (genre_id);
