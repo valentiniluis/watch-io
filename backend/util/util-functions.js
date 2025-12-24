@@ -1,5 +1,5 @@
 import { pageValidation, limitValidation } from './validationSchemas.js';
-import { DELETE_INTERACTION_MESSAGE, LIKE, POST_INTERACTION_MESSAGE, RECOMMENDATION_WEIGHTS } from './constants.js';
+import { DELETE_INTERACTION_MESSAGE, LIKE, MEDIA_TYPES, POST_INTERACTION_MESSAGE, RECOMMENDATION_WEIGHTS } from './constants.js';
 import pool from '../model/postgres.js';
 
 
@@ -47,6 +47,11 @@ export function postInteractionMessage(type) {
 
 export function deleteInteractionMessage(type) {
   return DELETE_INTERACTION_MESSAGE[type];
+}
+
+
+export function checkValidMediaType(mediaType) {
+  return MEDIA_TYPES.includes(mediaType);
 }
 
 

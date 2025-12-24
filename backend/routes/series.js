@@ -9,11 +9,11 @@ router.get('/search', optionallyAuthenticateJWT, seriesControllers.getSearchedSe
 
 router.get('/genres', seriesControllers.getSeriesGenres);
 
-// router.get('/user-recommendations', optionallyAuthenticateJWT, moviesControllers.getUserRecommendations);
+// router.get('/user-recommendations', optionallyAuthenticateJWT, seriesControllers.getUserRecommendations);
 
 router.get('/genre/:genreId', optionallyAuthenticateJWT, seriesControllers.getSeriesByGenre);
 
-// router.get('/:seriesId/recommendations', optionallyAuthenticateJWT, moviesControllers.getMovieRecommendations);
+// router.get('/:seriesId/recommendations', optionallyAuthenticateJWT, seriesControllers.getMovieRecommendations);
 
 router.get('/:seriesId', optionallyAuthenticateJWT, seriesControllers.getSeriesData);
 

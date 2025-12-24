@@ -38,24 +38,6 @@ create table
 		constraint fk_media_media_type foreign key (type_id) references media_type (id)
 	);
 
-create table
-	if not exists interaction_type (
-		id serial not null,
-		interaction_type varchar(50) not null,
-		constraint pk_interaction_type primary key (id)
-	);
-
-create table
-	if not exists interaction (
-		media_id integer not null,
-		user_id varchar(100) not null,
-		inter_type_id integer not null,
-		constraint pk_interaction primary key (user_id, media_id),
-		constraint fk_interaction_user foreign key (user_id) references user_account (id),
-		constraint fk_interaction_media foreign key (media_id) references media (id),
-		constraint fk_interaction_interaction_type foreign key (inter_type_id) references interaction_type (id)
-	);
-
 -- genres regardless of media type
 create table
 	if not exists genre (
@@ -83,6 +65,25 @@ create table
 		constraint pk_media_genre primary key (media_id, genre_id),
 		constraint fk_media_genre_media_type_genre foreign key (media_type_id, genre_id) references media_type_genre (media_type_id, genre_id),
 		constraint fk_media_genre_media foreign key (media_id) references media (id)
+	);
+
+
+create table
+	if not exists interaction_type (
+		id serial not null,
+		interaction_type varchar(50) not null,
+		constraint pk_interaction_type primary key (id)
+	);
+
+create table
+	if not exists interaction (
+		media_id integer not null,
+		user_id varchar(100) not null,
+		inter_type_id integer not null,
+		constraint pk_interaction primary key (user_id, media_id),
+		constraint fk_interaction_user foreign key (user_id) references user_account (id),
+		constraint fk_interaction_media foreign key (media_id) references media (id),
+		constraint fk_interaction_interaction_type foreign key (inter_type_id) references interaction_type (id)
 	);
 
 create table

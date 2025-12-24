@@ -1,6 +1,6 @@
 import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
-import { getGenreId, getReleaseYear } from './util-functions.js';
+import { checkValidMediaType, getGenreId, getReleaseYear } from './util-functions.js';
 import { MOVIES, SERIES, URL_SEGMENTS } from './constants.js';
 
 const TMDB_IMAGE_PATH = 'https://image.tmdb.org/t/p';
@@ -123,7 +123,7 @@ export function sanitizeMovie(movie) {
 
 
 export async function getMediaData(type, mediaId, country) {
-  if (![MOVIES, SERIES].includes(type)) throw new Error('Invalid media type.');
+  if (checkValidMediaType(type)) throw new Error('Invalid media type.');
   const urlSegment = getTMDbUrlSegment(type);
   const urlTMDB = `/${urlSegment}/${mediaId}?append_to_response=watch/providers`;
   

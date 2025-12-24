@@ -1,6 +1,6 @@
 import pool from '../model/postgres.js';
 import { getMediaData } from '../util/api-util.js';
-import { discoverMedia, getInteraction, getMovieGenreQuery, getPagesAndClearData, searchMedia } from '../util/db-util.js';
+import { discoverMedia, getGenres, getInteraction, getMediaByGenreQuery, getMovieGenreQuery, getPagesAndClearData, searchMedia } from '../util/db-util.js';
 import { getMovieBasedRecommendationQuery, getUserBasedRecommendationQuery, throwError, validatePage } from '../util/util-functions.js';
 import { genreIdSchema, orderByValidation, countryValidation, mediaIdValidation, limitValidation } from '../util/validationSchemas.js';
 import { MOVIES } from '../util/constants.js';
@@ -134,7 +134,7 @@ export const getUserRecommendations = async (req, res, next) => {
 
 export const getMovieGenres = async (req, res, next) => {
   try {
-    const { rows: genres } = await pool.query('SELECT * FROM genre ORDER BY genre_name;');
+    const genres = await getGenres(MOVIES);
     res.status(200).json({ success: true, genres });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
@@ -145,7 +145,7 @@ export const getMovieGenres = async (req, res, next) => {
 
 export const getMoviesByGenre = async (req, res, next) => {
   try {
-    const id = req.user?.id;
+    const userId = req.user?.id;
 
     // guarantee that order by is in the allowed options so there's no injection in the query
     const { value: orderBy, error: orderByError } = orderByValidation.validate(req.query.orderBy);
@@ -156,8 +156,8 @@ export const getMoviesByGenre = async (req, res, next) => {
 
     const [page, limit] = validatePage(req.query.page, req.query.limit);
     const { genreId } = value;
-    const parameters = { genreId, userId: id, limit, page };
-    const [query, args] = getMovieGenreQuery(orderBy, id?.length > 0, parameters);
+    const parameters = { genreId, userId, limit, page };
+    const [query, args] = getMediaByGenreQuery(MOVIES, orderBy, parameters);
 
     const { rows: results } = await pool.query(query, args);
     const finalData = getPagesAndClearData(results, limit, 'movies');

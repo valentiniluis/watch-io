@@ -1,7 +1,7 @@
 import { getMediaData } from "../util/api-util.js";
 import { SERIES } from "../util/constants.js";
 import { mediaIdValidation } from "../util/validationSchemas.js";
-import { searchMedia } from "../util/db-util.js";
+import { getGenres, getMediaByGenreQuery, searchMedia } from "../util/db-util.js";
 
 
 export const getSeriesData = async (req, res, next) => {
@@ -54,7 +54,7 @@ export const getSearchedSeries = async (req, res, next) => {
 
 export const getSeriesGenres = async (req, res, next) => {
   try {
-    const { rows: genres } = await pool.query('SELECT * FROM series_genre ORDER BY genre_name;');
+    const genres = await getGenres(SERIES);
     res.status(200).json({ success: true, genres });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
@@ -65,7 +65,7 @@ export const getSeriesGenres = async (req, res, next) => {
 
 export const getSeriesByGenre = async (req, res, next) => {
   try {
-    const id = req.user?.id;
+    const userId = req.user?.id;
 
     // guarantee that order by is in the allowed options so there's no injection in the query
     const { value: orderBy, error: orderByError } = orderByValidation.validate(req.query.orderBy);
@@ -76,11 +76,11 @@ export const getSeriesByGenre = async (req, res, next) => {
 
     const [page, limit] = validatePage(req.query.page, req.query.limit);
     const { genreId } = value;
-    const parameters = { genreId, userId: id, limit, page };
-    const [query, args] = getMovieGenreQuery(orderBy, id?.length > 0, parameters);
+    const parameters = { genreId, userId, limit, page };
+    const [query, args] = getMediaByGenreQuery(SERIES, orderBy, parameters);
 
     const { rows: results } = await pool.query(query, args);
-    const finalData = getPagesAndClearData(results, limit, 'movies');
+    const finalData = getPagesAndClearData(results, limit, 'series');
     return res.status(200).json({ success: true, ...finalData });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;

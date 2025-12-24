@@ -20,6 +20,7 @@ export const JWT_EXPIRY_HOURS = 6;
 // constant strings to avoid typos in other files
 export const SERIES = 'TV_SERIES';
 export const MOVIES = 'MOVIES';
+export const MEDIA_TYPES = [MOVIES, SERIES];
 export const WATCHLIST = 'WATCHLIST';
 export const NOT_INTERESTED = 'NOT_INTERESTED';
 export const LIKE = 'LIKE';

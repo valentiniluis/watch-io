@@ -1,6 +1,6 @@
 import pool from '../model/postgres.js';
-import { NOT_INTERESTED } from './constants.js';
-import { calculateOffset } from './util-functions.js';
+import { NOT_INTERESTED, SERIES } from './constants.js';
+import { calculateOffset, checkValidMediaType } from './util-functions.js';
 
 
 export async function discoverMedia({ mediaType, page, user = {}, limit }) {
@@ -91,17 +91,32 @@ export async function getInteraction({ movieId, userId }) {
 }
 
 
-export const getMovieGenreQuery = (orderBy, authenticated, parameters) => {
-  const queryParams = [parameters.genreId];
+export const getMediaByGenreQuery = (mediaType, orderBy, parameters) => {
+  if (!checkValidMediaType(mediaType)) throw new Error("Invalid media type.");
+  const { genreId, userId } = parameters;
+  const queryParams = [genreId];
+
   let query = `
-    SELECT med.*, ROUND(med.tmdb_rating, 1) AS tmdb_rating, COUNT(*) OVER() AS row_count
+    SELECT 
+      med.tmdb_id AS id,
+      med.title,
+      med.original_title,
+      med.original_language,
+      med.release_year,
+      med.poster_path,
+      med.tmdb_rating,
+      ${mediaType === SERIES ? 'med.seasons,' : ''}
+      '${mediaType}' AS type,
+      ROUND(med.tmdb_rating, 1) AS tmdb_rating,
+      COUNT(*) OVER() AS row_count
     FROM media AS med
     INNER JOIN media_genre AS mg
     ON med.id = mg.media_id
     WHERE mg.genre_id = $1
+    AND med.type_id = (SELECT id FROM media_type WHERE media_name = '${mediaType}');
   `;
-  if (authenticated) {
-    queryParams.push(parameters.userId);
+  if (userId) {
+    queryParams.push(userId);
     query += `
       AND med.id NOT IN (
         SELECT inter.media_id
@@ -126,6 +141,26 @@ export const getMovieGenreQuery = (orderBy, authenticated, parameters) => {
   return [query, queryParams];
 };
 
+export const getGenres = async (mediaType) => {
+  let genresQuery;
+
+  if (!checkValidMediaType(mediaType)) {
+    genresQuery = "SELECT * FROM genre ORDER BY genre_name;";
+  }
+  else {
+    genresQuery = `
+      SELECT gen.*
+      FROM media_type_genre AS mtg
+      INNER JOIN genre AS gen
+      ON mtg.genre_id = gen.id
+      WHERE mtg.media_type_id = (SELECT id FROM media_type WHERE media_name = '${mediaType}')
+      ORDER BY gen.genre_name;
+    `;
+  }
+
+  const { rows: genres } = await pool.query(genresQuery);
+  return genres;
+}
 
 const constructValues = (valuesQty, dataArray) => {
   const values = dataArray.map((_, index) => {
