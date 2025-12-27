@@ -1,6 +1,6 @@
 import { getMediaData } from "../util/api-util.js";
 import { SERIES } from "../util/constants.js";
-import { mediaIdValidation } from "../util/validationSchemas.js";
+import { genreIdValidation, mediaIdValidation } from "../util/validationSchemas.js";
 import { getGenres, getMediaByGenreQuery, searchMedia } from "../util/db-util.js";
 
 
@@ -71,11 +71,10 @@ export const getSeriesByGenre = async (req, res, next) => {
     const { value: orderBy, error: orderByError } = orderByValidation.validate(req.query.orderBy);
     if (orderByError) throwError(400, 'Invalid sorting condition: ' + orderByError.message);
 
-    const { error: genreError, value } = genreIdSchema.validate(req.params);
+    const { error: genreError, value: genreId } = genreIdValidation.validate(req.params.genreId);
     if (genreError) throwError(400, 'Invalid genre: ' + genreError.message);
 
     const [page, limit] = validatePage(req.query.page, req.query.limit);
-    const { genreId } = value;
     const parameters = { genreId, userId, limit, page };
     const [query, args] = getMediaByGenreQuery(SERIES, orderBy, parameters);
 

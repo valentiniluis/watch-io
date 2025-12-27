@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { LIKE, NOT_INTERESTED, WATCHLIST } from "./constants.js";
+import { LIKE, MOVIES, NOT_INTERESTED, SERIES, URL_SEGMENTS, WATCHLIST } from "./constants.js";
 
 
 export const orderByValidation = Joi.string().valid('title.asc', 'title.desc', 'release_year.asc', 'release_year.desc', 'tmdb_rating.asc', 'tmdb_rating.desc', 'random').optional().default('random');
@@ -14,18 +14,19 @@ export const mediaIdValidation = Joi.number().integer().positive();
 
 export const interactionTypeValidation = Joi.string().valid(NOT_INTERESTED, WATCHLIST, LIKE).optional();
 
+export const genreIdValidation = Joi.number().positive().required();
+
+export const mediaTypeValidation = Joi.string().valid(URL_SEGMENTS[MOVIES], URL_SEGMENTS[SERIES]).required();
+
 export const loginSchema = Joi.object({
   credential: Joi.string().required(),
   clientId: Joi.string().required()
 });
 
 export const interactionSchema = Joi.object({
-  movieId: Joi.number().positive().required(),
+  mediaId: Joi.number().positive().required(),
+  mediaType: mediaTypeValidation,
   interactionType: Joi.string().valid(NOT_INTERESTED, WATCHLIST, LIKE).required()
-});
-
-export const genreIdSchema = Joi.object({
-  genreId: Joi.number().positive().required()
 });
 
 export const ratingSchema = Joi.object({

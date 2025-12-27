@@ -6,12 +6,16 @@ import { calculateOffset, checkValidMediaType } from './util-functions.js';
 export async function discoverMedia({ mediaType, page, user = {}, limit }) {
   const id = user?.id;
   const offset = calculateOffset(page, limit);
-  const queryArgs = [mediaType, limit, offset];
+  const queryArgs = [limit, offset];
 
   let query = `
-    SELECT *, ROUND(med.tmdb_rating, 1) AS tmdb_rating, COUNT(*) OVER() AS row_count 
+    SELECT 
+      *,
+      med.tmdb_id AS id, 
+      ROUND(med.tmdb_rating, 1) AS tmdb_rating, 
+      COUNT(*) OVER() AS row_count 
     FROM media AS med
-    WHERE med.type_id = (SELECT id FROM media_type WHERE media_name = $1)
+    WHERE med.type_id = (SELECT id FROM media_type WHERE media_name = '${mediaType}')
   `;
 
   if (id && id.length) {
@@ -19,9 +23,9 @@ export async function discoverMedia({ mediaType, page, user = {}, limit }) {
     query = `
       WITH not_interested AS (
         SELECT inter.media_id
-        FROM interaction AS inter
-        WHERE inter.user_id = $3
-        AND inter.type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
+        FROM interaction AS itr
+        WHERE itr.user_id = $3
+        AND itr.inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
       )
       ` + query + `
       WHERE med.id NOT IN (SELECT media_id FROM not_interested)
@@ -40,7 +44,11 @@ export async function searchMedia({ title, mediaType, user = {}, limit, page }) 
   const queryArgs = [mediaType, `%${title}%`, limit, offset];
 
   let query = `
-    SELECT *, ROUND(tmdb_rating, 1) AS tmdb_rating, COUNT(*) OVER() AS row_count
+    SELECT 
+      *, 
+      med.tmdb_id AS id, 
+      ROUND(tmdb_rating, 1) AS tmdb_rating, 
+      COUNT(*) OVER() AS row_count
     FROM media AS med
     WHERE med.type_id = (SELECT id FROM media_type WHERE media_name = $1)
     AND (med.title ILIKE $2 OR med.original_title ILIKE $2)
@@ -49,10 +57,10 @@ export async function searchMedia({ title, mediaType, user = {}, limit, page }) 
   if (id && id.length) {
     query += `
       AND med.id NOT IN (
-        SELECT inter.media_id
-        FROM interaction AS inter
-        WHERE inter.user_id = $5
-        AND inter.type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
+        SELECT itr.media_id
+        FROM interaction AS itr
+        WHERE itr.user_id = $5
+        AND itr.inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
       )
     `;
     queryArgs.push(id);
@@ -61,7 +69,8 @@ export async function searchMedia({ title, mediaType, user = {}, limit, page }) 
   query += `
     ORDER BY med.tmdb_rating DESC, med.title
     LIMIT $3
-    OFFSET $4;`;
+    OFFSET $4;`
+    ;
 
   const { rows } = await pool.query(query, queryArgs);
   return rows;
@@ -80,11 +89,11 @@ export function getPagesAndClearData(data, limit, key = 'data') {
 export async function getInteraction({ movieId, userId }) {
   const { rows: interaction } = await pool.query(`
     SELECT ity.interaction_type 
-    FROM interaction AS inter
+    FROM interaction AS itr
     INNER JOIN interaction_type AS ity
-    ON inter.type_id = ity.id
-    WHERE inter.user_id = $1
-    AND inter.media_id = $2;`,
+    ON itr.inter_type_id = ity.id
+    WHERE itr.user_id = $1
+    AND itr.media_id = $2;`,
     [userId, movieId]
   );
   return interaction;
@@ -93,8 +102,8 @@ export async function getInteraction({ movieId, userId }) {
 
 export const getMediaByGenreQuery = (mediaType, orderBy, parameters) => {
   if (!checkValidMediaType(mediaType)) throw new Error("Invalid media type.");
-  const { genreId, userId } = parameters;
-  const queryParams = [genreId];
+  const { genreId, userId, limit } = parameters;
+  const queryParams = [genreId, limit];
 
   let query = `
     SELECT 
@@ -113,33 +122,32 @@ export const getMediaByGenreQuery = (mediaType, orderBy, parameters) => {
     INNER JOIN media_genre AS mg
     ON med.id = mg.media_id
     WHERE mg.genre_id = $1
-    AND med.type_id = (SELECT id FROM media_type WHERE media_name = '${mediaType}');
+    AND med.type_id = (SELECT id FROM media_type WHERE media_name = '${mediaType}')
   `;
   if (userId) {
     queryParams.push(userId);
     query += `
       AND med.id NOT IN (
-        SELECT inter.media_id
-        FROM interaction AS inter
-        WHERE inter.user_id = $${queryParams.length}
-        AND inter.type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
+        SELECT itr.media_id
+        FROM interaction AS itr
+        WHERE itr.user_id = $${queryParams.length}
+        AND itr.inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
       )
     `;
   }
 
-  queryParams.push(parameters.limit);
-
   // could be costly if the table were very big. works fine for now
-  if (orderBy === 'random') query += ` ORDER BY random() LIMIT $${queryParams.length};`;
+  if (orderBy === 'random') query += ` ORDER BY random() LIMIT $2;`;
   else {
     // unique id used as tiebreaker
     const offset = calculateOffset(parameters.page, parameters.limit);
     queryParams.push(offset);
     const [attr, sort] = orderBy.split('.');
-    query += ` ORDER BY med.${attr} ${sort}, med.id ASC LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length};`;
+    query += ` ORDER BY med.${attr} ${sort}, med.id ASC LIMIT $2 OFFSET $${queryParams.length};`;
   }
   return [query, queryParams];
 };
+
 
 export const getGenres = async (mediaType) => {
   let genresQuery;
@@ -161,6 +169,7 @@ export const getGenres = async (mediaType) => {
   const { rows: genres } = await pool.query(genresQuery);
   return genres;
 }
+
 
 const constructValues = (valuesQty, dataArray) => {
   const values = dataArray.map((_, index) => {

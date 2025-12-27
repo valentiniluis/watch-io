@@ -1,5 +1,5 @@
 import { pageValidation, limitValidation } from './validationSchemas.js';
-import { DELETE_INTERACTION_MESSAGE, LIKE, MEDIA_TYPES, POST_INTERACTION_MESSAGE, RECOMMENDATION_WEIGHTS } from './constants.js';
+import { DELETE_INTERACTION_MESSAGE, LIKE, MEDIA_TYPES, MOVIES, NOT_INTERESTED, POST_INTERACTION_MESSAGE, RECOMMENDATION_WEIGHTS } from './constants.js';
 import pool from '../model/postgres.js';
 
 
@@ -61,173 +61,98 @@ export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
   const args = [movieId, cast, director, crew, keywords, genres, language, rating, limit];
   if (userId) args.push(userId);
   const recommendationQuery = `
-    with cast_score as (
-      with casted as (
-        select mc.artist_id
-        from media_cast as mc
-        inner join media as med
-        on mc.media_id = med.id
-        inner join artist as ar
-        on mc.artist_id = ar.id
-        where med.id = $1
-      ),
-      cast_careers as (
-        select mc.media_id, ca.artist_id
-        from media_cast as mc
-        inner join casted as ca
-        on mc.artist_id = ca.artist_id
-        where mc.media_id != $1
-      ),
-      scores as (
-        select media_id, count(*) as cast_score
-        from cast_careers as cc
-        group by cc.media_id
-      )
-      select
-        sc.*, (cast(cast_score as float) / (select max(cast_score) from scores)) as normal_cast_score
-      from scores as sc
+    WITH 
+    target_media AS (
+      SELECT id, original_language FROM media WHERE id = $1
     ),
-    director_score as (
-      with directors as (
-        select artist_id
-        from crew as cr
-        where job = 'Director'
-        and media_id = $1
-      ),
-      careers as (
-        select cr.media_id, cr.artist_id
-        from crew as cr
-        inner join directors as di
-        on cr.artist_id = di.artist_id
-        where cr.job = 'Director'
-        and cr.media_id != $1
-      ),
-      scores as (
-        select ca.media_id, count(*) as score
-        from careers as ca
-        group by ca.media_id
-      )
-      select 
-        media_id, score / (select max(score) from scores) as normal_director_score
-      from scores
+    norm_cast AS (
+      SELECT media_id, (raw_score::float / NULLIF(MAX(raw_score) OVER(), 0)) as score
+      FROM (
+        SELECT mc.media_id, COUNT(*) as raw_score
+        FROM media_cast mc
+        WHERE mc.artist_id IN (SELECT artist_id FROM media_cast WHERE media_id = $1) AND mc.media_id != $1
+        GROUP BY mc.media_id
+      ) AS c
     ),
-    crew_score as (
-      with crew_members as (
-        select cr.artist_id
-        from crew as cr
-        where cr.media_id = $1
-        and cr.job != 'Director'
-      ),
-      crew_careers as (
-        select cr.media_id, cr.artist_id
-        from crew_members as cm
-        inner join crew as cr
-        on cm.artist_id = cr.artist_id
-        where cr.media_id != $1
-      ),
-      scores as (
-        select media_id, count(*) as crew_score
-        from crew_careers
-        group by media_id
-      )
-      select 
-        sc.*, (cast(crew_score as float) / (select max(crew_score) from scores)) as normal_crew_score
-      from scores as sc
+    norm_director AS (
+      SELECT media_id, (raw_score::float / NULLIF(MAX(raw_score) OVER(), 0)) as score
+      FROM (
+        SELECT cr.media_id, COUNT(*) as raw_score
+        FROM crew cr
+        WHERE cr.job = 'Director' AND cr.artist_id IN (SELECT artist_id FROM crew WHERE job = 'Director' AND media_id = $1) AND cr.media_id != $1
+        GROUP BY cr.media_id
+      ) AS d
     ),
-    keyword_score as (
-      with keywords as (
-        select keyword_id
-        from media_keyword as mk
-        where mk.media_id = $1
-      ),
-      keyword_movies as (
-        select mk.media_id, mk.keyword_id
-        from keywords as ke
-        inner join media_keyword as mk
-        on ke.keyword_id = mk.keyword_id
-        where mk.media_id != $1
-      ),
-      scores as (
-        select media_id, count(*) as keyword_score
-        from keyword_movies as kem
-        group by media_id
-      )
-      select 
-        sc.*, (cast(keyword_score as float) / (select max(keyword_score) from scores)) as normal_keyword_score
-      from scores as sc	
+    norm_crew AS (
+      SELECT media_id, (raw_score::float / NULLIF(MAX(raw_score) OVER(), 0)) as score
+      FROM (
+        SELECT cr.media_id, COUNT(*) as raw_score
+        FROM crew cr
+        WHERE cr.job != 'Director' AND cr.artist_id IN (SELECT artist_id FROM crew WHERE media_id = $1 AND job != 'Director') AND cr.media_id != $1
+        GROUP BY cr.media_id
+      ) AS crw
     ),
-    genre_score as (
-      with genres as (
-        select genre_id
-        from media_genre as mg
-        where mg.media_id = $1
-      ),
-      genre_movies as (
-        select mg.media_id, mg.genre_id
-        from genres as gs
-        inner join media_genre as mg
-        on gs.genre_id = mg.genre_id
-        where mg.media_id != $1
-      ),
-      scores as (
-        select media_id, count(*) as genre_score
-        from genre_movies as gem
-        group by media_id
-      )
-      select 
-        sc.*, (cast(genre_score as float) / (select max(genre_score) from scores)) as normal_genre_score
-      from scores as sc	
+    norm_keyword AS (
+      SELECT media_id, (raw_score::float / NULLIF(MAX(raw_score) OVER(), 0)) as score
+      FROM (
+        SELECT mk.media_id, COUNT(*) as raw_score
+        FROM media_keyword mk
+        WHERE mk.keyword_id IN (SELECT keyword_id FROM media_keyword WHERE media_id = $1) AND mk.media_id != $1
+        GROUP BY mk.media_id
+      ) AS k
     ),
-    language_score as (
-      select id as media_id, 1 as normal_language_score
-      from movie
-      where original_language = (
-        select original_language
-        from movie as mo
-        where mo.id = $1
-      )
+    norm_genre AS (
+      SELECT media_id, (raw_score::float / NULLIF(MAX(raw_score) OVER(), 0)) as score
+      FROM (
+        SELECT mg.media_id, COUNT(*) as raw_score
+        FROM media_genre mg
+        WHERE mg.genre_id IN (SELECT genre_id FROM media_genre WHERE media_id = $1) AND mg.media_id != $1
+        GROUP BY mg.media_id
+      ) AS g
     ),
-    ranks as (
-      select 
-        mo.id,
+    ranks AS (
+      SELECT 
+        med.id,
+        med.tmdb_id,
         (
-          coalesce(cas.normal_cast_score, 0) * $2 +
-          coalesce(dis.normal_director_score, 0) * $3 +           
-          coalesce(crs.normal_crew_score, 0) * $4 + 
-          coalesce(kes.normal_keyword_score, 0) * $5 + 
-          coalesce(ges.normal_genre_score, 0) * $6 + 
-          coalesce(las.normal_language_score, 0) * $7 +
-          tmdb_rating / 10 * $8
+          COALESCE(cas.score, 0) * $2 +
+          COALESCE(dis.score, 0) * $3 +           
+          COALESCE(crs.score, 0) * $4 + 
+          COALESCE(kes.score, 0) * $5 + 
+          COALESCE(ges.score, 0) * $6 + 
+          (CASE WHEN med.original_language = (SELECT original_language FROM target_media) THEN 1 ELSE 0 END) * $7 +
+          (COALESCE(med.tmdb_rating, 0) / 10.0) * $8
         ) as final_score
-      from movie as mo
-      left join cast_score as cas
-      on mo.id = cas.media_id
-      left join director_score as dis
-      on mo.id = dis.media_id
-      left join crew_score as crs
-      on mo.id = crs.media_id
-      left join keyword_score as kes
-      on mo.id = kes.media_id
-      left join genre_score as ges
-      on mo.id = ges.media_id
-      left join language_score as las
-      on mo.id = las.media_id
-      ${userId ? `
-      where mo.id not in (
-        select media_id 
-        from interaction 
-        where user_id = $10
-        and type_id = (select id from interaction_type where interaction_type = 'not interested')
-      )` : ''}
-      order by final_score desc
-      limit 50
+      FROM media med
+      LEFT JOIN norm_cast cas ON med.id = cas.media_id
+      LEFT JOIN norm_director dis ON med.id = dis.media_id
+      LEFT JOIN norm_crew crs ON med.id = crs.media_id
+      LEFT JOIN norm_keyword kes ON med.id = kes.media_id
+      LEFT JOIN norm_genre ges ON med.id = ges.media_id
+      WHERE med.id != $1 
+        AND med.type_id = (SELECT id FROM media_type WHERE media_name = '${MOVIES}')
+        ${userId ? `
+        AND NOT EXISTS (
+          SELECT 1 FROM interaction i 
+          WHERE i.media_id = med.id 
+          AND i.user_id = $10 
+          AND i.inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
+        )` : ''}
+      ORDER BY final_score DESC
+      LIMIT 50
     )
-    select mo.*, round(mo.tmdb_rating, 1) as tmdb_rating
-    from ranks as ra
-    inner join movie as mo
-    on ra.id = mo.id
-    order by random()
-    limit $9;
+    SELECT
+      ra.tmdb_id AS id,
+      med.title,
+      med.original_title,
+      med.poster_path,
+      med.release_year,
+      med.original_language,
+      ROUND(CAST(med.tmdb_rating as numeric), 1) AS tmdb_rating
+    FROM ranks AS ra
+    JOIN media AS med ON ra.id = med.id
+    ORDER BY RANDOM()
+    LIMIT $9;
   `;
 
   return [recommendationQuery, args];
@@ -239,186 +164,103 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
  
   const args = [userId, cast, director, crew, keywords, genres, language, rating, limit];
   const query = `
-    with favorites as (
-      select mr.media_id
-      from rating as rt
-      where rt.user_id = $1
-      and rt.score >= 7
-      union
-      select media_id
-      from interaction as itr
-      where itr.user_id = $1
-      and itr.type_id = (select id from interaction_type where interaction_type = '${LIKE}')
-      and itr.media_id not in (select media_id from rating)
+    WITH favorites AS (
+      SELECT media_id FROM rating WHERE user_id = $1 AND score >= 7
+      UNION
+      SELECT media_id FROM interaction 
+      WHERE user_id = $1 
+      AND inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${LIKE}')
     ),
-    cast_score as (
-      with casted as (
-        select mc.artist_id
-        from media_cast as mc
-        inner join movie as mv
-        on mc.media_id = mv.id
-        inner join artist as ar
-        on mc.artist_id = ar.id
-        where mv.id in (select media_id from favorites)
-      ),
-      cast_careers as (
-        select media_id, ca.artist_id
-        from media_cast as mc
-        inner join casted as ca
-        on mc.artist_id = ca.artist_id
-        where mc.media_id not in (select media_id from favorites)
-      ),
-      scores as (
-        select media_id, count(*) as cast_score
-        from cast_careers as cc
-        group by cc.media_id
-      )
-      select
-        sc.*, (cast(cast_score as float) / (select max(cast_score) from scores)) as normal_cast_score
-      from scores as sc
+    -- OTIMIZAÇÃO: Calculamos todos os denominadores (máximos) uma única vez (?)
+    stats AS (
+      SELECT 
+        NULLIF(MAX(c_cast), 0) as max_cast,
+        NULLIF(MAX(c_dir), 0) as max_dir,
+        NULLIF(MAX(c_key), 0) as max_key,
+        NULLIF(MAX(c_gen), 0) as max_gen
+      FROM (
+        SELECT 
+          (SELECT COUNT(*) FROM media_cast mc2 WHERE mc2.media_id = m.id) as c_cast,
+          (SELECT COUNT(*) FROM crew cr2 WHERE cr2.media_id = m.id AND cr2.job = 'Director') as c_dir,
+          (SELECT COUNT(*) FROM media_keyword mk2 WHERE mk2.media_id = m.id) as c_key,
+          (SELECT COUNT(*) FROM media_genre mg2 WHERE mg2.media_id = m.id) as c_gen
+        FROM media m
+        WHERE m.id NOT IN (SELECT media_id FROM favorites)
+      ) counts
     ),
-    director_score as (
-      with directors as (
-        select artist_id
-        from crew as cr
-        where job = 'Director'
-        and media_id in (select media_id from favorites)
-      ),
-      careers as (
-        select cr.media_id, cr.artist_id
-        from crew as cr
-        inner join directors as di
-        on cr.artist_id = di.artist_id
-        where cr.job = 'Director'
-        and cr.media_id not in (select media_id from favorites)
-      ),
-      scores as (
-        select ca.media_id, count(*) as score
-        from careers as ca
-        group by ca.media_id
-      )
-      select 
-        media_id, score / (select max(score) from scores) as normal_director_score
-      from scores
+    cast_score AS (
+      SELECT mc.media_id, CAST(COUNT(*) AS FLOAT) / (SELECT max_cast FROM stats) as normal_cast_score
+      FROM media_cast mc
+      WHERE mc.artist_id IN (SELECT artist_id FROM media_cast WHERE media_id IN (SELECT media_id FROM favorites))
+      AND mc.media_id NOT IN (SELECT media_id FROM favorites)
+      GROUP BY mc.media_id
     ),
-    crew_score as (
-      with crew_members as (
-        select cr.artist_id
-        from crew as cr
-        where cr.job != 'Director'
-        and cr.media_id in (select media_id from favorites)
-      ),
-      crew_careers as (
-        select cr.media_id, cr.artist_id
-        from crew_members as cm
-        inner join crew as cr
-        on cm.artist_id = cr.artist_id
-        where cr.media_id not in (select media_id from favorites)
-      ),
-      scores as (
-        select
-          media_id, count(*) as crew_score
-        from crew_careers
-        group by media_id
-      )
-      select 
-        sc.*, (cast(crew_score as float) / (select max(crew_score) from scores)) as normal_crew_score
-      from scores as sc
+    director_score AS (
+      SELECT cr.media_id, CAST(COUNT(*) AS FLOAT) / (SELECT max_dir FROM stats) as normal_director_score
+      FROM crew cr
+      WHERE cr.job = 'Director'
+      AND cr.artist_id IN (SELECT artist_id FROM crew WHERE job = 'Director' AND media_id IN (SELECT media_id FROM favorites))
+      AND cr.media_id NOT IN (SELECT media_id FROM favorites)
+      GROUP BY cr.media_id
     ),
-    keyword_score as (
-      with keywords as (
-        select keyword_id
-        from media_keyword as mk
-        where mk.media_id in (select media_id from favorites)
-      ),
-      keyword_movies as (
-        select mk.media_id, mk.keyword_id
-        from keywords as ke
-        inner join media_keyword as mk
-        on ke.keyword_id = mk.keyword_id
-        where mk.media_id not in (select media_id from favorites)
-      ),
-      scores as (
-        select media_id, count(*) as keyword_score
-        from keyword_movies as kem
-        group by media_id
-      )
-      select 
-        sc.*, (cast(keyword_score as float) / (select max(keyword_score) from scores)) as normal_keyword_score
-      from scores as sc	
+    keyword_score AS (
+      SELECT mk.media_id, CAST(COUNT(*) AS FLOAT) / (SELECT max_key FROM stats) as normal_keyword_score
+      FROM media_keyword mk
+      WHERE mk.keyword_id IN (SELECT keyword_id FROM media_keyword WHERE media_id IN (SELECT media_id FROM favorites))
+      AND mk.media_id NOT IN (SELECT media_id FROM favorites)
+      GROUP BY mk.media_id
     ),
-    genre_score as (
-      with genres as (
-        select genre_id
-        from media_genre as mg
-        where mg.media_id in (select media_id from favorites)
-      ),
-      genre_movies as (
-        select mg.media_id, mg.genre_id
-        from genres as gs
-        inner join media_genre as mg
-        on gs.genre_id = mg.genre_id
-        where mg.media_id not in (select media_id from favorites)
-      ),
-      scores as (
-        select media_id, count(*) as genre_score
-        from genre_movies as gem
-        group by media_id
-      )
-      select 
-        sc.*, (cast(genre_score as float) / (select max(genre_score) from scores)) as normal_genre_score
-      from scores as sc	
+    genre_score AS (
+      SELECT mg.media_id, CAST(COUNT(*) AS FLOAT) / (SELECT max_gen FROM stats) as normal_genre_score
+      FROM media_genre mg
+      WHERE mg.genre_id IN (SELECT genre_id FROM media_genre WHERE media_id IN (SELECT media_id FROM favorites))
+      AND mg.media_id NOT IN (SELECT media_id FROM favorites)
+      GROUP BY mg.media_id
     ),
-    language_score as (
-      select id as media_id, 1 as normal_language_score
-      from movie
-      where original_language in (
-        select original_language
-        from movie as mo
-        where mo.id in (select media_id from favorites)
-      )
+    language_score AS (
+      SELECT id as media_id, 1.0 as normal_language_score
+      FROM media
+      WHERE original_language IN (SELECT DISTINCT original_language FROM media WHERE id IN (SELECT media_id FROM favorites))
     ),
-    ranks as (
-      select 
-        mo.id,
+    ranks AS (
+      SELECT 
+        med.id as internal_id,
+        med.tmdb_id,
         (
-          coalesce(cas.normal_cast_score, 0) * $2 + 
-          coalesce(dis.normal_director_score, 0) * $3 + 
-          coalesce(crs.normal_crew_score, 0) * $4 + 
-          coalesce(kes.normal_keyword_score, 0) * $5 + 
-          coalesce(ges.normal_genre_score, 0) * $6 + 
-          coalesce(las.normal_language_score, 0) * $7 +
-          tmdb_rating / 10 * $8
+          COALESCE(cas.normal_cast_score, 0) * $2 + 
+          COALESCE(dis.normal_director_score, 0) * $3 + 
+          COALESCE(kes.normal_keyword_score, 0) * $5 + 
+          COALESCE(ges.normal_genre_score, 0) * $6 + 
+          COALESCE(las.normal_language_score, 0) * $7 +
+          (COALESCE(med.tmdb_rating, 0) / 10.0) * $8
         ) as final_score
-      from movie as mo
-      left join cast_score as cas
-      on mo.id = cas.media_id
-      left join director_score as dis
-      on mo.id = dis.media_id
-      left join crew_score as crs
-      on mo.id = crs.media_id
-      left join keyword_score as kes
-      on mo.id = kes.media_id
-      left join genre_score as ges
-      on mo.id = ges.media_id
-      left join language_score as las
-      on mo.id = las.media_id
-      where mo.id not in (
-        select media_id 
-        from interaction as itr 
-        where itr.user_id = $1 
-        and itr.type_id = (select id from interaction_type where interaction_type = 'not interested')
+      FROM media med
+      LEFT JOIN cast_score cas ON med.id = cas.media_id
+      LEFT JOIN director_score dis ON med.id = dis.media_id
+      LEFT JOIN keyword_score kes ON med.id = kes.media_id
+      LEFT JOIN genre_score ges ON med.id = ges.media_id
+      LEFT JOIN language_score las ON med.id = las.media_id
+      WHERE med.id NOT IN (SELECT media_id FROM favorites)
+      AND med.id NOT IN (
+        SELECT media_id FROM interaction 
+        WHERE user_id = $1 
+        AND inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
       )
-      order by final_score desc
-      limit 60
+      ORDER BY final_score DESC
+      LIMIT 50
     )
-    select
-      mo.*, round(mo.tmdb_rating, 1) as tmdb_rating
-    from ranks as ra
-    inner join movie as mo
-    on ra.id = mo.id
-    order by random()
-    limit $9;
+    SELECT
+      ra.tmdb_id as id,
+      med.title,
+      med.original_title,
+      med.poster_path,
+      med.release_year,
+      med.original_language,
+      round(cast(med.tmdb_rating as numeric), 1) as tmdb_rating
+    FROM ranks ra
+    JOIN media med ON ra.internal_id = med.id
+    ORDER BY RANDOM()
+    LIMIT $9;
   `;
 
   return [query, args];

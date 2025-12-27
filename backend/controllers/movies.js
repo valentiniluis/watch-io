@@ -1,9 +1,9 @@
 import pool from '../model/postgres.js';
 import { getMediaData } from '../util/api-util.js';
-import { discoverMedia, getGenres, getInteraction, getMediaByGenreQuery, getMovieGenreQuery, getPagesAndClearData, searchMedia } from '../util/db-util.js';
+import { discoverMedia, getGenres, getInteraction, getMediaByGenreQuery, getPagesAndClearData, searchMedia } from '../util/db-util.js';
 import { getMovieBasedRecommendationQuery, getUserBasedRecommendationQuery, throwError, validatePage } from '../util/util-functions.js';
-import { genreIdSchema, orderByValidation, countryValidation, mediaIdValidation, limitValidation } from '../util/validationSchemas.js';
-import { MOVIES } from '../util/constants.js';
+import { genreIdValidation, orderByValidation, countryValidation, mediaIdValidation, limitValidation } from '../util/validationSchemas.js';
+import { LIKE, MOVIES } from '../util/constants.js';
 
 
 export const getSearchedMovies = async (req, res, next) => {
@@ -13,7 +13,7 @@ export const getSearchedMovies = async (req, res, next) => {
     const { movie } = req.query;
 
     const data = (movie)
-      ? await searchMedia({ movie, mediaType: MOVIES, page, user, limit })
+      ? await searchMedia({ title: movie, mediaType: MOVIES, page, user, limit })
       : await discoverMedia({ page, mediaType: MOVIES, user, limit })
       ;
 
@@ -87,7 +87,14 @@ export const getUserRecommendations = async (req, res, next) => {
     // take 250 best rated movies and use random 25 movies sample
     const fallbackQuery = `
       WITH best_rated AS (
-        SELECT *, ROUND(tmdb_rating, 1) AS tmdb_rating
+        SELECT 
+          med.tmdb_id AS id,
+          med.title,
+          med.original_title,
+          med.original_language,
+          med.poster_path,
+          med.release_year,
+          ROUND(tmdb_rating, 1) AS tmdb_rating
         FROM media AS med
         ORDER BY med.tmdb_rating DESC
         LIMIT 250
@@ -106,7 +113,7 @@ export const getUserRecommendations = async (req, res, next) => {
         SELECT 1
         FROM interaction AS itr
         WHERE user_id = $1
-        AND itr.type_id = (SELECT id FROM interaction_type WHERE interaction_type = 'like')
+        AND itr.inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${LIKE}')
         UNION ALL
         SELECT 1
         FROM rating
@@ -151,11 +158,10 @@ export const getMoviesByGenre = async (req, res, next) => {
     const { value: orderBy, error: orderByError } = orderByValidation.validate(req.query.orderBy);
     if (orderByError) throwError(400, 'Invalid sorting condition: ' + orderByError.message);
 
-    const { error: genreError, value } = genreIdSchema.validate(req.params);
+    const { error: genreError, value: genreId } = genreIdValidation.validate(req.params.genreId);
     if (genreError) throwError(400, 'Invalid genre: ' + genreError.message);
 
     const [page, limit] = validatePage(req.query.page, req.query.limit);
-    const { genreId } = value;
     const parameters = { genreId, userId, limit, page };
     const [query, args] = getMediaByGenreQuery(MOVIES, orderBy, parameters);
 

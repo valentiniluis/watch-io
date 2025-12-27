@@ -18,8 +18,7 @@ MIN_VOTE_AVG = 5
 MIN_POPULARITY = 0.5
 SERIES = 'TV_SERIES'
 MOVIES = 'MOVIE'
-# MEDIA_TYPES = [MOVIES, SERIES]
-MEDIA_TYPES = [SERIES]
+MEDIA_TYPES = [MOVIES, SERIES]
 
 
 def connectDB(retries=3):
@@ -66,7 +65,7 @@ def getReleaseYear(data):
 
 
 def sanitizeTvShow(data):
-  # transform tv show data so that every field name is the same as the movies objects
+  # transform tv show data so that every field name is the same as the in the movie data objects
   data['title'] = data['name']
   del data['name']
   data['original_title'] = data['original_name']
@@ -254,31 +253,32 @@ if __name__ == '__main__':
   connection = connectDB()
   cursor = connection.cursor()
 
-  # isInit = testIfInitialized(cursor)
+  isInit = testIfInitialized(cursor)
 
-  # if (isInit):
-  #   print("Movies already in the local database. Exiting successfully.")
-  #   exit(0)
+  if (isInit):
+    print("Movies already in the local database. Exiting successfully.")
+    cursor.close()
+    connection.close()
+    exit(0)
 
-  # try:
-  #   genres = {}
-  #   documentaryId = None
-  #   for mediaType in MEDIA_TYPES:
-  #     segment = getURLSegment(mediaType)
-  #     GENRES_URL = f'{BASE_URL}/genre/{segment}/list'
-  #     loadedGenres = makeRequest(GENRES_URL)['genres']
-  #     genres[mediaType] = loadedGenres
-  #     if (mediaType == MOVIES):
-  #       documentaryId = getGenreId('Documentary', loadedGenres)
+  try:
+    genres = {}
+    documentaryId = None
+    for mediaType in MEDIA_TYPES:
+      segment = getURLSegment(mediaType)
+      GENRES_URL = f'{BASE_URL}/genre/{segment}/list'
+      loadedGenres = makeRequest(GENRES_URL)['genres']
+      genres[mediaType] = loadedGenres
+      if (mediaType == MOVIES):
+        documentaryId = getGenreId('Documentary', loadedGenres)
 
-  #   storeGenres(genres, cursor, connection)
-  #   print('Stored movie genres successfully.')
-  # except Exception as err:
-  #   print("Fatal error - exiting...")
-  #   print('Failed to request and store genres.')
-  #   print(err)
-  #   exit(1)
-
+    storeGenres(genres, cursor, connection)
+    print('Stored movie genres successfully.')
+  except Exception as err:
+    print("Fatal error - exiting...")
+    print('Failed to request and store genres.')
+    print(err)
+    exit(1)
 
   for mediaType in MEDIA_TYPES:
     segment = getURLSegment(mediaType)

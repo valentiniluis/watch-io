@@ -1,6 +1,6 @@
 import pool from '../model/postgres.js';
 import { getInteraction, getPagesAndClearData } from '../util/db-util.js';
-import { interactionSchema, interactionTypeValidation, mediaIdValidation } from '../util/validationSchemas.js';
+import { interactionSchema, interactionTypeValidation, mediaIdValidation, mediaTypeValidation } from '../util/validationSchemas.js';
 import { calculateOffset, deleteInteractionMessage, postInteractionMessage, throwError, validatePage } from '../util/util-functions.js';
 import { PG_UNIQUE_ERR } from '../util/constants.js';
 
@@ -10,28 +10,33 @@ export const getInteractions = async (req, res, next) => {
   try {
     const { user } = req;
 
+    const { error: mediaError, value: mediaType } = mediaTypeValidation.validate(req.params.mediaType);
+    if (mediaError) throwError(400, 'Invalid media type: ' + mediaError.message);
+
     const { value: interactionType, error: interactionErr } = interactionTypeValidation.validate(req.query.interactionType);
     if (interactionErr) throwError(400, 'Invalid interaction type: ' + interactionErr.message);
+
     const [page, limit] = validatePage(req.query.page, req.query.limit);
 
     const offset = calculateOffset(page, limit);
-    const queryArgs = [user.id, limit, offset];
+    const queryArgs = [user.id, mediaType, limit, offset];
     let query = `
       SELECT ity.interaction_type, med.*, ROUND(med.tmdb_rating, 1) AS tmdb_rating, COUNT(*) OVER() AS row_count
-      FROM interaction AS inter
+      FROM interaction AS itr
       INNER JOIN media AS med
-      ON inter.media_id = med.id
+      ON itr.media_id = med.id
       INNER JOIN interaction_type AS ity
-      ON inter.type_id = ity.id
-      WHERE inter.user_id = $1
+      ON itr.inter_type_id = ity.id
+      WHERE itr.user_id = $1
+      AND med.type_id = (SELECT id FROM media_type WHERE media_name = $2)
     `;
 
     if (interactionType) {
-      query += ' AND ity.interaction_type = $4';
+      query += ' AND ity.interaction_type = $5';
       queryArgs.push(interactionType);
     }
 
-    query += ' LIMIT $2 OFFSET $3;';
+    query += ' LIMIT $3 OFFSET $4;';
 
     const { rows: interactions } = await pool.query(query, queryArgs);
     const finalData = getPagesAndClearData(interactions, limit, 'interactions');
@@ -48,13 +53,18 @@ export const postInteraction = async (req, res, next) => {
     if (error) throwError(400, 'Invalid Input: ' + error.message);
 
     const { user } = req;
-    const { interactionType, movieId } = value;
+    const { interactionType, mediaId, mediaType } = value;
 
     await pool.query(`
       INSERT INTO
-      interaction(media_id, user_id, type_id)
-      VALUES ($1, $2, (SELECT id FROM interaction_type WHERE interaction_type = $3));`,
-      [movieId, user.id, interactionType]
+      interaction(media_id, user_id, inter_type_id)
+      VALUES 
+      (
+        (SELECT id FROM media WHERE type_id = (SELECT id FROM media_type WHERE media_name = $1) AND tmdb_id = $2), 
+        $3, 
+        (SELECT id FROM interaction_type WHERE interaction_type = $4)
+      );`,
+      [mediaType, mediaId, user.id, interactionType]
     );
 
     const message = postInteractionMessage(interactionType);
@@ -98,11 +108,9 @@ export const deleteInteraction = async (req, res, next) => {
       DELETE FROM interaction
       WHERE user_id = $1
       AND media_id = $2
-      AND type_id = (SELECT id FROM interaction_type WHERE interaction_type = $3);`,
+      AND inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = $3);`,
       [user.id, movieId, interactionType]
     );
-
-    console.log(interactionType);
 
     if (rowCount === 0) throwError(401, `User has no '${interactionType}' interaction with movie.`);
     const message = deleteInteractionMessage(interactionType);

@@ -123,7 +123,7 @@ export function sanitizeMovie(movie) {
 
 
 export async function getMediaData(type, mediaId, country) {
-  if (checkValidMediaType(type)) throw new Error('Invalid media type.');
+  if (!checkValidMediaType(type)) throw new Error('Invalid media type.');
   const urlSegment = getTMDbUrlSegment(type);
   const urlTMDB = `/${urlSegment}/${mediaId}?append_to_response=watch/providers`;
   
