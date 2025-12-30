@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as moviesControllers from '../controllers/movies.js';
+import * as moviesControllers from '../controllers/movie.js';
 import { optionallyAuthenticateJWT } from '../middleware/auth.js';
 
 const router = Router();

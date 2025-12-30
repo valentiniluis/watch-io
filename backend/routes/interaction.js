@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as interactionControllers from '../controllers/interactions.js';
+import * as interactionControllers from '../controllers/interaction.js';
 import { authenticateJWT } from '../middleware/auth.js';
 
 const router = Router();

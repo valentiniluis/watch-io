@@ -4,18 +4,20 @@ import Spinner from '../components/UI/Spinner';
 import ErrorSection from '../components/UI/ErrorSection';
 import MovieList from '../components/movie/MovieList';
 import { mainGenres } from '../util/constants.js';
-import { loadMoviesByGenre } from '../util/movie-query.js';
+import { loadMediaByGenre } from '../util/movie-query.js';
 import RecommendationsSection from '../components/movie/RecommendationsSection.jsx';
+import { useSelector } from 'react-redux';
 
 
 export default function HomePage() {
+  const mediaType = useSelector(state => state.media.type);
   const [enabledQueries, setEnabledQueries] = useState([true, ...Array(mainGenres.length - 1).fill(false)]);
   const observerRefs = useRef([]);
 
   const results = useQueries({
     queries: mainGenres.map((genre, index) => ({
-      queryKey: ['genres', { genre: genre.id, genreName: genre.name }],
-      queryFn: loadMoviesByGenre,
+      queryKey: [mediaType, { genre: genre.id, genreName: genre.name }],
+      queryFn: loadMediaByGenre,
       // 10 minutes until refetch
       refetchInterval: 1000 * 60 * 10,
       refetchOnWindowFocus: false,

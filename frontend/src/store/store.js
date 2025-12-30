@@ -1,13 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './auth';
-import movieReducer from './movie';
+import mediaReducer from './media';
 import toastReducer from './toast';
-
 
 const store = configureStore({
   reducer: {
     auth: authReducer,
-    movie: movieReducer,
+    media: mediaReducer,
     toast: toastReducer
   }
 });

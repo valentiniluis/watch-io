@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { optionallyAuthenticateJWT } from '../middleware/auth.js';
-import * as seriesControllers from '../controllers/series.js';
+import * as seriesControllers from '../controllers/tv.js';
 
 const router = Router();
 

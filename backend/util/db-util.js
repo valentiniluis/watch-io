@@ -85,8 +85,8 @@ export function getPagesAndClearData(data, limit, key = 'data') {
   return { [key]: data, pages };
 }
 
-
-export async function getInteraction({ movieId, userId }) {
+// correct
+export async function getInteraction({ mediaId, userId }) {
   const { rows: interaction } = await pool.query(`
     SELECT ity.interaction_type 
     FROM interaction AS itr

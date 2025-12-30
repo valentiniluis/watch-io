@@ -7,7 +7,7 @@ import { useSelector } from "react-redux";
 
 
 export default function MovieRecommendations() {
-  const movie = useSelector(state => state.movie);
+  const movie = useSelector(state => state.media.data);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['movie-recommendations', { movieId: movie.id }],

@@ -9,7 +9,7 @@ import RatingPreview from "./RatingPreview";
 
 
 export default function RatingSection() {
-  const movie = useSelector(state => state.movie);
+  const movie = useSelector(state => state.media.data);
   const modalRef = useRef();
 
   const { data, isPending, isError, error } = useQuery({

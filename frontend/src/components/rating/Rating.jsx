@@ -8,7 +8,7 @@ import DeleteIcon from '/delete.svg';
 import IconButton from '../icons/IconButton.jsx';
 import RatingModal from './RatingModal.jsx';
 import { useDispatch } from 'react-redux';
-import { movieActions } from '../../store/movie.js';
+import { mediaActions } from '../../store/media.js';
 import DeleteRatingModal from './DeleteRatingModal.jsx';
 
 
@@ -23,7 +23,7 @@ export default function Rating({ rating }) {
   const formattedDate = formatDate(rate_date);
 
   function handleOpenModal(ref) {
-    dispatch(movieActions.setMovie(rating));
+    dispatch(mediaActions.setMediaData(rating));
     ref.current.showModal();
   }
 

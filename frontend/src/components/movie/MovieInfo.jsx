@@ -7,8 +7,7 @@ import Overview from '../UI/Overview.jsx';
 
 
 export default function MovieInfo({ movie }) {
-  const auth = useSelector(reduxState => reduxState.auth);
-  const { isLoggedIn } = auth;
+  const { isLoggedIn } = useSelector(reduxState => reduxState.auth);
 
   const { title, poster_path, tagline, release_year, runtime, genres, overview } = movie;
   const poster = poster_path || noPoster;

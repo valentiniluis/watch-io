@@ -80,3 +80,6 @@ export const INTERACTION_BTN_CONTENT = {
     }
   }
 };
+
+export const SERIES = 'tv';
+export const MOVIES = 'movie';

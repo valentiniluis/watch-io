@@ -8,7 +8,7 @@ import { toastActions } from '../../store/toast';
 
 export default function DeleteRatingModal({ ref }) {
   const dispatch = useDispatch();
-  const movie = useSelector(state => state.movie);
+  const movie = useSelector(state => state.media.data);
 
   const { mutate } = useMutation({
     mutationFn: deleteRating,

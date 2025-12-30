@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DropdownMenu from "../UI/DropdownMenu";
-import { loadMoviesByGenre } from "../../util/movie-query";
+import { loadMediaByGenre } from "../../util/movie-query";
 import Spinner from "../UI/Spinner";
 import MovieCatalog from './MovieCatalog';
 import { sortOptions } from "../../util/constants";
+import ErrorSection from "../UI/ErrorSection";
+import { useSelector } from "react-redux";
+
 
 const initialState = {
   label: sortOptions[0]["data-label"],
@@ -12,13 +15,14 @@ const initialState = {
 };
 
 export default function GenresPageContent({ genres }) {
+  const { type: mediaType } = useSelector(state => state.media);
   const [genre, setGenre] = useState({ name: genres[0].name, id: genres[0].id });
   const [sortAttribute, setSortAttribute] = useState(initialState);
   const [page, setPage] = useState(1);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['movies', { genre: genre.id, orderBy: sortAttribute.attribute, page }],
-    queryFn: loadMoviesByGenre,
+    queryKey: [mediaType, { genre: genre.id, orderBy: sortAttribute.attribute, page }],
+    queryFn: loadMediaByGenre,
   });
 
   let content;

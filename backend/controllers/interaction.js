@@ -2,7 +2,7 @@ import pool from '../model/postgres.js';
 import { getInteraction, getPagesAndClearData } from '../util/db-util.js';
 import { interactionSchema, interactionTypeValidation, mediaIdValidation, mediaTypeValidation } from '../util/validationSchemas.js';
 import { calculateOffset, deleteInteractionMessage, postInteractionMessage, throwError, validatePage } from '../util/util-functions.js';
-import { PG_UNIQUE_ERR } from '../util/constants.js';
+import { PG_UNIQUE_ERR, URL_SEGMENT_TO_CONSTANT_MAPPING } from '../util/constants.js';
 
 
 // get all user interactions
@@ -54,6 +54,10 @@ export const postInteraction = async (req, res, next) => {
 
     const { user } = req;
     const { interactionType, mediaId, mediaType } = value;
+    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
+
+    const m = [mappedMediaType, mediaId, user.id, interactionType];
+    console.log(mediaType);
 
     await pool.query(`
       INSERT INTO
@@ -64,7 +68,7 @@ export const postInteraction = async (req, res, next) => {
         $3, 
         (SELECT id FROM interaction_type WHERE interaction_type = $4)
       );`,
-      [mediaType, mediaId, user.id, interactionType]
+      [mappedMediaType, mediaId, user.id, interactionType]
     );
 
     const message = postInteractionMessage(interactionType);
@@ -82,10 +86,10 @@ export const postInteraction = async (req, res, next) => {
 export const hasInteraction = async (req, res, next) => {
   try {
     const { user } = req;
-    const { error, value: movieId } = mediaIdValidation.required().validate(req.params.movieId);
+    const { error, value: mediaId } = mediaIdValidation.required().validate(req.params.mediaId);
     if (error) throwError(400, 'Invalid movie id provided: ' + error.message);
 
-    const interaction = await getInteraction({ userId: user.id, movieId });
+    const interaction = await getInteraction({ userId: user.id, mediaId });
     const hasInteraction = (interaction.length > 0);
     const responseData = { hasInteraction };
     if (hasInteraction) responseData.type = interaction[0].interaction_type;

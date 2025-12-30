@@ -10,7 +10,7 @@ import { toastActions } from '../../store/toast';
 
 
 export default function RatingModal({ ref, editMode, data }) {
-  const { id: movieId, title, release_year } = useSelector(state => state.movie);
+  const { id: movieId, title, release_year } = useSelector(state => state.media.data);
   const dispatch = useDispatch();
 
   function handleClose() {
