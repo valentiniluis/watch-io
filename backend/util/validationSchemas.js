@@ -28,8 +28,14 @@ export const interactionSchema = Joi.object({
   interactionType: Joi.string().valid(NOT_INTERESTED, WATCHLIST, LIKE).required()
 });
 
+export const deleteInteractionSchema = Joi.object({
+  mediaId: Joi.number().positive().required(),
+  mediaType: mediaTypeValidation
+});
+
 export const ratingSchema = Joi.object({
-  movieId: mediaIdValidation.required(),
+  mediaId: mediaIdValidation.required(),
+  mediaType: mediaTypeValidation,
   score: Joi.number().min(1).max(10).integer().required(),
   headline: Joi.string().required(),
   note: Joi.string().max(511).optional()

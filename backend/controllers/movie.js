@@ -39,7 +39,7 @@ export const getMovieData = async (req, res, next) => {
     const userData = {};
     if (user) {
       userData.authenticated = true;
-      const interactions = await getInteraction({ movieId, userId: user.id });
+      const interactions = await getInteraction({ tmdbId: movieId, userId: user.id, mediaType: MOVIES });
       if (interactions.length) {
         const [interaction] = interactions;
         userData[interaction.interaction_type] = true;

@@ -10,7 +10,8 @@ import { toastActions } from '../../store/toast';
 
 
 export default function RatingModal({ ref, editMode, data }) {
-  const { id: movieId, title, release_year } = useSelector(state => state.media.data);
+  const { data: media, type: mediaType }  = useSelector(state => state.media);
+  const { id: mediaId, title, release_year } = media;
   const dispatch = useDispatch();
 
   function handleClose() {
@@ -37,7 +38,8 @@ export default function RatingModal({ ref, editMode, data }) {
       score: +rating.score,
       note: rating.note.length > 0 ? rating.note : undefined
     };
-    mutate({ rating, movieId, method: (editMode === true) ? "PUT" : "POST" });
+    const method = (editMode === true) ? "PUT" : "POST";
+    mutate({ rating, mediaId, mediaType, method });
     event.target.reset();
     handleClose();
   }

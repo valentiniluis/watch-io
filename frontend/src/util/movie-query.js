@@ -13,7 +13,7 @@ export async function fetchMovies({ queryKey }) {
 
 export async function addInteraction({ type, mediaId, mediaType }) {
   const body = { mediaId, interactionType: type, mediaType };
-  const response = await api.post(`/interaction`, body);
+  const response = await api.post('/interaction', body);
   return response.data;
 }
 
@@ -30,9 +30,10 @@ export async function getRatings({ queryKey }) {
 }
 
 
-export async function mutateRating({ rating, movieId, method }) {
-  const body = { ...rating, movieId };
+export async function mutateRating({ rating, mediaId, mediaType, method }) {
   if (!['POST', 'PUT'].includes(method)) throw new Error("Invalid method!");
+
+  const body = { ...rating, mediaId, mediaType };
   let response;
   const url = "/rating";
   if (method === 'POST') response = await api.post(url, body);
@@ -48,10 +49,12 @@ export async function deleteRating({ movie }) {
 
 
 export async function getInteractedMovies({ queryKey }) {
-  let url = '/interaction';
   const params = queryKey[1];
+  const { interactionType, page, mediaType } = params;
+  
+  let url = `/interaction/${mediaType}`;
   const queryParams = [];
-  const { interactionType, page } = params;
+
   if (interactionType) queryParams.push(`interactionType=${interactionType}`);
   if (page) queryParams.push(`page=${page}`);
   if (queryParams.length) url += '?' + queryParams.join('&');
@@ -60,13 +63,13 @@ export async function getInteractedMovies({ queryKey }) {
 }
 
 
-export async function removeInteraction({ movieId, type }) {
-  const response = await api.delete(`/interaction/${type}/${movieId}`);
+export async function removeInteraction({ mediaId, mediaType }) {
+  const response = await api.delete(`/interaction/${mediaType}/${mediaId}`);
   return response.data;
 }
 
 
-export async function getInteractions({ queryKey }) {
+export async function getInteraction({ queryKey }) {
   const { mediaId, mediaType } = queryKey[1];
   if (!mediaId) throw new Error('Media ID must be provided.');
   if (!mediaType) throw new Error('Media type must be provided.');

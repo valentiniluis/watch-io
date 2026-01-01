@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { addInteraction, getInteractions, removeInteraction } from "../../util/movie-query";
+import { addInteraction, getInteraction, removeInteraction } from "../../util/movie-query";
 import ToggleInteraction from './ToggleInteraction';
 import queryClient from '../../util/query';
 import Spinner from "../UI/Spinner";
@@ -17,14 +17,12 @@ export default function MovieInteractions() {
 
   const { data, isPending, isError } = useQuery({
     queryKey,
-    queryFn: getInteractions
+    queryFn: getInteraction
   });
 
   const { mutate: add } = useMutation({
     mutationFn: addInteraction,
-    onSuccess: async (ctx) => {
-      console.log(ctx);
-      const { message } = ctx;
+    onSuccess: async ({ message }) => {
       dispatch(toastActions.setSuccessToast(message || "Interaction added successfully!"));
       await queryClient.invalidateQueries({ queryKey });
     },
@@ -45,7 +43,7 @@ export default function MovieInteractions() {
   }
 
   function handleRemoveInteraction() {
-    remove({ type: data?.type, mediaId });
+    remove({ mediaType, mediaId });
   }
 
   let content;

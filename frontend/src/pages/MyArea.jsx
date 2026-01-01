@@ -17,6 +17,8 @@ const initialState = {
 
 export default function MyArea() {
   const { isLoggedIn } = useSelector(state => state.auth);
+  const { type: mediaType } = useSelector(state => state.media);
+
   const [contentType, setContentType] = useState(initialState);
   const [page, setPage] = useState(1);
 
@@ -24,7 +26,7 @@ export default function MyArea() {
 
   const { data, isPending, isError, error } = useQuery({
     queryFn: (category === RATINGS) ? getRatings : getInteractedMovies,
-    queryKey: (category === RATINGS) ? ['ratings', { page }] : ['interactions', { interactionType: category, page }],
+    queryKey: (category === RATINGS) ? ['ratings', { page, mediaType }] : ['interactions', { interactionType: category, page, mediaType }],
     retry: false
   });
 

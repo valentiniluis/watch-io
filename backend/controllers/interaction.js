@@ -1,8 +1,8 @@
 import pool from '../model/postgres.js';
 import { getInteraction, getPagesAndClearData } from '../util/db-util.js';
-import { interactionSchema, interactionTypeValidation, mediaIdValidation, mediaTypeValidation } from '../util/validationSchemas.js';
+import { deleteInteractionSchema, interactionSchema, interactionTypeValidation, mediaIdValidation, mediaTypeValidation } from '../util/validationSchemas.js';
 import { calculateOffset, deleteInteractionMessage, postInteractionMessage, throwError, validatePage } from '../util/util-functions.js';
-import { PG_UNIQUE_ERR, URL_SEGMENT_TO_CONSTANT_MAPPING } from '../util/constants.js';
+import { MOVIES, PG_UNIQUE_ERR, URL_SEGMENT_TO_CONSTANT_MAPPING } from '../util/constants.js';
 
 
 // get all user interactions
@@ -16,12 +16,22 @@ export const getInteractions = async (req, res, next) => {
     const { value: interactionType, error: interactionErr } = interactionTypeValidation.validate(req.query.interactionType);
     if (interactionErr) throwError(400, 'Invalid interaction type: ' + interactionErr.message);
 
+    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
     const [page, limit] = validatePage(req.query.page, req.query.limit);
 
     const offset = calculateOffset(page, limit);
-    const queryArgs = [user.id, mediaType, limit, offset];
+    const queryArgs = [user.id, mappedMediaType, limit, offset];
     let query = `
-      SELECT ity.interaction_type, med.*, ROUND(med.tmdb_rating, 1) AS tmdb_rating, COUNT(*) OVER() AS row_count
+      SELECT 
+        ity.interaction_type, 
+        med.tmdb_id AS id,
+        med.title,
+        med.original_title,
+        med.original_language,
+        med.poster_path,
+        med.release_year,
+        ROUND(med.tmdb_rating, 1) AS tmdb_rating, 
+        COUNT(*) OVER() AS row_count
       FROM interaction AS itr
       INNER JOIN media AS med
       ON itr.media_id = med.id
@@ -56,9 +66,6 @@ export const postInteraction = async (req, res, next) => {
     const { interactionType, mediaId, mediaType } = value;
     const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
 
-    const m = [mappedMediaType, mediaId, user.id, interactionType];
-    console.log(mediaType);
-
     await pool.query(`
       INSERT INTO
       interaction(media_id, user_id, inter_type_id)
@@ -86,10 +93,12 @@ export const postInteraction = async (req, res, next) => {
 export const hasInteraction = async (req, res, next) => {
   try {
     const { user } = req;
-    const { error, value: mediaId } = mediaIdValidation.required().validate(req.params.mediaId);
+
+    const { error, value: tmdbId } = mediaIdValidation.required().validate(req.params.mediaId);
     if (error) throwError(400, 'Invalid movie id provided: ' + error.message);
 
-    const interaction = await getInteraction({ userId: user.id, mediaId });
+    const userId = user.id;
+    const interaction = await getInteraction({ userId, tmdbId, mediaType: MOVIES });
     const hasInteraction = (interaction.length > 0);
     const responseData = { hasInteraction };
     if (hasInteraction) responseData.type = interaction[0].interaction_type;
@@ -104,20 +113,36 @@ export const hasInteraction = async (req, res, next) => {
 export const deleteInteraction = async (req, res, next) => {
   try {
     const { user } = req;
-    const { error, value } = interactionSchema.validate(req.params);
+    const { error, value } = deleteInteractionSchema.validate(req.params);
     if (error) throwError(400, 'Invalid Input: ' + error.message);
 
-    const { interactionType, movieId } = value;
-    const { rowCount } = await pool.query(`
+    const { mediaType, mediaId } = value;
+    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
+
+    const { rowCount, rows } = await pool.query(`
       DELETE FROM interaction
       WHERE user_id = $1
-      AND media_id = $2
-      AND inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = $3);`,
-      [user.id, movieId, interactionType]
+      AND media_id = (
+        SELECT id FROM media 
+        WHERE tmdb_id = $2 
+        AND type_id = (SELECT id FROM media_type WHERE media_name = $3)
+      )
+      RETURNING (
+        SELECT interaction_type 
+        FROM interaction_type 
+        WHERE id = interaction.inter_type_id
+      ) AS interaction_type;`,
+      [user.id, mediaId, mappedMediaType]
     );
 
     if (rowCount === 0) throwError(401, `User has no '${interactionType}' interaction with movie.`);
-    const message = deleteInteractionMessage(interactionType);
+
+    let message = 'Interaction deleted successfully!';
+    if (rows.length === 1) {
+      const [interaction] = rows;
+      const { interaction_type } = interaction;
+      message = deleteInteractionMessage(interaction_type);
+    }    
 
     return res.status(200).json({ success: true, message });
   } catch (err) {

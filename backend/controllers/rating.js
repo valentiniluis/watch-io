@@ -1,6 +1,6 @@
 import pool from '../model/postgres.js';
 import { mediaIdValidation, ratingSchema } from '../util/validationSchemas.js';
-import { PG_UNIQUE_ERR } from '../util/constants.js';
+import { PG_UNIQUE_ERR, URL_SEGMENT_TO_CONSTANT_MAPPING } from '../util/constants.js';
 import { throwError, calculateOffset, validatePage } from '../util/util-functions.js';
 import { getPagesAndClearData } from '../util/db-util.js';
 
@@ -17,7 +17,20 @@ export const getRatings = async (req, res, next) => {
 
     const queryArgs = [user.id, limit, offset];
     let query = `
-      SELECT *, rt.last_update AS rate_date, COUNT(*) OVER() AS row_count
+      SELECT
+        med.tmdb_id AS id,
+        med.title,
+        med.original_title,
+        med.original_language,
+        med.poster_path,
+        med.release_year,
+        (SELECT media_name FROM media_type WHERE id = med.type_id) AS media_type,
+        ROUND(med.tmdb_rating, 1) AS tmdb_rating, 
+        rt.score,
+        rt.headline,
+        rt.note,
+        rt.last_update AS rate_date,
+        COUNT(*) OVER() AS row_count
       FROM rating AS rt
       INNER JOIN media AS med
       ON rt.media_id = med.id
@@ -45,13 +58,21 @@ export const postRating = async (req, res, next) => {
     const { user } = req;
     const { value, error } = ratingSchema.validate(req.body);
     if (error) throwError(400, 'Invalid rating: ' + error.message);
-    const { movieId, score, headline, note } = value;
+    
+    const { mediaId, mediaType, score, headline, note } = value;
+    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
 
     await pool.query(`
       INSERT INTO
       rating (user_id, media_id, score, headline, note)
-      VALUES ($1, $2, $3, $4, $5);`,
-      [user.id, movieId, score, headline, note]
+      VALUES (
+        $1, (
+          SELECT id FROM media 
+          WHERE tmdb_id = $2 
+          AND type_id = (SELECT id FROM media_type WHERE media_name = $3)
+        ), $4, $5, $6
+      );`,
+      [user.id, mediaId, mappedMediaType, score, headline, note]
     );
 
     return res.status(201).json({ success: true, message: "Movie rated successfully!" });

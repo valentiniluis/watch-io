@@ -22,13 +22,13 @@ export async function discoverMedia({ mediaType, page, user = {}, limit }) {
     queryArgs.push(id);
     query = `
       WITH not_interested AS (
-        SELECT inter.media_id
+        SELECT itr.media_id
         FROM interaction AS itr
         WHERE itr.user_id = $3
         AND itr.inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
       )
       ` + query + `
-      WHERE med.id NOT IN (SELECT media_id FROM not_interested)
+      AND med.id NOT IN (SELECT media_id FROM not_interested)
     `;
   }
   query += " ORDER BY med.tmdb_rating DESC, med.title LIMIT $1 OFFSET $2;";
@@ -85,16 +85,15 @@ export function getPagesAndClearData(data, limit, key = 'data') {
   return { [key]: data, pages };
 }
 
-// correct
-export async function getInteraction({ mediaId, userId }) {
+export async function getInteraction({ tmdbId, userId, mediaType }) {
   const { rows: interaction } = await pool.query(`
     SELECT ity.interaction_type 
     FROM interaction AS itr
     INNER JOIN interaction_type AS ity
     ON itr.inter_type_id = ity.id
     WHERE itr.user_id = $1
-    AND itr.media_id = $2;`,
-    [userId, movieId]
+    AND itr.media_id = (SELECT id FROM media WHERE tmdb_id = $2 AND type_id = (SELECT id FROM media_type WHERE media_name = $3));`,
+    [userId, tmdbId, mediaType]
   );
   return interaction;
 }
