@@ -7,7 +7,7 @@ import ErrorSection from "../components/UI/ErrorSection";
 import Ratings from "../components/rating/Ratings";
 import DropdownMenu from '../components/UI/DropdownMenu';
 import { getMyAreaEmptyMessage, getMyAreaLoadingMessage } from "../util/functions";
-import { getRatings, getInteractedMovies } from "../util/movie-query";
+import { getMyAreaContent } from "../util/movie-query";
 import { myAreaCategories, RATINGS } from "../util/constants";
 
 const initialState = {
@@ -23,10 +23,11 @@ export default function MyArea() {
   const [page, setPage] = useState(1);
 
   const { category, label } = contentType;
+  const mainQueryKey = (category === RATINGS) ? 'rating' : 'interaction';
 
   const { data, isPending, isError, error } = useQuery({
-    queryFn: (category === RATINGS) ? getRatings : getInteractedMovies,
-    queryKey: (category === RATINGS) ? ['ratings', { page, mediaType }] : ['interactions', { interactionType: category, page, mediaType }],
+    queryFn: getMyAreaContent,
+    queryKey: [mainQueryKey, { interactionType: category, page, mediaType }],
     retry: false
   });
 

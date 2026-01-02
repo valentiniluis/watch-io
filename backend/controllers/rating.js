@@ -1,5 +1,5 @@
 import pool from '../model/postgres.js';
-import { mediaIdValidation, ratingSchema } from '../util/validationSchemas.js';
+import { mediaIdValidation, mediaSchema, ratingSchema } from '../util/validationSchemas.js';
 import { PG_UNIQUE_ERR, URL_SEGMENT_TO_CONSTANT_MAPPING } from '../util/constants.js';
 import { throwError, calculateOffset, validatePage } from '../util/util-functions.js';
 import { getPagesAndClearData } from '../util/db-util.js';
@@ -8,10 +8,6 @@ import { getPagesAndClearData } from '../util/db-util.js';
 export const getRatings = async (req, res, next) => {
   try {
     const { user } = req;
-
-    const { value: movieId, error: movieIdErr } = mediaIdValidation.validate(req.query.movieId);
-    if (movieIdErr) throwError(400, 'Invalid movie: ' + movieIdErr.message);
-
     const [page, limit] = validatePage(req.query.page, req.query.limit);
     const offset = calculateOffset(page, limit);
 
@@ -35,18 +31,59 @@ export const getRatings = async (req, res, next) => {
       INNER JOIN media AS med
       ON rt.media_id = med.id
       WHERE rt.user_id = $1
+      LIMIT $2 OFFSET $3;
     `;
-
-    if (movieId) {
-      query += ' AND rt.media_id = $4';
-      queryArgs.push(movieId);
-    }
-
-    query += ' LIMIT $2 OFFSET $3;';
 
     const { rows: result } = await pool.query(query, queryArgs);
     const finalData = getPagesAndClearData(result, limit, 'ratings');
     return res.status(200).json({ success: true, message: "Rating(s) retrieved successfully", ...finalData });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+export const getSingleRating = async (req, res, next) => {
+  try {
+    const { user } = req;
+
+    const { value: media, error: mediaErr } = mediaSchema.validate(req.params);
+    if (mediaErr) throwError(400, 'Invalid media: ' + mediaErr.message);
+
+    const { mediaId, mediaType } = media;
+    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
+    const queryArgs = [user.id, mediaId, mappedMediaType];
+    let query = `
+      SELECT
+        med.tmdb_id AS id,
+        (SELECT media_name FROM media_type WHERE id = med.type_id) AS media_type,
+        rt.score,
+        rt.headline,
+        rt.note,
+        rt.last_update AS rate_date
+      FROM rating AS rt
+      INNER JOIN media AS med
+      ON rt.media_id = med.id
+      WHERE rt.user_id = $1
+      AND rt.media_id = (
+        SELECT id FROM media 
+        WHERE tmdb_id = $2
+        AND type_id = (SELECT id FROM media_type WHERE media_name = $3)
+      );
+    `;
+
+    const { rows } = await pool.query(query, queryArgs);
+
+    const finalData = {};
+    let message = 'User has not rated this movie.';
+    if (rows.length > 0) {
+      message = 'Rating retrieved successfully.';
+      const [rating] = rows;
+      finalData.rating = rating;
+    }
+    finalData.message = message;
+
+    return res.status(200).json({ success: true, ...finalData });
   } catch (err) {
     next(err);
   }
@@ -92,7 +129,8 @@ export const putRating = async (req, res, next) => {
     const { value, error } = ratingSchema.validate(req.body);
     if (error) throwError(400, 'Invalid rating: ' + error.message);
 
-    const { movieId, score, headline, note } = value;
+    const { mediaId, mediaType, score, headline, note } = value;
+    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
     const now = new Date().toISOString();
 
     await pool.query(`
@@ -102,10 +140,13 @@ export const putRating = async (req, res, next) => {
       headline = $2,
       note = $3,
       last_update = $4
-      WHERE
-      media_id = $5 AND
-      user_id = $6;`,
-      [score, headline, note, now, movieId, user.id]
+      WHERE user_id = $5,
+      AND media_id = (
+        SELECT id FROM media
+        WHERE tmdb_id = $6
+        AND type_id = (SELECT id FROM media_type WHERE media_name = $7)
+      );`
+      [score, headline, note, now, user.id, mediaId, mappedMediaType]
     );
 
     return res.status(200).json({ success: true, message: "Rating updated successfully." });
@@ -118,14 +159,21 @@ export const putRating = async (req, res, next) => {
 export const deleteRating = async (req, res, next) => {
   try {
     const { user } = req;
-    const { error, value: movieId } = mediaIdValidation.required().validate(req.params.movieId);
+    const { error, value } = mediaSchema.validate(req.params);
     if (error) throwError(400, 'Invalid movie: ' + error.message);
+
+    const { mediaType, mediaId } = value;
+    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
 
     const { rowCount } = await pool.query(`
       DELETE FROM rating
-      WHERE media_id = $1 AND
-      user_id = $2;`,
-      [movieId, user.id]
+      WHERE media_id = (
+        SELECT id FROM media
+        WHERE tmdb_id = $1
+        AND type_id = (SELECT id FROM media_type WHERE media_name = $2)
+      )
+      AND user_id = $3;`,
+      [mediaId, mappedMediaType, user.id]
     );
 
     if (rowCount === 0) throwError(401, `User has not rated this movie.`);

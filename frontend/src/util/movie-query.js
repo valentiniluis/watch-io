@@ -18,13 +18,42 @@ export async function addInteraction({ type, mediaId, mediaType }) {
 }
 
 
-export async function getRatings({ queryKey }) {
-  let url = '/rating';
-  const params = (queryKey.length > 1) ? queryKey[1] : null;
-  const requestParams = [];
-  if (params?.page) requestParams.push(`page=${params.page}`);
-  if (params?.movieId) requestParams.push(`movieId=${params.movieId}`);
-  if (requestParams.length) url += '?' + requestParams.join('&');
+export const getMyAreaContent = async ({ queryKey }) => {
+  const [mainKey, params] = queryKey;
+  const { mediaType } = params;
+  let url = `/${mainKey}/${mediaType}`;
+
+  // filter entries that have non-null/non-undefined values
+  const queryParams = Object.entries(params).filter(([key, value]) => key !== 'mediaType' && value);
+
+  if (queryParams.length > 0) {
+    const queryString = queryParams.map(([key, value]) => `${key}=${value}`).join('&');
+    url += '?' + queryString;
+  }
+  const response = await api.get(url);
+  return response.data;
+}
+
+
+export async function getRating({ queryKey }) {
+  const params = queryKey[1];
+  const { mediaId, mediaType } = params;
+
+  let url = `/rating/check/${mediaType}/${mediaId}`;
+  const response = await api.get(url);
+  return response.data;
+}
+
+
+export async function getInteractedMovies({ queryKey }) {
+  const params = queryKey[1];
+  const { interactionType, page, mediaType } = params;
+  let url = `/interaction/${mediaType}`;
+  const queryParams = [];
+  if (interactionType) queryParams.push(`interactionType=${interactionType}`);
+  if (page) queryParams.push(`page=${page}`);
+  if (queryParams.length) url += '?' + queryParams.join('&');
+  console.log(url);
   const response = await api.get(url);
   return response.data;
 }
@@ -44,21 +73,6 @@ export async function mutateRating({ rating, mediaId, mediaType, method }) {
 
 export async function deleteRating({ movie }) {
   const response = await api.delete(`/rating/${movie.id}`);
-  return response.data;
-}
-
-
-export async function getInteractedMovies({ queryKey }) {
-  const params = queryKey[1];
-  const { interactionType, page, mediaType } = params;
-  
-  let url = `/interaction/${mediaType}`;
-  const queryParams = [];
-
-  if (interactionType) queryParams.push(`interactionType=${interactionType}`);
-  if (page) queryParams.push(`page=${page}`);
-  if (queryParams.length) url += '?' + queryParams.join('&');
-  const response = await api.get(url);
   return response.data;
 }
 

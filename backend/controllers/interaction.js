@@ -1,6 +1,6 @@
 import pool from '../model/postgres.js';
 import { getInteraction, getPagesAndClearData } from '../util/db-util.js';
-import { deleteInteractionSchema, interactionSchema, interactionTypeValidation, mediaIdValidation, mediaTypeValidation } from '../util/validationSchemas.js';
+import { mediaSchema, interactionSchema, interactionTypeValidation, mediaIdValidation, mediaTypeValidation } from '../util/validationSchemas.js';
 import { calculateOffset, deleteInteractionMessage, postInteractionMessage, throwError, validatePage } from '../util/util-functions.js';
 import { MOVIES, PG_UNIQUE_ERR, URL_SEGMENT_TO_CONSTANT_MAPPING } from '../util/constants.js';
 
@@ -113,7 +113,7 @@ export const hasInteraction = async (req, res, next) => {
 export const deleteInteraction = async (req, res, next) => {
   try {
     const { user } = req;
-    const { error, value } = deleteInteractionSchema.validate(req.params);
+    const { error, value } = mediaSchema.validate(req.params);
     if (error) throwError(400, 'Invalid Input: ' + error.message);
 
     const { mediaType, mediaId } = value;
