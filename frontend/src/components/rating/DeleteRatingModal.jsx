@@ -8,7 +8,8 @@ import { toastActions } from '../../store/toast';
 
 export default function DeleteRatingModal({ ref }) {
   const dispatch = useDispatch();
-  const movie = useSelector(state => state.media.data);
+  const { data: media, type: mediaType } = useSelector(state => state.media);
+  const { id, release_year, title } = media;
 
   const { mutate } = useMutation({
     mutationFn: deleteRating,
@@ -24,15 +25,15 @@ export default function DeleteRatingModal({ ref }) {
   }
 
   function handleDelete() {
-    mutate({ movie });
+    mutate({ mediaId: id, mediaType });
   }
 
   return (
     <Modal ref={ref} handleClose={handleClose}>
       <p className="text-sm text-stone-500">Deleting movie rating</p>
       <h2 className="text-semibold text-xl flex items-center gap-2 mb-4">
-        {movie.title}{" "}
-        <span className="text-sm text-stone-600">({movie.release_year})</span>
+        {title}{" "}
+        <span className="text-sm text-stone-600">({release_year})</span>
       </h2>
       <p className="text-gray-600 mb-4">Are you sure?</p>
       <div className="flex justify-end gap-2">

@@ -53,7 +53,6 @@ export async function getInteractedMovies({ queryKey }) {
   if (interactionType) queryParams.push(`interactionType=${interactionType}`);
   if (page) queryParams.push(`page=${page}`);
   if (queryParams.length) url += '?' + queryParams.join('&');
-  console.log(url);
   const response = await api.get(url);
   return response.data;
 }
@@ -71,8 +70,8 @@ export async function mutateRating({ rating, mediaId, mediaType, method }) {
 }
 
 
-export async function deleteRating({ movie }) {
-  const response = await api.delete(`/rating/${movie.id}`);
+export async function deleteRating({ mediaId, mediaType }) {
+  const response = await api.delete(`/rating/${mediaType}/${mediaId}`);
   return response.data;
 }
 

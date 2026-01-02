@@ -118,8 +118,7 @@ export const getUserRecommendations = async (req, res, next) => {
         SELECT 1
         FROM rating
         WHERE user_id = $1
-        AND score >= 7;
-        `,
+        AND score >= 7;`,
         [user.id]
       );
 

@@ -58,7 +58,7 @@ export function checkValidMediaType(mediaType) {
 export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
   const { cast, director, crew, keywords, genres, language, rating } = RECOMMENDATION_WEIGHTS;
 
-  const args = [movieId, cast, director, crew, keywords, genres, language, rating, limit];
+  const args = [movieId, limit];
   if (userId) args.push(userId);
   const recommendationQuery = `
     WITH 
@@ -115,13 +115,13 @@ export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
         med.id,
         med.tmdb_id,
         (
-          COALESCE(cas.score, 0) * $2 +
-          COALESCE(dis.score, 0) * $3 +           
-          COALESCE(crs.score, 0) * $4 + 
-          COALESCE(kes.score, 0) * $5 + 
-          COALESCE(ges.score, 0) * $6 + 
-          (CASE WHEN med.original_language = (SELECT original_language FROM target_media) THEN 1 ELSE 0 END) * $7 +
-          (COALESCE(med.tmdb_rating, 0) / 10.0) * $8
+          COALESCE(cas.score, 0) * ${cast} +
+          COALESCE(dis.score, 0) * ${director} +           
+          COALESCE(crs.score, 0) * ${crew} + 
+          COALESCE(kes.score, 0) * ${keywords} + 
+          COALESCE(ges.score, 0) * ${genres} + 
+          (CASE WHEN med.original_language = (SELECT original_language FROM target_media) THEN 1 ELSE 0 END) * ${language} +
+          (COALESCE(med.tmdb_rating, 0) / 10.0) * ${rating}
         ) as final_score
       FROM media med
       LEFT JOIN norm_cast cas ON med.id = cas.media_id
@@ -135,7 +135,7 @@ export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
         AND NOT EXISTS (
           SELECT 1 FROM interaction i 
           WHERE i.media_id = med.id 
-          AND i.user_id = $10 
+          AND i.user_id = $3 
           AND i.inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
         )` : ''}
       ORDER BY final_score DESC
@@ -152,7 +152,7 @@ export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
     FROM ranks AS ra
     JOIN media AS med ON ra.id = med.id
     ORDER BY RANDOM()
-    LIMIT $9;
+    LIMIT $2;
   `;
 
   return [recommendationQuery, args];
@@ -162,7 +162,7 @@ export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
 export function getUserBasedRecommendationQuery({ userId, limit }) {
   const { cast, director, crew, keywords, genres, language, rating } = RECOMMENDATION_WEIGHTS;
  
-  const args = [userId, cast, director, crew, keywords, genres, language, rating, limit];
+  const args = [userId, limit];
   const query = `
     WITH favorites AS (
       SELECT media_id FROM rating WHERE user_id = $1 AND score >= 7
@@ -176,12 +176,14 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
       SELECT 
         NULLIF(MAX(c_cast), 0) as max_cast,
         NULLIF(MAX(c_dir), 0) as max_dir,
+        NULLIF(MAX(c_crew), 0) as max_crew,
         NULLIF(MAX(c_key), 0) as max_key,
         NULLIF(MAX(c_gen), 0) as max_gen
       FROM (
         SELECT 
           (SELECT COUNT(*) FROM media_cast mc2 WHERE mc2.media_id = m.id) as c_cast,
           (SELECT COUNT(*) FROM crew cr2 WHERE cr2.media_id = m.id AND cr2.job = 'Director') as c_dir,
+          (SELECT COUNT(*) FROM crew cr2 WHERE cr2.media_id = m.id AND cr2.job != 'Director') as c_crew,
           (SELECT COUNT(*) FROM media_keyword mk2 WHERE mk2.media_id = m.id) as c_key,
           (SELECT COUNT(*) FROM media_genre mg2 WHERE mg2.media_id = m.id) as c_gen
         FROM media m
@@ -200,6 +202,14 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
       FROM crew cr
       WHERE cr.job = 'Director'
       AND cr.artist_id IN (SELECT artist_id FROM crew WHERE job = 'Director' AND media_id IN (SELECT media_id FROM favorites))
+      AND cr.media_id NOT IN (SELECT media_id FROM favorites)
+      GROUP BY cr.media_id
+    ),
+    crew_score AS (
+      SELECT cr.media_id, CAST(COUNT(*) AS FLOAT) / (SELECT max_crew FROM stats) as normal_crew_score
+      FROM crew cr
+      WHERE cr.job != 'Director'
+      AND cr.artist_id IN (SELECT artist_id FROM crew WHERE job != 'Director' AND media_id IN (SELECT media_id FROM favorites))
       AND cr.media_id NOT IN (SELECT media_id FROM favorites)
       GROUP BY cr.media_id
     ),
@@ -227,16 +237,18 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
         med.id as internal_id,
         med.tmdb_id,
         (
-          COALESCE(cas.normal_cast_score, 0) * $2 + 
-          COALESCE(dis.normal_director_score, 0) * $3 + 
-          COALESCE(kes.normal_keyword_score, 0) * $5 + 
-          COALESCE(ges.normal_genre_score, 0) * $6 + 
-          COALESCE(las.normal_language_score, 0) * $7 +
-          (COALESCE(med.tmdb_rating, 0) / 10.0) * $8
+          COALESCE(cas.normal_cast_score, 0) * ${cast} + 
+          COALESCE(dis.normal_director_score, 0) * ${director} + 
+          COALESCE(crs.normal_crew_score, 0) * ${crew} + 
+          COALESCE(kes.normal_keyword_score, 0) * ${keywords} + 
+          COALESCE(ges.normal_genre_score, 0) * ${genres} + 
+          COALESCE(las.normal_language_score, 0) * ${language} +
+          (COALESCE(med.tmdb_rating, 0) / 10.0) * ${rating}
         ) as final_score
       FROM media med
       LEFT JOIN cast_score cas ON med.id = cas.media_id
       LEFT JOIN director_score dis ON med.id = dis.media_id
+      LEFT JOIN crew_score crs ON med.id = crs.media_id
       LEFT JOIN keyword_score kes ON med.id = kes.media_id
       LEFT JOIN genre_score ges ON med.id = ges.media_id
       LEFT JOIN language_score las ON med.id = las.media_id
@@ -260,7 +272,7 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
     FROM ranks ra
     JOIN media med ON ra.internal_id = med.id
     ORDER BY RANDOM()
-    LIMIT $9;
+    LIMIT $2;
   `;
 
   return [query, args];

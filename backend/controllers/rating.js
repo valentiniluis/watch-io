@@ -140,12 +140,12 @@ export const putRating = async (req, res, next) => {
       headline = $2,
       note = $3,
       last_update = $4
-      WHERE user_id = $5,
+      WHERE user_id = $5
       AND media_id = (
         SELECT id FROM media
         WHERE tmdb_id = $6
         AND type_id = (SELECT id FROM media_type WHERE media_name = $7)
-      );`
+      );`,
       [score, headline, note, now, user.id, mediaId, mappedMediaType]
     );
 
@@ -159,7 +159,7 @@ export const putRating = async (req, res, next) => {
 export const deleteRating = async (req, res, next) => {
   try {
     const { user } = req;
-    const { error, value } = mediaSchema.validate(req.params);
+    const { value, error } = mediaSchema.validate(req.params);
     if (error) throwError(400, 'Invalid movie: ' + error.message);
 
     const { mediaType, mediaId } = value;

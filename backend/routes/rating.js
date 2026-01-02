@@ -13,7 +13,7 @@ router.get('/check/:mediaType/:mediaId', authenticateJWT, ratingControllers.getS
 
 router.get('/:mediaType', authenticateJWT, ratingControllers.getRatings);
 
-router.delete('/:mediaType/:movieId', authenticateJWT, ratingControllers.deleteRating);
+router.delete('/:mediaType/:mediaId', authenticateJWT, ratingControllers.deleteRating);
 
 
 export default router;
