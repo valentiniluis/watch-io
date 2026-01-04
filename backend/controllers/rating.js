@@ -1,5 +1,5 @@
 import pool from '../model/postgres.js';
-import { mediaIdValidation, mediaSchema, ratingSchema } from '../util/validationSchemas.js';
+import { mediaIdValidation, ratingSchema } from '../util/validationSchemas.js';
 import { PG_UNIQUE_ERR, URL_SEGMENT_TO_CONSTANT_MAPPING } from '../util/constants.js';
 import { throwError, calculateOffset, validatePage } from '../util/util-functions.js';
 import { getPagesAndClearData } from '../util/db-util.js';
@@ -45,14 +45,12 @@ export const getRatings = async (req, res, next) => {
 
 export const getSingleRating = async (req, res, next) => {
   try {
-    const { user } = req;
+    const { user, mediaType } = req;
 
-    const { value: media, error: mediaErr } = mediaSchema.validate(req.params);
+    const { value: mediaId, error: mediaErr } = mediaIdValidation.validate(req.params.mediaId);
     if (mediaErr) throwError(400, 'Invalid media: ' + mediaErr.message);
 
-    const { mediaId, mediaType } = media;
-    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
-    const queryArgs = [user.id, mediaId, mappedMediaType];
+    const queryArgs = [user.id, mediaId, mediaType];
     let query = `
       SELECT
         med.tmdb_id AS id,
@@ -92,12 +90,12 @@ export const getSingleRating = async (req, res, next) => {
 
 export const postRating = async (req, res, next) => {
   try {
-    const { user } = req;
+    const { user, mediaType } = req;
+    
     const { value, error } = ratingSchema.validate(req.body);
     if (error) throwError(400, 'Invalid rating: ' + error.message);
     
-    const { mediaId, mediaType, score, headline, note } = value;
-    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
+    const { mediaId, score, headline, note } = value;
 
     await pool.query(`
       INSERT INTO
@@ -109,7 +107,7 @@ export const postRating = async (req, res, next) => {
           AND type_id = (SELECT id FROM media_type WHERE media_name = $3)
         ), $4, $5, $6
       );`,
-      [user.id, mediaId, mappedMediaType, score, headline, note]
+      [user.id, mediaId, mediaType, score, headline, note]
     );
 
     return res.status(201).json({ success: true, message: "Movie rated successfully!" });
@@ -125,12 +123,11 @@ export const postRating = async (req, res, next) => {
 
 export const putRating = async (req, res, next) => {
   try {
-    const { user } = req;
+    const { user, mediaType } = req;
     const { value, error } = ratingSchema.validate(req.body);
     if (error) throwError(400, 'Invalid rating: ' + error.message);
 
-    const { mediaId, mediaType, score, headline, note } = value;
-    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
+    const { mediaId, score, headline, note } = value;
     const now = new Date().toISOString();
 
     await pool.query(`
@@ -146,7 +143,7 @@ export const putRating = async (req, res, next) => {
         WHERE tmdb_id = $6
         AND type_id = (SELECT id FROM media_type WHERE media_name = $7)
       );`,
-      [score, headline, note, now, user.id, mediaId, mappedMediaType]
+      [score, headline, note, now, user.id, mediaId, mediaType]
     );
 
     return res.status(200).json({ success: true, message: "Rating updated successfully." });
@@ -158,12 +155,9 @@ export const putRating = async (req, res, next) => {
 
 export const deleteRating = async (req, res, next) => {
   try {
-    const { user } = req;
-    const { value, error } = mediaSchema.validate(req.params);
-    if (error) throwError(400, 'Invalid movie: ' + error.message);
-
-    const { mediaType, mediaId } = value;
-    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
+    const { user, mediaType } = req;
+    const { value: mediaId, error } = mediaIdValidation.validate(req.params.mediaId);
+    if (error) throwError(400, 'Invalid media: ' + error.message);
 
     const { rowCount } = await pool.query(`
       DELETE FROM rating
@@ -173,7 +167,7 @@ export const deleteRating = async (req, res, next) => {
         AND type_id = (SELECT id FROM media_type WHERE media_name = $2)
       )
       AND user_id = $3;`,
-      [mediaId, mappedMediaType, user.id]
+      [mediaId, mediaType, user.id]
     );
 
     if (rowCount === 0) throwError(401, `User has not rated this movie.`);

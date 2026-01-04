@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { MOVIES, SERIES } from '../util/constants';
+import { MOVIES } from '../util/constants';
 
 const initialState = {
   type: MOVIES,
@@ -16,11 +16,8 @@ const mediaSlice = createSlice({
   name: 'media',
   initialState,
   reducers: {
-    setMediaTypeToTv(state) {
-      state.type = SERIES;
-    },
-    setMediaTypeToMovies(state) {
-      state.type = MOVIES;
+    setMediaType(state, { payload }) {
+      state.type = payload;
     },
     setMediaData(state, { payload }) {
       state.data.id = payload.id;

@@ -83,3 +83,8 @@ export const INTERACTION_BTN_CONTENT = {
 
 export const SERIES = 'tv';
 export const MOVIES = 'movie';
+export const MEDIA_TYPES = [MOVIES, SERIES];
+export const MEDIA_TYPES_LABELS = {
+  [SERIES]: "TV Shows",
+  [MOVIES]: "Movies"
+};

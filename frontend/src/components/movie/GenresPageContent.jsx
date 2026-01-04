@@ -55,8 +55,20 @@ export default function GenresPageContent({ genres }) {
   return (
     <section>
       <div className="flex justify-evenly items-center gap-3 px-2">
-        <DropdownMenu label="Genre" className="bg-blue-600 text-white font-semibold rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide hover:bg-blue-700 focus:ring-blue-800" text={genre.name} options={genres} onUpdate={handleUpdateGenre} />
-        <DropdownMenu label="Sort By" className="bg-cyan-900 font-semibold text-white rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide focus:ring-cyan-950 hover:bg-cyan-950" text={sortAttribute.label} options={sortOptions} onUpdate={handleSort} />
+        <DropdownMenu 
+          label="Genre" 
+          className="bg-blue-600 text-white font-semibold rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide hover:bg-blue-700 focus:ring-blue-800" 
+          text={genre.name} 
+          options={genres} 
+          onUpdate={handleUpdateGenre} 
+        />
+        <DropdownMenu 
+          label="Sort By" 
+          className="bg-cyan-900 font-semibold text-white rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide focus:ring-cyan-950 hover:bg-cyan-950" 
+          text={sortAttribute.label} 
+          options={sortOptions} 
+          onUpdate={handleSort} 
+        />
       </div>
       {content}
     </section>

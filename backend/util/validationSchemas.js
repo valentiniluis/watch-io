@@ -9,7 +9,7 @@ export const pageValidation = Joi.number().integer().positive().optional().defau
 
 export const countryValidation = Joi.string().length(2).uppercase().default('US');
 
-export const mediaIdValidation = Joi.number().integer().positive();
+export const mediaIdValidation = Joi.number().integer().positive().required();
 
 export const interactionTypeValidation = Joi.string().valid(NOT_INTERESTED, WATCHLIST, LIKE).optional();
 
@@ -28,13 +28,9 @@ export const interactionSchema = Joi.object({
   interactionType: Joi.string().valid(NOT_INTERESTED, WATCHLIST, LIKE).required()
 });
 
-export const mediaSchema = Joi.object({
-  mediaId: mediaIdValidation.required(),
-  mediaType: mediaTypeValidation
-});
 
 export const ratingSchema = Joi.object({
-  mediaId: mediaIdValidation.required(),
+  mediaId: mediaIdValidation,
   mediaType: mediaTypeValidation,
   score: Joi.number().min(1).max(10).integer().required(),
   headline: Joi.string().required(),

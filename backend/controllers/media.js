@@ -1,23 +1,39 @@
 import pool from '../model/postgres.js';
-import { getMediaData } from '../util/api-util.js';
-import { discoverMedia, getGenres, getInteraction, getMediaByGenreQuery, getPagesAndClearData, searchMedia } from '../util/db-util.js';
-import { getMovieBasedRecommendationQuery, getUserBasedRecommendationQuery, throwError, validatePage } from '../util/util-functions.js';
-import { genreIdValidation, orderByValidation, countryValidation, mediaIdValidation, limitValidation } from '../util/validationSchemas.js';
-import { LIKE, MOVIES } from '../util/constants.js';
+import { getAPIMediaData } from '../util/api-util.js';
+import { throwError, validatePage } from '../util/util-functions.js';
+import { LIKE } from '../util/constants.js';
+import { 
+  genreIdValidation, 
+  orderByValidation, 
+  countryValidation, 
+  mediaIdValidation, 
+  limitValidation 
+} from '../util/validationSchemas.js';
+import {
+  discoverMedia,
+  getGenres,
+  getInteraction,
+  getMediaByGenreQuery,
+  getPagesAndClearData,
+  searchMedia,
+  getMovieBasedRecommendationQuery,
+  getUserBasedRecommendationQuery
+} from '../util/db-util.js';
 
 
-export const getSearchedMovies = async (req, res, next) => {
+export const getSearchedMedia = async (req, res, next) => {
   try {
-    const { user } = req;
+    const { user, mediaType } = req;
     const [page, limit] = validatePage(req.query.page, req.query.limit);
-    const { movie } = req.query;
+    const { title } = req.query;
 
-    const data = (movie)
-      ? await searchMedia({ title: movie, mediaType: MOVIES, page, user, limit })
-      : await discoverMedia({ page, mediaType: MOVIES, user, limit })
+    const data = (title)
+      ? await searchMedia({ title, mediaType, page, user, limit })
+      : await discoverMedia({ page, mediaType, user, limit })
       ;
 
-    const finalData = getPagesAndClearData(data, limit, 'movies');
+    const mediaString = req.params[0];
+    const finalData = getPagesAndClearData(data, limit, mediaString);
     res.status(200).json({ success: true, ...finalData });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
@@ -26,27 +42,30 @@ export const getSearchedMovies = async (req, res, next) => {
 }
 
 
-export const getMovieData = async (req, res, next) => {
+export const getMediaData = async (req, res, next) => {
   try {
-    const { user } = req;
-    const { value: movieId, error } = mediaIdValidation.required().validate(req.params.movieId);
+    const { user, mediaType } = req;
+    const userId = user?.id;
+
+    const { value: tmdbId, error } = mediaIdValidation.validate(req.params.mediaId);
     if (error) throwError(400, "Invalid Movie: " + error.message);
 
     const { value: country, error: countryErr } = countryValidation.validate(req.query.country);
     if (countryErr) throwError(400, 'Invalid country: ' + countryErr.message);
 
-    const responseData = await getMediaData(MOVIES, movieId, country);
+    const responseData = await getAPIMediaData(mediaType, tmdbId, country);
     const userData = {};
     if (user) {
       userData.authenticated = true;
-      const interactions = await getInteraction({ tmdbId: movieId, userId: user.id, mediaType: MOVIES });
+      const interactions = await getInteraction({ tmdbId, userId, mediaType });
       if (interactions.length) {
         const [interaction] = interactions;
         userData[interaction.interaction_type] = true;
       }
     }
 
-    res.status(200).json({ success: true, movieData: responseData, user: userData });
+    const mediaString = req.params[0]
+    res.status(200).json({ success: true, mediaString: responseData, user: userData });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
     next(err);
@@ -54,18 +73,19 @@ export const getMovieData = async (req, res, next) => {
 }
 
 
-export const getMovieRecommendations = async (req, res, next) => {
+export const getMediaRecommendations = async (req, res, next) => {
   try {
-    const { value: movieId, error: movieErr } = mediaIdValidation.required().validate(req.params.movieId);
+    const { user, mediaType } = req;
+
+    const { value: mediaId, error: movieErr } = mediaIdValidation.validate(req.params.mediaId);
     if (movieErr) throwError(400, "Invalid Movie: " + movieErr.message);
 
     const { value: limit, limitErr } = limitValidation.validate(req.query.limit);
     if (limitErr) throwError(400, `Invalid limit: ${limitErr.message}`);
 
-    const { user } = req;
     const userId = (user && user.id) ? user.id : null;
 
-    const [query, args] = getMovieBasedRecommendationQuery({ movieId, limit, userId });
+    const [query, args] = getMovieBasedRecommendationQuery({ movieId: mediaId, limit, userId });
     const { rows: recommendations } = await pool.query(query, args);
 
     res.status(200).json({ success: true, recommendations });
@@ -78,10 +98,10 @@ export const getMovieRecommendations = async (req, res, next) => {
 
 export const getUserRecommendations = async (req, res, next) => {
   try {
+    const { user, mediaType } = req;
+
     const { value: limit, error } = limitValidation.validate(req.query.limit);
     if (error) throwError(400, `Invalid limit: ${error.message}`);
-
-    const { user } = req;
 
     // fallback query will be used if the user's not logged in or has no liked/well-rated movies
     // take 250 best rated movies and use random 25 movies sample
@@ -138,9 +158,10 @@ export const getUserRecommendations = async (req, res, next) => {
 }
 
 
-export const getMovieGenres = async (req, res, next) => {
+export const getMediaGenres = async (req, res, next) => {
   try {
-    const genres = await getGenres(MOVIES);
+    const { mediaType } = req;
+    const genres = await getGenres(mediaType);
     res.status(200).json({ success: true, genres });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
@@ -149,9 +170,10 @@ export const getMovieGenres = async (req, res, next) => {
 }
 
 
-export const getMoviesByGenre = async (req, res, next) => {
+export const getMediaByGenre = async (req, res, next) => {
   try {
-    const userId = req.user?.id;
+    const { user, mediaType } = req;
+    const userId = user?.id;
 
     // guarantee that order by is in the allowed options so there's no injection in the query
     const { value: orderBy, error: orderByError } = orderByValidation.validate(req.query.orderBy);
@@ -162,10 +184,11 @@ export const getMoviesByGenre = async (req, res, next) => {
 
     const [page, limit] = validatePage(req.query.page, req.query.limit);
     const parameters = { genreId, userId, limit, page };
-    const [query, args] = getMediaByGenreQuery(MOVIES, orderBy, parameters);
+    const [query, args] = getMediaByGenreQuery(mediaType, orderBy, parameters);
 
+    const mediaString = req.params[0];
     const { rows: results } = await pool.query(query, args);
-    const finalData = getPagesAndClearData(results, limit, 'movies');
+    const finalData = getPagesAndClearData(results, limit, mediaString);
     return res.status(200).json({ success: true, ...finalData });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;

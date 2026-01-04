@@ -1,26 +1,21 @@
 import pool from '../model/postgres.js';
 import { getInteraction, getPagesAndClearData } from '../util/db-util.js';
-import { mediaSchema, interactionSchema, interactionTypeValidation, mediaIdValidation, mediaTypeValidation } from '../util/validationSchemas.js';
+import { interactionSchema, interactionTypeValidation, mediaIdValidation } from '../util/validationSchemas.js';
 import { calculateOffset, deleteInteractionMessage, postInteractionMessage, throwError, validatePage } from '../util/util-functions.js';
-import { MOVIES, PG_UNIQUE_ERR, URL_SEGMENT_TO_CONSTANT_MAPPING } from '../util/constants.js';
+import { PG_UNIQUE_ERR } from '../util/constants.js';
 
 
 // get all user interactions
 export const getInteractions = async (req, res, next) => {
   try {
-    const { user } = req;
-
-    const { error: mediaError, value: mediaType } = mediaTypeValidation.validate(req.params.mediaType);
-    if (mediaError) throwError(400, 'Invalid media type: ' + mediaError.message);
+    const { user, mediaType } = req;
 
     const { value: interactionType, error: interactionErr } = interactionTypeValidation.validate(req.query.interactionType);
     if (interactionErr) throwError(400, 'Invalid interaction type: ' + interactionErr.message);
-
-    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
     const [page, limit] = validatePage(req.query.page, req.query.limit);
 
     const offset = calculateOffset(page, limit);
-    const queryArgs = [user.id, mappedMediaType, limit, offset];
+    const queryArgs = [user.id, mediaType, limit, offset];
     let query = `
       SELECT 
         ity.interaction_type, 
@@ -59,12 +54,12 @@ export const getInteractions = async (req, res, next) => {
 // create interaction between user and movie
 export const postInteraction = async (req, res, next) => {
   try {
+    const { user, mediaType } = req;
+
     const { error, value } = interactionSchema.validate(req.body);
     if (error) throwError(400, 'Invalid Input: ' + error.message);
 
-    const { user } = req;
-    const { interactionType, mediaId, mediaType } = value;
-    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
+    const { interactionType, mediaId } = value;
 
     await pool.query(`
       INSERT INTO
@@ -75,7 +70,7 @@ export const postInteraction = async (req, res, next) => {
         $3, 
         (SELECT id FROM interaction_type WHERE interaction_type = $4)
       );`,
-      [mappedMediaType, mediaId, user.id, interactionType]
+      [mediaType, mediaId, user.id, interactionType]
     );
 
     const message = postInteractionMessage(interactionType);
@@ -92,13 +87,13 @@ export const postInteraction = async (req, res, next) => {
 // check if user has interaction with particular movie
 export const hasInteraction = async (req, res, next) => {
   try {
-    const { user } = req;
+    const { user, mediaType } = req;
 
-    const { error, value: tmdbId } = mediaIdValidation.required().validate(req.params.mediaId);
-    if (error) throwError(400, 'Invalid movie id provided: ' + error.message);
+    const { error, value: tmdbId } = mediaIdValidation.validate(req.params.mediaId);
+    if (error) throwError(400, 'Invalid media id provided: ' + error.message);
 
     const userId = user.id;
-    const interaction = await getInteraction({ userId, tmdbId, mediaType: MOVIES });
+    const interaction = await getInteraction({ userId, tmdbId, mediaType });
     const hasInteraction = (interaction.length > 0);
     const responseData = { hasInteraction };
     if (hasInteraction) responseData.type = interaction[0].interaction_type;
@@ -112,12 +107,10 @@ export const hasInteraction = async (req, res, next) => {
 
 export const deleteInteraction = async (req, res, next) => {
   try {
-    const { user } = req;
-    const { error, value } = mediaSchema.validate(req.params);
+    const { user, mediaType } = req;
+    
+    const { error, value: mediaId } = mediaIdValidation.validate(req.params.mediaId);
     if (error) throwError(400, 'Invalid Input: ' + error.message);
-
-    const { mediaType, mediaId } = value;
-    const mappedMediaType = URL_SEGMENT_TO_CONSTANT_MAPPING[mediaType];
 
     const { rowCount, rows } = await pool.query(`
       DELETE FROM interaction
@@ -132,10 +125,10 @@ export const deleteInteraction = async (req, res, next) => {
         FROM interaction_type 
         WHERE id = interaction.inter_type_id
       ) AS interaction_type;`,
-      [user.id, mediaId, mappedMediaType]
+      [user.id, mediaId, mediaType]
     );
 
-    if (rowCount === 0) throwError(401, `User has no '${interactionType}' interaction with movie.`);
+    if (rowCount === 0) throwError(401, `User has no interaction with this media.`);
 
     let message = 'Interaction deleted successfully!';
     if (rows.length === 1) {
