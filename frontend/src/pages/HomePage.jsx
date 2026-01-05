@@ -1,82 +1,31 @@
-import { Fragment, useRef, useState, useEffect } from 'react';
-import { useQueries } from '@tanstack/react-query';
-import Spinner from '../components/UI/Spinner';
-import ErrorSection from '../components/UI/ErrorSection';
-import MovieList from '../components/movie/MovieList';
-import { mainGenres } from '../util/constants.js';
-import { loadMediaByGenre } from '../util/movie-query.js';
-import RecommendationsSection from '../components/movie/RecommendationsSection.jsx';
-import { useSelector } from 'react-redux';
+import { useQuery } from "@tanstack/react-query";
+import { loadHomepageGenres } from "../util/movie-query";
+import { useSelector } from "react-redux";
+import { HOMEPAGE_GENRES_NUMBER } from '../util/constants';
+import Spinner from "../components/UI/Spinner";
+import ErrorSection from "../components/UI/ErrorSection";
+import HomepageContent from "../components/media/HomepageContent";
 
-
-export default function HomePage() {
+export default function Homepage() {
   const mediaType = useSelector(state => state.media.type);
-  const [enabledQueries, setEnabledQueries] = useState([true, ...Array(mainGenres.length - 1).fill(false)]);
-  const observerRefs = useRef([]);
-
-  const results = useQueries({
-    queries: mainGenres.map((genre, index) => ({
-      queryKey: [mediaType, { genre: genre.id, genreName: genre.name }],
-      queryFn: loadMediaByGenre,
-      // 10 minutes until refetch
-      refetchInterval: 1000 * 60 * 10,
-      refetchOnWindowFocus: false,
-      enabled: enabledQueries[index],
-    }))
+  
+  const { data, isError, error, isPending } = useQuery({
+    queryKey: [mediaType, { limit: HOMEPAGE_GENRES_NUMBER, randomize: true }],
+    queryFn: loadHomepageGenres,
+    staleTime: 1000 * 60 * 20
   });
 
-  useEffect(() => {
-    const observers = [];
-    observerRefs.current.forEach((ref, index) => {
-      if (ref && index < mainGenres.length - 1) {
-        const observer = new IntersectionObserver((entries) => {
-          entries.forEach((entry) => {
-            // if is intersecting, enable next query
-            if (entry.isIntersecting && !enabledQueries[index + 1]) {
-              setEnabledQueries(prev => {
-                const newEnabled = [...prev];
-                newEnabled[index + 1] = true;
-                return newEnabled;
-              });
-            }
-          });
-        },
-          {
-            threshold: 0.1,
-            rootMargin: '100px' // Start loading 100px before element is visible
-          }
-        );
+  let content;
+  if (isPending) {
+    content = <Spinner text="Loading genres..." />
+  }
+  else if (isError) {
+    content = <ErrorSection message={error.message} />
+  }
+  else if (data) {
+    const { genres } = data;
+    content = <HomepageContent genres={genres} key={mediaType} />
+  }
 
-        observer.observe(ref);
-        observers.push(observer);
-      }
-    });
-
-    return () => observers.forEach(observer => observer.disconnect());
-  }, [enabledQueries]);
-
-  const content = results.map((result, i) => {
-    if (!enabledQueries[i]) return null;
-    const { data, isPending, isError, error } = result;
-
-    return (
-      <Fragment key={i}>
-        {isPending && <div className='py-40'><Spinner text={`Loading ${mainGenres[i].name} movies...`} /></div>}
-        {isError && <ErrorSection message={error.message} />}
-        {data && <MovieList movies={data[mediaType]} fallback="No movies found" title={mainGenres[i].name} />}
-
-        {/* Trigger for next section */}
-        {i < mainGenres.length - 1 && <div ref={el => observerRefs.current[i] = el} />}
-      </Fragment>
-    );
-  });
-
-  return (
-    <section className='content-wrapper'>
-      <RecommendationsSection />
-      <section id='genres-section'>
-        {content}
-      </section>
-    </section>
-  );
+  return content;
 }

@@ -147,17 +147,22 @@ export const getMediaByGenreQuery = (mediaType, orderBy, parameters) => {
 };
 
 
-export const getGenres = async (mediaType) => {
-  const genresQuery = `
+export const getGenres = async (mediaType, params) => {
+  const { randomize, limit } = params;
+
+  const args = [];
+  const query = `
     SELECT gen.*
     FROM media_type_genre AS mtg
     INNER JOIN genre AS gen
     ON mtg.genre_id = gen.id
     WHERE mtg.media_type_id = (SELECT id FROM media_type WHERE media_name = '${mediaType}')
     AND gen.genre_name != 'Documentary'
-    ORDER BY gen.genre_name;`;
+    ORDER BY ${randomize ? 'RANDOM()' : 'gen.genre_name'}
+    ${limit ? 'LIMIT $1': ''};`;
 
-  const { rows: genres } = await pool.query(genresQuery);
+  if (limit) args.push(limit);
+  const { rows: genres } = await pool.query(query, args);
   return genres;
 }
 

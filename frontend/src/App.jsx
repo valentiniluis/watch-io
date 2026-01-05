@@ -34,7 +34,7 @@ const router = createBrowserRouter([
             )
           },
           {
-            path: ':movieId',
+            path: ':mediaId',
             element: (
               <Suspense fallback={<LoadingOverlay text="Loading content..." />}>
                 <SelectedMovie />

@@ -1,11 +1,11 @@
+import { useSelector } from "react-redux";
 import { useState } from "react";
 import { useQuery } from '@tanstack/react-query';
-import SearchInput from "../components/UI/SearchInput.jsx";
-import MovieCatalog from "../components/movie/MovieCatalog.jsx";
-import Spinner from "../components/UI/Spinner.jsx";
 import { fetchMedia } from "../util/movie-query.js";
+import SearchInput from "../components/UI/SearchInput.jsx";
+import MovieCatalog from "../components/media/MovieCatalog.jsx";
+import Spinner from "../components/UI/Spinner.jsx";
 import ErrorSection from "../components/UI/ErrorSection.jsx";
-import { useSelector } from "react-redux";
 
 
 export default function MoviePicker() {

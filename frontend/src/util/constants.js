@@ -4,15 +4,7 @@ import LikeIcon from '/like.svg';
 import UnlikeIcon from '/unlike.svg';
 import BlockIcon from '/block.svg';
 
-
-export const mainGenres = [
-  { id: 28, name: 'Action' },
-  { id: 35, name: 'Comedy' },
-  { id: 18, name: 'Drama' },
-  { id: 27, name: 'Horror' },
-  { id: 10749, name: 'Romance' },
-  { id: 878, name: 'Science Fiction' },
-];
+export const HOMEPAGE_GENRES_NUMBER = 7;
 
 export const sortOptions = [
   { id: 'title.asc', name: "Title (↑)", 'data-attribute': 'title.asc', 'data-label': 'Title ↑' },

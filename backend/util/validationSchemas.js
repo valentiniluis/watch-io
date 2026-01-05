@@ -3,17 +3,21 @@ import { LIKE, NOT_INTERESTED, URL_SEGMENTS, WATCHLIST } from "./constants.js";
 
 export const orderByValidation = Joi.string().valid('title.asc', 'title.desc', 'release_year.asc', 'release_year.desc', 'tmdb_rating.asc', 'tmdb_rating.desc', 'random').optional().default('random');
 
+export const booleanValidation = Joi.boolean().optional();
+
+export const intValidation = Joi.number().integer().positive().optional();
+
 export const limitValidation = Joi.number().integer().positive().optional().max(50).default(25);
 
-export const pageValidation = Joi.number().integer().positive().optional().default(1);
+export const pageValidation = intValidation.default(1);
 
 export const countryValidation = Joi.string().length(2).uppercase().default('US');
 
-export const mediaIdValidation = Joi.number().integer().positive().required();
+export const mediaIdValidation = intValidation.required();
+
+export const genreIdValidation = intValidation.required();
 
 export const interactionTypeValidation = Joi.string().valid(NOT_INTERESTED, WATCHLIST, LIKE).optional();
-
-export const genreIdValidation = Joi.number().positive().required();
 
 export const mediaTypeValidation = Joi.string().valid(...Object.values(URL_SEGMENTS)).required();
 
@@ -23,16 +27,15 @@ export const loginSchema = Joi.object({
 });
 
 export const interactionSchema = Joi.object({
-  mediaId: Joi.number().positive().required(),
+  mediaId: mediaIdValidation,
   mediaType: mediaTypeValidation,
-  interactionType: Joi.string().valid(NOT_INTERESTED, WATCHLIST, LIKE).required()
+  interactionType: interactionTypeValidation.required()
 });
-
 
 export const ratingSchema = Joi.object({
   mediaId: mediaIdValidation,
   mediaType: mediaTypeValidation,
-  score: Joi.number().min(1).max(10).integer().required(),
+  score: intValidation.min(1).max(10).required(),
   headline: Joi.string().required(),
   note: Joi.string().max(511).optional()
 });

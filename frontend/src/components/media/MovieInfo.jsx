@@ -29,7 +29,7 @@ export default function MovieInfo({ movie }) {
         <div className='text-container'>
           <h1 className='movie-name hidden xl:inline-block'>{title}</h1>
           {tagline && <h4 className='tagline hidden xl:inline-block'>{tagline}</h4>}
-          <MovieRatings ratings={movie.ratings} />
+          {movie.ratings && <MovieRatings ratings={movie.ratings} />}
           <Overview overviewText={overview} />
           <div className='additional-info mt-8'>
             <p>{genres.map(genre => genre.name).join(', ')}</p>

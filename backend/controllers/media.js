@@ -7,7 +7,9 @@ import {
   orderByValidation, 
   countryValidation, 
   mediaIdValidation, 
-  limitValidation 
+  limitValidation, 
+  intValidation,
+  booleanValidation
 } from '../util/validationSchemas.js';
 import {
   discoverMedia,
@@ -48,7 +50,7 @@ export const getMediaData = async (req, res, next) => {
     const userId = user?.id;
 
     const { value: tmdbId, error } = mediaIdValidation.validate(req.params.mediaId);
-    if (error) throwError(400, "Invalid Movie: " + error.message);
+    if (error) throwError(400, "Invalid media: " + error.message);
 
     const { value: country, error: countryErr } = countryValidation.validate(req.query.country);
     if (countryErr) throwError(400, 'Invalid country: ' + countryErr.message);
@@ -161,7 +163,15 @@ export const getUserRecommendations = async (req, res, next) => {
 export const getMediaGenres = async (req, res, next) => {
   try {
     const { mediaType } = req;
-    const genres = await getGenres(mediaType);
+
+    const { value: limit, error: limitErr } = intValidation.validate(req.query.limit);
+    if (limitErr) throwError(400, 'Limit must be a positive integer.');
+
+    const { value: randomize, error: randErr } = booleanValidation.validate(req.query.randomize);
+    if (randErr) throwError(400, 'Randomization options are either "true" or "false".');
+
+    const params = { limit, randomize };
+    const genres = await getGenres(mediaType, params);
     res.status(200).json({ success: true, genres });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;

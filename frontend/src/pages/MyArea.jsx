@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import Spinner from "../components/UI/Spinner";
-import MovieCatalog from "../components/movie/MovieCatalog";
+import MovieCatalog from "../components/media/MovieCatalog";
 import ErrorSection from "../components/UI/ErrorSection";
 import Ratings from "../components/rating/Ratings";
 import DropdownMenu from '../components/UI/DropdownMenu';

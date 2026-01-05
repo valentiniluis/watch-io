@@ -7,6 +7,7 @@ import math
 load_dotenv()
 
 
+BASE_URL = 'https://api.themoviedb.org/3'
 HEADERS = {
   'Authorization': 'Bearer ' + os.getenv('TMDB_API_ACCESS_TOKEN'),
   'accept': 'application/json'
@@ -60,7 +61,7 @@ def makeRequest(endpoint, page=None):
 
 
 def getReleaseYear(data):
-  release = data.get('release_date', None)
+  release = data.get('release_date', None) or data.get('first_air_date', None)
   return int(release.split('-')[0]) if release and len(release) > 0 else 'N/A'
 
 
@@ -166,7 +167,7 @@ def requestAndStoreMediaDetails(TMDbId, mediaType, cursor, conn):
 
 
 def storeMedia(data, mediaType, cursor, connection):
-  def filterMovie(media):
+  def filterMedia(media):
     return (
         getReleaseYear(media) != 'N/A' and 
         type(media['vote_average']) in [int, float] and 
@@ -174,7 +175,7 @@ def storeMedia(data, mediaType, cursor, connection):
         len(media['poster_path'])
       )
 
-  allMedia = list(filter(filterMovie, data['results']))
+  allMedia = list(filter(filterMedia, data['results']))
   for media in allMedia:
     requestAndStoreMediaDetails(media['id'], mediaType, cursor, connection)
 
@@ -249,14 +250,12 @@ def markAsInitialized(cursor, conn, retries=3):
 
 
 if __name__ == '__main__':
-  BASE_URL = 'https://api.themoviedb.org/3'
   connection = connectDB()
   cursor = connection.cursor()
 
   isInit = testIfInitialized(cursor)
-
   if (isInit):
-    print("Movies already in the local database. Exiting successfully.")
+    print("Database already initialized, exiting successfully...")
     cursor.close()
     connection.close()
     exit(0)
@@ -268,12 +267,13 @@ if __name__ == '__main__':
       segment = getURLSegment(mediaType)
       GENRES_URL = f'{BASE_URL}/genre/{segment}/list'
       loadedGenres = makeRequest(GENRES_URL)['genres']
-      genres[mediaType] = loadedGenres
       if (mediaType == MOVIES):
         documentaryId = getGenreId('Documentary', loadedGenres)
+      loadedGenres = list(filter(lambda x: x.get('name') != 'Documentary'))
+      genres[mediaType] = loadedGenres
 
     storeGenres(genres, cursor, connection)
-    print('Stored movie genres successfully.')
+    print(f'Stored genres successfully.')
   except Exception as err:
     print("Fatal error - exiting...")
     print('Failed to request and store genres.')
@@ -282,7 +282,7 @@ if __name__ == '__main__':
 
   for mediaType in MEDIA_TYPES:
     segment = getURLSegment(mediaType)
-    ENDPOINT = f'{BASE_URL}/discover/{segment}?sort_by=vote_average.desc&vote_average.gte={MIN_VOTE_AVG}&vote_count.gte={MIN_VOTES}&without_genres={99}'
+    ENDPOINT = f'{BASE_URL}/discover/{segment}?sort_by=vote_average.desc&vote_average.gte={MIN_VOTE_AVG}&vote_count.gte={MIN_VOTES}&without_genres={documentaryId}'
     sample = makeRequest(ENDPOINT)
     pagesToRequest = min(500, sample['total_pages'])
     tenPercent = math.floor(pagesToRequest / 10)
