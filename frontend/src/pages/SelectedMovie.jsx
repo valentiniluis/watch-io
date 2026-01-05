@@ -3,19 +3,20 @@ import { useQuery } from '@tanstack/react-query';
 import ErrorPage from './ErrorPage.jsx';
 import MovieInfo from '../components/movie/MovieInfo.jsx';
 import Spinner from '../components/UI/Spinner.jsx';
-import { loadMovieData } from '../util/movie-query.js';
+import { loadMediaData } from '../util/movie-query.js';
 import MovieRecommendations from '../components/movie/Recommendations.jsx';
 import { mediaActions } from '../store/media.js';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 
 export default function SelectedMoviePage() {
   const { movieId } = useParams();
+  const mediaType = useSelector(state => state.media.type);
   const dispatch = useDispatch();
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['movie-data', { movieId }],
-    queryFn: loadMovieData
+    queryKey: [mediaType, { movieId }],
+    queryFn: loadMediaData
   });
 
   let content;
@@ -28,9 +29,10 @@ export default function SelectedMoviePage() {
   else if (data) {
     dispatch(mediaActions.setMediaData(data.movieData));
     // recomendações são extraídas apenas após os dados do filme
+    const media = data[mediaType];
     content = (
       <>
-        <MovieInfo movie={data.movieData} />
+        <MovieInfo movie={media} />
         <MovieRecommendations />
       </>
     );

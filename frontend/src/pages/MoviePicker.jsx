@@ -3,21 +3,23 @@ import { useQuery } from '@tanstack/react-query';
 import SearchInput from "../components/UI/SearchInput.jsx";
 import MovieCatalog from "../components/movie/MovieCatalog.jsx";
 import Spinner from "../components/UI/Spinner.jsx";
-import { fetchMovies } from "../util/movie-query.js";
+import { fetchMedia } from "../util/movie-query.js";
 import ErrorSection from "../components/UI/ErrorSection.jsx";
+import { useSelector } from "react-redux";
 
 
 export default function MoviePicker() {
+  const mediaType = useSelector(state => state.media.type);
   const [movieSearched, setMovieSearched] = useState('');
   const [page, setPage] = useState(1);
 
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['movies', { searchTerm: movieSearched, page }],
-    queryFn: fetchMovies,
+    queryKey: [mediaType, { searchTerm: movieSearched, page }],
+    queryFn: fetchMedia,
   });
 
-  function handleUpdateSearch(movie) {
-    setMovieSearched(movie);
+  function handleUpdateSearch(title) {
+    setMovieSearched(title);
     setPage(1);
   }
 
@@ -25,24 +27,22 @@ export default function MoviePicker() {
   if (isPending) {
     content = <Spinner />
   }
-
   else if (isError) {
-    console.log(error);
     content = <ErrorSection message={error.message || 'Failed to load movies'} />;
   }
-
   else if (data) {
-    const { movies, pages } = data;
+    const { pages } = data;
+    const media = data[mediaType];
     content = (
       <div className="catalog-container">
-        <MovieCatalog movies={movies} currentPage={page} maxPages={pages} setPage={setPage} />
+        <MovieCatalog movies={media} currentPage={page} maxPages={pages} setPage={setPage} />
       </div>
     );
   }
 
   return (
     <section className="flex flex-col items-center justify-center">
-      <SearchInput onUpdate={handleUpdateSearch} />
+      <SearchInput onUpdate={handleUpdateSearch} key={mediaType} />
       {content}
     </section>
   );

@@ -17,7 +17,7 @@ const initialState = {
 
 export default function MyArea() {
   const { isLoggedIn } = useSelector(state => state.auth);
-  const { type: mediaType } = useSelector(state => state.media);
+  const mediaType = useSelector(state => state.media.type);
 
   const [contentType, setContentType] = useState(initialState);
   const [page, setPage] = useState(1);

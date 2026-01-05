@@ -6,7 +6,7 @@ import { toastActions } from "../../store/toast";
 
 
 export default function AppModeSelector() {
-  const { type: currentType } = useSelector(state => state.media);
+  const currentType = useSelector(state => state.media.type);
   const dispatch = useDispatch();
 
   const mediaTypes = MEDIA_TYPES

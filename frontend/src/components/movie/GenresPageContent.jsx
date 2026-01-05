@@ -15,7 +15,7 @@ const initialState = {
 };
 
 export default function GenresPageContent({ genres }) {
-  const { type: mediaType } = useSelector(state => state.media);
+  const mediaType = useSelector(state => state.media.type);
   const [genre, setGenre] = useState({ name: genres[0].name, id: genres[0].id });
   const [sortAttribute, setSortAttribute] = useState(initialState);
   const [page, setPage] = useState(1);
@@ -25,6 +25,8 @@ export default function GenresPageContent({ genres }) {
     queryFn: loadMediaByGenre,
   });
 
+  const filteredOptions = genres.filter(g => g.name !== genre.name);
+
   let content;
   if (isLoading) {
     content = <Spinner text="Loading movies by genre..." />
@@ -33,10 +35,12 @@ export default function GenresPageContent({ genres }) {
     content = <ErrorSection message={error.message || "Failed to load movies."} />
   }
   else if (data) {
-    const { movies, pages } = data;
+    console.log(data);
+    const { pages } = data;
+    const media = data[mediaType];
     content = (
       <div className="catalog-container">
-        <MovieCatalog movies={movies} currentPage={page} maxPages={pages} setPage={setPage} />
+        <MovieCatalog movies={media} currentPage={page} maxPages={pages} setPage={setPage} />
       </div>
     )
   }
@@ -59,7 +63,7 @@ export default function GenresPageContent({ genres }) {
           label="Genre" 
           className="bg-blue-600 text-white font-semibold rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide hover:bg-blue-700 focus:ring-blue-800" 
           text={genre.name} 
-          options={genres} 
+          options={filteredOptions} 
           onUpdate={handleUpdateGenre} 
         />
         <DropdownMenu 

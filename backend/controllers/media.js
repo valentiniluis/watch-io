@@ -64,8 +64,8 @@ export const getMediaData = async (req, res, next) => {
       }
     }
 
-    const mediaString = req.params[0]
-    res.status(200).json({ success: true, mediaString: responseData, user: userData });
+    const mediaString = req.params[0];
+    res.status(200).json({ success: true, [mediaString]: responseData, user: userData });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
     next(err);
@@ -186,8 +186,9 @@ export const getMediaByGenre = async (req, res, next) => {
     const parameters = { genreId, userId, limit, page };
     const [query, args] = getMediaByGenreQuery(mediaType, orderBy, parameters);
 
-    const mediaString = req.params[0];
     const { rows: results } = await pool.query(query, args);
+
+    const mediaString = req.params[0];
     const finalData = getPagesAndClearData(results, limit, mediaString);
     return res.status(200).json({ success: true, ...finalData });
   } catch (err) {

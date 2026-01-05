@@ -1,10 +1,10 @@
 import api from "../api/request";
 
-export async function fetchMovies({ queryKey }) {
-  const parameters = queryKey[1];
-  const { searchTerm, page = 1 } = parameters;
-  let url = `/movie/search?page=${page}`;
-  url += (searchTerm.length > 0) ? `&movie=${searchTerm}` : '';
+export async function fetchMedia({ queryKey }) {
+  const [mediaType, params] = queryKey;
+  const { searchTerm, page = 1 } = params;
+  let url = `/${mediaType}/search?page=${page}`;
+  url += (searchTerm.length > 0) ? `&title=${searchTerm}` : '';
   const response = await api.get(url);
   const data = response.data;
   return data;
@@ -91,9 +91,10 @@ export async function getInteraction({ queryKey }) {
 }
 
 
-export const loadMovieData = async ({ queryKey }) => {
-  const { movieId } = queryKey[1];
-  const response = await api.get('/movie/' + movieId);
+export const loadMediaData = async ({ queryKey }) => {
+  const [mediaType, params] = queryKey;
+  const { mediaId } = params;
+  const response = await api.get(`/${mediaType}/${mediaId}`);
   const data = response.data;
   if (!data.success) throw new Error(data.status_message);
   return data;
@@ -130,9 +131,9 @@ export const loadMediaByGenre = async ({ queryKey }) => {
 }
 
 
-export const loadGenres = async () => {
-  const response = await api.get('/movie/genres');
-  const { genres } = response.data;
-  const filtered = genres.filter(({ genre_name }) => genre_name !== 'Documentary');
-  return filtered;
+export const loadGenres = async ({ queryKey }) => {
+  const [mediaType] = queryKey;
+  const response = await api.get(`/${mediaType}/genres`);
+  const data = response.data;
+  return data;
 }

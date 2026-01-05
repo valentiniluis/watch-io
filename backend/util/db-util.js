@@ -154,6 +154,7 @@ export const getGenres = async (mediaType) => {
     INNER JOIN genre AS gen
     ON mtg.genre_id = gen.id
     WHERE mtg.media_type_id = (SELECT id FROM media_type WHERE media_name = '${mediaType}')
+    AND gen.genre_name != 'Documentary'
     ORDER BY gen.genre_name;`;
 
   const { rows: genres } = await pool.query(genresQuery);
