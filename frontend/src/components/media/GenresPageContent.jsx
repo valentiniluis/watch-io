@@ -35,7 +35,6 @@ export default function GenresPageContent({ genres }) {
     content = <ErrorSection message={error.message || "Failed to load movies."} />
   }
   else if (data) {
-    console.log(data);
     const { pages } = data;
     const media = data[mediaType];
     content = (

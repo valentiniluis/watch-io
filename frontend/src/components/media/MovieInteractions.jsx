@@ -9,9 +9,11 @@ import { toastActions } from '../../store/toast';
 import ErrorSection from "../UI/ErrorSection";
 
 export default function MovieInteractions() {
-  const { data: media, type: mediaType } = useSelector(state => state.media);
+  const media = useSelector(state => state.media);
   const dispatch = useDispatch();
-  const mediaId = media.id;
+
+  const mediaId = media.data.id;
+  const mediaType = media.type;
 
   const queryKey = ['interaction', { mediaId, mediaType }];
 

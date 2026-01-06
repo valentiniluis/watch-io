@@ -1,7 +1,7 @@
 import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
-import { getGenreId, getReleaseYear } from './util-functions.js';
-import { URL_SEGMENTS } from './constants.js';
+import { getReleaseYear } from './util-functions.js';
+import { MEDIA_TYPES, SERIES, URL_SEGMENTS } from './constants.js';
 
 const TMDB_IMAGE_PATH = 'https://image.tmdb.org/t/p';
 
@@ -48,20 +48,6 @@ export async function fetchAndSanitizeMovies(url) {
 }
 
 
-export async function searchMovie(movie, page = 1) {
-  const url = `/search/movie?query=${movie}&page=${page}`;
-  fetchAndSanitizeMovies(url);
-}
-
-
-export async function discoverMoviesByGenre(genre, page = 1) {
-  const genreId = getGenreId(genre);
-  if (genreId === -1) throw new Error('Genre not found.');
-  const url = `/discover/movie?include_adult=false&language=en-US&with_genres=${genreId}&page=${page}&vote_count.gte=300&vote_average.gte=5`;
-  fetchAndSanitizeMovies(url);
-}
-
-
 export function getRuntimeString(totalMinutes) {
   if (!totalMinutes) return 'N/A';
   const runtimeHours = Math.floor(totalMinutes / 60);
@@ -91,68 +77,86 @@ export async function fetchMovie(movieId) {
 }
 
 
-export function sanitizeMovie(movie) {
+export function sanitizeMedia(data, country) {
+  if (typeof data !== 'object') throw new Error('Invalid argument. Data must be an object.');
+
   const {
-    genres, id, original_language, original_title,
-    title, overview, poster_path, release_date, runtime,
-    tagline, vote_average, credits, keywords: nestedKeywords
-  } = movie;
+    genres, id, original_language, overview, poster_path, 
+    release_date, runtime, tagline, vote_average, credits, 
+    keywords: keys, external_ids, vote_count
+  } = data;
 
-  const { cast, crew } = credits;
-  const { keywords } = nestedKeywords;
+  const title = data.title || data.name;
+  const original_title = data.original_title || data.original_name;
+  const cast = credits?.cast;
+  const crew = credits?.crew;
+  const keywords = keys?.keywords || keys?.results;
+  const imdb_id = data.imdb_id || external_ids?.imdb_id;
 
-  const data = {
-    genres,
+  let available = undefined;
+  const providers = data['watch/providers'];
+  if (providers) {
+    available = providers.results[country];
+    fillAllLogoPaths(available);
+  }
+  
+  return {
     id,
-    original_language,
-    original_title,
+    imdb_id,
     title,
+    original_title,
+    tagline,
+    genres,
+    original_language,
     overview,
     poster_path: getFullPosterPath(poster_path),
     release_year: getReleaseYear(release_date),
     runtime: getRuntimeString(runtime),
-    tagline,
     tmdb_rating: vote_average,
+    tmdb_votes: vote_count,
     cast,
     crew,
-    keywords
+    keywords,
+    available
   };
-
-  return data;
 }
 
 
 export async function getAPIMediaData(type, mediaId, country) {
   const urlSegment = getTMDbUrlSegment(type);
-  const urlTMDB = `/${urlSegment}/${mediaId}?append_to_response=watch/providers`;
+  const urlTMDB = `/${urlSegment}/${mediaId}?append_to_response=watch/providers,external_ids`;
   
   const responseTMDB = await tmdbAPI.get(urlTMDB);
-  const dataTMDB = { ...responseTMDB.data };
-  dataTMDB.available = dataTMDB['watch/providers'].results[country];
-  fillAllLogoPaths(dataTMDB.available);
-  delete dataTMDB['watch/providers'];
-  dataTMDB.poster_path = getFullPosterPath(dataTMDB.poster_path);
-  dataTMDB.tmdb_rating = dataTMDB.vote_average;
-  dataTMDB.tmdb_votes = dataTMDB.vote_count;
-  delete dataTMDB['vote_average'];
-  delete dataTMDB['vote_count'];
-  const { imdb_id } = dataTMDB;
+  const dataTMDB = sanitizeMedia(responseTMDB.data, country);
 
+  const { imdb_id } = dataTMDB;
   // if there's no IMDb id, then it's not possible to fetch info from OMDb. Return before OMDb request
   if (!imdb_id) return dataTMDB;
 
   const urlOMDB = `/?i=${imdb_id}`;
   const responseOMDB = await omdbAPI.get(urlOMDB);
   const dataOMDB = filterOMDBData(responseOMDB.data);
-  const responseData = {
+  return {
     ...dataTMDB,
     ...dataOMDB,
-    runtime: getRuntimeString(dataTMDB.runtime),
   };
-  return responseData;
 }
 
 
 function getTMDbUrlSegment(type) {
   return URL_SEGMENTS[type];
 }
+
+
+// export async function searchMovie(movie, page = 1) {
+//   const url = `/search/movie?query=${movie}&page=${page}`;
+//   return fetchAndSanitizeMovies(url);
+// }
+
+
+// export async function discoverMoviesByGenre(genre, page = 1) {
+//   const genreId = getGenreId(genre);
+//   if (genreId === -1) throw new Error('Genre not found.');
+//   const url = `/discover/movie?include_adult=false&language=en-US&with_genres=${genreId}&page=${page}&vote_count.gte=300&vote_average.gte=5`;
+//   fetchAndSanitizeMovies(url);
+// }

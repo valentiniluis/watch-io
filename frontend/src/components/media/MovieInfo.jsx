@@ -7,9 +7,9 @@ import Overview from '../UI/Overview.jsx';
 
 
 export default function MovieInfo({ movie }) {
-  const { isLoggedIn } = useSelector(reduxState => reduxState.auth);
+  const { isLoggedIn } = useSelector(state => state.auth);
 
-  const { title, poster_path, tagline, release_year, runtime, genres, overview } = movie;
+  const { title, poster_path, tagline, release_year, runtime, genres, overview, ratings } = movie;
   const poster = poster_path || noPoster;
 
   return (
@@ -29,12 +29,12 @@ export default function MovieInfo({ movie }) {
         <div className='text-container'>
           <h1 className='movie-name hidden xl:inline-block'>{title}</h1>
           {tagline && <h4 className='tagline hidden xl:inline-block'>{tagline}</h4>}
-          {movie.ratings && <MovieRatings ratings={movie.ratings} />}
+          {movie.ratings && <MovieRatings ratings={ratings} />}
           <Overview overviewText={overview} />
           <div className='additional-info mt-8'>
             <p>{genres.map(genre => genre.name).join(', ')}</p>
-            <p className='tracking-wide'>{release_year}</p>
-            <p className='tracking-wider'>{runtime}</p>
+            {release_year != 'N/A' && <p className='tracking-wide'>{release_year}</p>}
+            {runtime != 'N/A' && <p className='tracking-wider'>{runtime}</p>}
           </div>
         </div>
       </div>
