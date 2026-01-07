@@ -18,7 +18,7 @@ import {
   getMediaByGenreQuery,
   getPagesAndClearData,
   searchMedia,
-  getMovieBasedRecommendationQuery,
+  getMediaBasedRecommendationQuery,
   getUserBasedRecommendationQuery
 } from '../util/db-util.js';
 
@@ -78,6 +78,7 @@ export const getMediaData = async (req, res, next) => {
 export const getMediaRecommendations = async (req, res, next) => {
   try {
     const { user, mediaType } = req;
+    const userId = user?.id;
 
     const { value: mediaId, error: movieErr } = mediaIdValidation.validate(req.params.mediaId);
     if (movieErr) throwError(400, "Invalid Movie: " + movieErr.message);
@@ -85,9 +86,7 @@ export const getMediaRecommendations = async (req, res, next) => {
     const { value: limit, limitErr } = limitValidation.validate(req.query.limit);
     if (limitErr) throwError(400, `Invalid limit: ${limitErr.message}`);
 
-    const userId = (user && user.id) ? user.id : null;
-
-    const [query, args] = getMovieBasedRecommendationQuery({ movieId: mediaId, limit, userId });
+    const [query, args] = getMediaBasedRecommendationQuery({ mediaId, mediaType, limit, userId });
     const { rows: recommendations } = await pool.query(query, args);
 
     res.status(200).json({ success: true, recommendations });

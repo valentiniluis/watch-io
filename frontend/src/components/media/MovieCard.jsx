@@ -45,12 +45,16 @@ export default function MovieCard({ movie, linkTo }) {
         <div className="card-text-wrapper">
           <h3 className="card-title">{title}</h3>
           <div className="card-info">
+
             <div className="rating">
               <img src={star} className='size-3 md:size-3.5 lg:size-4' alt="Start Icon" />
               <p>{tmdb_rating}</p>
             </div>
+            
             <span className="text-xs text-stone-300">•</span>
-            <p className='release'>{release_year}</p>
+
+            <p className='secondary'>{release_year}</p>
+
           </div>
         </div>
       </Link>

@@ -289,15 +289,17 @@ export const insertMovie = async (movie) => {
 }
 
 
-export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
+export function getMediaBasedRecommendationQuery({ mediaId, mediaType, limit, userId }) {
   const { cast, director, crew, keywords, genres, language, rating } = RECOMMENDATION_WEIGHTS;
 
-  const args = [movieId, limit];
+  const args = [mediaId, mediaType, limit];
   if (userId) args.push(userId);
   const recommendationQuery = `
     WITH 
     target_media AS (
-      SELECT id, original_language FROM media WHERE id = $1
+      SELECT id, original_language FROM media 
+      WHERE tmdb_id = $1 
+      AND type_id = (SELECT id FROM media_type WHERE media_name = $2)
     ),
     norm_cast AS (
       SELECT media_id, (raw_score::float / NULLIF(MAX(raw_score) OVER(), 0)) as score
@@ -369,7 +371,7 @@ export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
         AND NOT EXISTS (
           SELECT 1 FROM interaction i 
           WHERE i.media_id = med.id 
-          AND i.user_id = $3 
+          AND i.user_id = $4 
           AND i.inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
         )` : ''}
       ORDER BY final_score DESC
@@ -386,7 +388,7 @@ export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
     FROM ranks AS ra
     JOIN media AS med ON ra.id = med.id
     ORDER BY RANDOM()
-    LIMIT $2;
+    LIMIT $3;
   `;
 
   return [recommendationQuery, args];
@@ -486,7 +488,7 @@ export function getUserBasedRecommendationQuery({ userId, limit, mediaType }) {
       LEFT JOIN genre_score ges ON med.id = ges.media_id
       LEFT JOIN language_score las ON med.id = las.media_id
       WHERE med.id NOT IN (SELECT media_id FROM favorites)
-      AND med.id NOT IN (
+      AND med.id  NOT IN (
         SELECT media_id FROM interaction 
         WHERE user_id = $1 
         AND inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')

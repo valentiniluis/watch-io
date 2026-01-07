@@ -23,12 +23,11 @@ export default function RecommendationsSection() {
   }
   else if (data) {
     const { recommendations } = data;
-    content = <MovieList movies={recommendations} />
+    content = <MovieList title="Our Recommendations For You" titleClass="text-center" movies={recommendations} />
   }
 
   return (
-    <section className="my-20" id='recommendations-section'>
-      <h1 className='text-center text-2xl font-bold'>Our Recommendations For You</h1>
+    <section className="min-w-20" id='recommendations-section'>
       {content}
     </section>
   );
