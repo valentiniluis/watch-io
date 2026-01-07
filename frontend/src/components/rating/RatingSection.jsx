@@ -2,7 +2,7 @@ import { useRef } from "react";
 import RatingModal from "./RatingModal";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
-import { getRating } from '../../util/movie-query';
+import { getRating } from '../../query/rating';
 import ErrorBlock from '../UI/ErrorSection';
 import Spinner from "../UI/Spinner";
 import RatingPreview from "./RatingPreview";

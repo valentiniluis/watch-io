@@ -1,7 +1,7 @@
 import { Fragment, useRef, useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useQueries } from '@tanstack/react-query';
-import { loadMediaByGenre } from '../../util/movie-query.js';
+import { loadMediaByGenre } from '../../query/media.js';
 import Spinner from '../UI/Spinner.jsx';
 import ErrorSection from '../UI/ErrorSection';
 import MovieList from './MovieList.jsx';

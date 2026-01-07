@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import ErrorPage from './ErrorPage.jsx';
 import MovieInfo from '../components/media/MovieInfo.jsx';
 import Spinner from '../components/UI/Spinner.jsx';
-import { loadMediaData } from '../util/movie-query.js';
+import { loadMediaData } from '../query/media.js';
 import MovieRecommendations from '../components/media/Recommendations.jsx';
 import { mediaActions } from '../store/media.js';
 

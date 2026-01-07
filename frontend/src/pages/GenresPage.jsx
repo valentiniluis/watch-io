@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import Spinner from '../components/UI/Spinner';
 import ErrorSection from '../components/UI/ErrorSection';
-import { loadGenres } from '../util/movie-query';
+import { loadGenres } from '../query/genre';
 import GenresPageContent from '../components/media/GenresPageContent';
 import { useSelector } from 'react-redux';
 

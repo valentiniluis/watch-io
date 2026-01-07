@@ -1,8 +1,8 @@
 import { GoogleLogin } from '@react-oauth/google';
 import { useMutation } from '@tanstack/react-query';
-import { authUser } from '../../util/user-query.js';
-import queryClient from '../../util/query.js';
 import { useDispatch } from 'react-redux';
+import { authUser } from '../../query/user.js';
+import queryClient from '../../query/client.js';
 import { toastActions } from '../../store/toast.js';
 
 

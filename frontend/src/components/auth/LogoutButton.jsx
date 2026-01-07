@@ -1,10 +1,10 @@
 import { useDispatch } from 'react-redux';
-import LogoutIcon from '/logout.svg';
-import queryClient from '../../util/query';
-import api from '../../api/request';
-import { authActions } from '../../store/auth';
 import { useMutation } from '@tanstack/react-query';
+import queryClient from '../../query/client';
+import api from '../../api/client';
+import { authActions } from '../../store/auth';
 import { toastActions } from '../../store/toast';
+import LogoutIcon from '/logout.svg';
 
 
 export default function LogoutButton() {

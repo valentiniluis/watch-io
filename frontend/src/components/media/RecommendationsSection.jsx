@@ -1,13 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { loadUserRecommendations } from "../../util/movie-query";
+import { loadUserRecommendations } from "../../query/media";
+import { useSelector } from "react-redux";
 import Spinner from "../UI/Spinner";
 import ErrorSection from "../UI/ErrorSection";
 import MovieList from "./MovieList";
 
 
 export default function RecommendationsSection() {
+  const mediaType = useSelector(state => state.media.type);
+
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['user-recommendations'],
+    queryKey: [mediaType, 'user-recommendations'],
     queryFn: loadUserRecommendations
   });
 

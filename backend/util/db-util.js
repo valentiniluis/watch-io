@@ -393,10 +393,10 @@ export function getMovieBasedRecommendationQuery({ movieId, limit, userId }) {
 }
 
 
-export function getUserBasedRecommendationQuery({ userId, limit }) {
+export function getUserBasedRecommendationQuery({ userId, limit, mediaType }) {
   const { cast, director, crew, keywords, genres, language, rating } = RECOMMENDATION_WEIGHTS;
 
-  const args = [userId, limit];
+  const args = [userId, limit, mediaType];
   const query = `
     WITH favorites AS (
       SELECT media_id FROM rating WHERE user_id = $1 AND score >= 7
@@ -491,6 +491,7 @@ export function getUserBasedRecommendationQuery({ userId, limit }) {
         WHERE user_id = $1 
         AND inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
       )
+      AND med.type_id = (SELECT id FROM media_type WHERE media_name = $3)
       ORDER BY final_score DESC
       LIMIT 50
     )

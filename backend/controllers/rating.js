@@ -7,11 +7,11 @@ import { getPagesAndClearData } from '../util/db-util.js';
 
 export const getRatings = async (req, res, next) => {
   try {
-    const { user } = req;
+    const { user, mediaType } = req;
     const [page, limit] = validatePage(req.query.page, req.query.limit);
     const offset = calculateOffset(page, limit);
 
-    const queryArgs = [user.id, limit, offset];
+    const queryArgs = [user.id, limit, offset, mediaType];
     let query = `
       SELECT
         med.tmdb_id AS id,
@@ -31,6 +31,7 @@ export const getRatings = async (req, res, next) => {
       INNER JOIN media AS med
       ON rt.media_id = med.id
       WHERE rt.user_id = $1
+      AND type_id = (SELECT id FROM media_type WHERE media_name = $4)
       LIMIT $2 OFFSET $3;
     `;
 

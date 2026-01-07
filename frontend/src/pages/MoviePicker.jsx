@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux";
 import { useState } from "react";
 import { useQuery } from '@tanstack/react-query';
-import { fetchMedia } from "../util/movie-query.js";
+import { fetchMedia } from "../query/media.js";
 import SearchInput from "../components/UI/SearchInput.jsx";
 import MovieCatalog from "../components/media/MovieCatalog.jsx";
 import Spinner from "../components/UI/Spinner.jsx";

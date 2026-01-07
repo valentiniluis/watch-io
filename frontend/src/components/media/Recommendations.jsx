@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { loadRecommendations } from '../../util/movie-query';
+import { loadRecommendations } from '../../query/media';
 import Spinner from "../UI/Spinner";
 import ErrorSection from '../UI/ErrorSection';
 import MovieList from "./MovieList";

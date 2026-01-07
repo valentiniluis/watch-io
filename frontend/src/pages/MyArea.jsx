@@ -7,7 +7,7 @@ import ErrorSection from "../components/UI/ErrorSection";
 import Ratings from "../components/rating/Ratings";
 import DropdownMenu from '../components/UI/DropdownMenu';
 import { getMyAreaEmptyMessage, getMyAreaLoadingMessage } from "../util/functions";
-import { getMyAreaContent } from "../util/movie-query";
+import { getMyAreaContent } from "../query/user";
 import { myAreaCategories, RATINGS } from "../util/constants";
 
 const initialState = {

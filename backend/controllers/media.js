@@ -101,12 +101,14 @@ export const getMediaRecommendations = async (req, res, next) => {
 export const getUserRecommendations = async (req, res, next) => {
   try {
     const { user, mediaType } = req;
+    const userId = user?.id;
 
     const { value: limit, error } = limitValidation.validate(req.query.limit);
     if (error) throwError(400, `Invalid limit: ${error.message}`);
 
     // fallback query will be used if the user's not logged in or has no liked/well-rated movies
-    // take 250 best rated movies and use random 25 movies sample
+    // take 250 best rated movies and use random sample
+    const fallbackArgs = [mediaType, limit];
     const fallbackQuery = `
       WITH best_rated AS (
         SELECT 
@@ -118,18 +120,19 @@ export const getUserRecommendations = async (req, res, next) => {
           med.release_year,
           ROUND(tmdb_rating, 1) AS tmdb_rating
         FROM media AS med
+        WHERE med.type_id = (SELECT id FROM media_type WHERE media_name = $1)
         ORDER BY med.tmdb_rating DESC
         LIMIT 250
       )
       SELECT *
       FROM best_rated
       ORDER BY RANDOM()
-      LIMIT 25;
+      LIMIT $2;
     `;
 
     let result;
     if (!user) {
-      result = await pool.query(fallbackQuery);
+      result = await pool.query(fallbackQuery, fallbackArgs);
     } else {
       const { rows } = await pool.query(`
         SELECT 1
@@ -144,9 +147,9 @@ export const getUserRecommendations = async (req, res, next) => {
         [user.id]
       );
 
-      if (rows.length === 0) result = await pool.query(fallbackQuery);
+      if (rows.length === 0) result = await pool.query(fallbackQuery, fallbackArgs);
       else {
-        const [query, args] = getUserBasedRecommendationQuery({ userId: user.id, limit });
+        const [query, args] = getUserBasedRecommendationQuery({ userId, limit, mediaType });
         result = await pool.query(query, args);
       }
     }

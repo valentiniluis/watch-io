@@ -1,12 +1,12 @@
+import { useSelector } from "react-redux";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DropdownMenu from "../UI/DropdownMenu";
-import { loadMediaByGenre } from "../../util/movie-query";
+import { loadMediaByGenre } from "../../query/media";
 import Spinner from "../UI/Spinner";
 import MovieCatalog from './MovieCatalog';
 import { sortOptions } from "../../util/constants";
 import ErrorSection from "../UI/ErrorSection";
-import { useSelector } from "react-redux";
 
 
 const initialState = {

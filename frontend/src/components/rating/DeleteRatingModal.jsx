@@ -1,8 +1,8 @@
 import { useDispatch, useSelector } from "react-redux";
 import Modal from "../layout/Modal";
 import { useMutation } from "@tanstack/react-query";
-import { deleteRating } from "../../util/movie-query";
-import queryClient from "../../util/query";
+import { deleteRating } from "../../query/rating";
+import queryClient from "../../query/client";
 import { toastActions } from '../../store/toast';
 
 

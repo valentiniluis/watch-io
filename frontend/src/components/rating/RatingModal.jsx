@@ -1,9 +1,9 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { createPortal } from "react-dom";
 import { useMutation } from "@tanstack/react-query";
-import queryClient from '../../util/query';
+import queryClient from '../../query/client';
 import Input from "../UI/Input";
-import { mutateRating } from "../../util/movie-query";
+import { mutateRating } from "../../query/rating";
 import Modal from "../layout/Modal";
 import RatingInput from './RatingInput';
 import { toastActions } from '../../store/toast';

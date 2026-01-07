@@ -1,9 +1,9 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { addInteraction, getInteraction, removeInteraction } from "../../util/movie-query";
-import ToggleInteraction from './ToggleInteraction';
-import queryClient from '../../util/query';
-import Spinner from "../UI/Spinner";
 import { useDispatch, useSelector } from "react-redux";
+import { addInteraction, getInteraction, removeInteraction } from "../../query/interaction";
+import ToggleInteraction from './ToggleInteraction';
+import queryClient from '../../query/client';
+import Spinner from "../UI/Spinner";
 import { interactionTypes } from "../../util/constants";
 import { toastActions } from '../../store/toast';
 import ErrorSection from "../UI/ErrorSection";

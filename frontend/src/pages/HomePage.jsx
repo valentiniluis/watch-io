@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { loadHomepageGenres } from "../util/movie-query";
+import { loadHomepageGenres } from "../query/genre";
 import { useSelector } from "react-redux";
 import { HOMEPAGE_GENRES_NUMBER } from '../util/constants';
 import Spinner from "../components/UI/Spinner";

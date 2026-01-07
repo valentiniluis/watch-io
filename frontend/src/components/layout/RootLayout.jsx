@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import Header from "../layout/Header.jsx";
 import { useQuery } from "@tanstack/react-query";
-import { fetchUser } from '../../util/user-query.js';
+import { fetchUser } from '../../query/user.js';
 import { useDispatch, useSelector } from "react-redux";
 import Toast from "../UI/Toast.jsx";
 import useJwtTimer from "../../hooks/jwtTimer.js";
