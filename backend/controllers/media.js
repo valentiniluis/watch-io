@@ -80,6 +80,8 @@ export const getMediaRecommendations = async (req, res, next) => {
     const { user, mediaType } = req;
     const userId = user?.id;
 
+    console.log(mediaType);
+    
     const { value: mediaId, error: movieErr } = mediaIdValidation.validate(req.params.mediaId);
     if (movieErr) throwError(400, "Invalid Movie: " + movieErr.message);
 

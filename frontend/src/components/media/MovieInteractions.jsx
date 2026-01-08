@@ -68,7 +68,7 @@ export default function MovieInteractions() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 md:gap-10 md:flex-row justify-center flex-wrap">
+    <div className="flex flex-col items-center gap-4 md:gap-10 md:flex-row justify-center flex-wrap mt-4">
       {content}
     </div>
   );

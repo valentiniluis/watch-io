@@ -1,8 +1,25 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { MOVIES } from '../util/constants';
+import { MEDIA_TYPES, MOVIES } from '../util/constants';
+import { toastActions } from "./toast";
+
+
+const MEDIA_MODE = 'MEDIA_MODE';
+
+
+export function setMediaType(type) {
+  return (dispatch) => {
+    if (!MEDIA_TYPES.includes(type)) return dispatch(toastActions.setErrorToast(`Invalid media type: ${type}`));
+
+    sessionStorage.setItem(MEDIA_MODE, type);
+
+    dispatch(mediaActions.setMediaType(type));
+  }
+}
+
+
 
 const initialState = {
-  type: MOVIES,
+  type: sessionStorage.getItem(MEDIA_MODE) || MOVIES,
   data: {
     id: null,
     title: null,

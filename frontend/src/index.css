@@ -105,7 +105,7 @@ body {
     }
 
     & .additional-info {
-      @apply flex gap-6 justify-center mb-8 xl:mb-0;
+      @apply flex gap-6 justify-center mb-8 xl:mb-0 flex-wrap;
     }
 
     & .additional-info p {

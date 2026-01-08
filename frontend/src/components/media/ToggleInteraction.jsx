@@ -3,7 +3,7 @@ import { getInteractionBtnContent } from '../../util/functions';
 
 
 export default function ToggleInteraction({ className, type, active=false, ...props }) {
-  let cssClass = 'w-fit rounded-md py-1.5 px-2.5 uppercase text-[.7rem] text-nowrap tracking-wider mt-4 font-semibold';
+  let cssClass = 'w-fit rounded-md py-1.5 px-2.5 uppercase text-[.7rem] text-nowrap tracking-wider font-semibold';
   if (className) cssClass += ' ' + className;
 
   const btnContent = getInteractionBtnContent(type, active);

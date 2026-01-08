@@ -41,7 +41,9 @@ export async function discoverMedia({ mediaType, page, user = {}, limit }) {
 export async function searchMedia({ title, mediaType, user = {}, limit, page }) {
   const id = user?.id;
   const offset = calculateOffset(page, limit);
+
   const queryArgs = [mediaType, `%${title}%`, limit, offset];
+  if (id) queryArgs.push(id);
 
   let query = `
     SELECT 
@@ -52,25 +54,17 @@ export async function searchMedia({ title, mediaType, user = {}, limit, page }) 
     FROM media AS med
     WHERE med.type_id = (SELECT id FROM media_type WHERE media_name = $1)
     AND (med.title ILIKE $2 OR med.original_title ILIKE $2)
-  `;
-
-  if (id && id.length) {
-    query += `
-      AND med.id NOT IN (
-        SELECT itr.media_id
-        FROM interaction AS itr
-        WHERE itr.user_id = $5
-        AND itr.inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
-      )
-    `;
-    queryArgs.push(id);
-  }
-
-  query += `
+    ${id ? `
+    AND med.id NOT IN (
+      SELECT itr.media_id
+      FROM interaction AS itr
+      WHERE itr.user_id = $5
+      AND itr.inter_type_id = (SELECT id FROM interaction_type WHERE interaction_type = '${NOT_INTERESTED}')
+    )` : ''}
     ORDER BY med.tmdb_rating DESC, med.title
     LIMIT $3
-    OFFSET $4;`
-    ;
+    OFFSET $4;
+  `;
 
   const { rows } = await pool.query(query, queryArgs);
   return rows;
@@ -295,9 +289,9 @@ export function getMediaBasedRecommendationQuery({ mediaId, mediaType, limit, us
   const args = [mediaId, mediaType, limit];
   if (userId) args.push(userId);
   const recommendationQuery = `
-    WITH 
-    target_media AS (
-      SELECT id, original_language FROM media 
+    WITH target_media AS (
+      SELECT id, original_language, type_id 
+      FROM media 
       WHERE tmdb_id = $1 
       AND type_id = (SELECT id FROM media_type WHERE media_name = $2)
     ),
@@ -306,7 +300,8 @@ export function getMediaBasedRecommendationQuery({ mediaId, mediaType, limit, us
       FROM (
         SELECT mc.media_id, COUNT(*) as raw_score
         FROM media_cast mc
-        WHERE mc.artist_id IN (SELECT artist_id FROM media_cast WHERE media_id = $1) AND mc.media_id != $1
+        WHERE mc.artist_id IN (SELECT artist_id FROM media_cast WHERE media_id = (SELECT id FROM target_media)) 
+          AND mc.media_id != (SELECT id FROM target_media)
         GROUP BY mc.media_id
       ) AS c
     ),
@@ -315,7 +310,9 @@ export function getMediaBasedRecommendationQuery({ mediaId, mediaType, limit, us
       FROM (
         SELECT cr.media_id, COUNT(*) as raw_score
         FROM crew cr
-        WHERE cr.job = 'Director' AND cr.artist_id IN (SELECT artist_id FROM crew WHERE job = 'Director' AND media_id = $1) AND cr.media_id != $1
+        WHERE cr.job = 'Director' 
+          AND cr.artist_id IN (SELECT artist_id FROM crew WHERE job = 'Director' AND media_id = (SELECT id FROM target_media)) 
+          AND cr.media_id != (SELECT id FROM target_media)
         GROUP BY cr.media_id
       ) AS d
     ),
@@ -324,7 +321,9 @@ export function getMediaBasedRecommendationQuery({ mediaId, mediaType, limit, us
       FROM (
         SELECT cr.media_id, COUNT(*) as raw_score
         FROM crew cr
-        WHERE cr.job != 'Director' AND cr.artist_id IN (SELECT artist_id FROM crew WHERE media_id = $1 AND job != 'Director') AND cr.media_id != $1
+        WHERE cr.job != 'Director' 
+          AND cr.artist_id IN (SELECT artist_id FROM crew WHERE media_id = (SELECT id FROM target_media) AND job != 'Director') 
+          AND cr.media_id != (SELECT id FROM target_media)
         GROUP BY cr.media_id
       ) AS crw
     ),
@@ -333,7 +332,8 @@ export function getMediaBasedRecommendationQuery({ mediaId, mediaType, limit, us
       FROM (
         SELECT mk.media_id, COUNT(*) as raw_score
         FROM media_keyword mk
-        WHERE mk.keyword_id IN (SELECT keyword_id FROM media_keyword WHERE media_id = $1) AND mk.media_id != $1
+        WHERE mk.keyword_id IN (SELECT keyword_id FROM media_keyword WHERE media_id = (SELECT id FROM target_media)) 
+          AND mk.media_id != (SELECT id FROM target_media)
         GROUP BY mk.media_id
       ) AS k
     ),
@@ -342,7 +342,8 @@ export function getMediaBasedRecommendationQuery({ mediaId, mediaType, limit, us
       FROM (
         SELECT mg.media_id, COUNT(*) as raw_score
         FROM media_genre mg
-        WHERE mg.genre_id IN (SELECT genre_id FROM media_genre WHERE media_id = $1) AND mg.media_id != $1
+        WHERE mg.genre_id IN (SELECT genre_id FROM media_genre WHERE media_id = (SELECT id FROM target_media)) 
+          AND mg.media_id != (SELECT id FROM target_media)
         GROUP BY mg.media_id
       ) AS g
     ),
@@ -365,8 +366,8 @@ export function getMediaBasedRecommendationQuery({ mediaId, mediaType, limit, us
       LEFT JOIN norm_crew crs ON med.id = crs.media_id
       LEFT JOIN norm_keyword kes ON med.id = kes.media_id
       LEFT JOIN norm_genre ges ON med.id = ges.media_id
-      WHERE med.id != $1 
-        AND med.type_id = (SELECT id FROM media_type WHERE media_name = '${MOVIES}')
+      WHERE med.id != (SELECT id FROM target_media) 
+      AND med.type_id = (SELECT type_id FROM target_media)
         ${userId ? `
         AND NOT EXISTS (
           SELECT 1 FROM interaction i 

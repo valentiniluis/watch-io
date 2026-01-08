@@ -1,8 +1,7 @@
 import DropdownMenu from "../UI/DropdownMenu";
 import { MEDIA_TYPES_LABELS, MEDIA_TYPES } from "../../util/constants";
 import { useSelector, useDispatch } from "react-redux";
-import { mediaActions } from '../../store/media';
-import { toastActions } from "../../store/toast";
+import { setMediaType } from '../../store/media';
 
 
 export default function AppModeSelector() {
@@ -15,8 +14,7 @@ export default function AppModeSelector() {
 
   function handleUpdateType(event) {
     const { mediaType } = event.currentTarget.dataset;
-    if (!MEDIA_TYPES.includes(mediaType)) dispatch(toastActions.setErrorToast(`Invalid media type: ${mediaType}`));
-    else dispatch(mediaActions.setMediaType(mediaType));
+    dispatch(setMediaType(mediaType));
   }
 
   return (
