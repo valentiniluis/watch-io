@@ -1,5 +1,4 @@
-import DropdownMenu from "../UI/DropdownMenu";
-import { MEDIA_TYPES_LABELS, MEDIA_TYPES } from "../../util/constants";
+import { SERIES, MOVIES } from "../../util/constants";
 import { useSelector, useDispatch } from "react-redux";
 import { setMediaType } from '../../store/media';
 
@@ -8,22 +7,29 @@ export default function AppModeSelector() {
   const currentType = useSelector(state => state.media.type);
   const dispatch = useDispatch();
 
-  const mediaTypes = MEDIA_TYPES
-    .filter(mediaType => mediaType !== currentType)
-    .map(mediaType => ({ id: mediaType, name: MEDIA_TYPES_LABELS[mediaType], 'data-media-type': mediaType }));
-
-  function handleUpdateType(event) {
-    const { mediaType } = event.currentTarget.dataset;
+  function handleUpdateType(mediaType) {
     dispatch(setMediaType(mediaType));
   }
 
+  const buttonClass = 'relative z-10 flex-1 flex items-center justify-center font-medium text-sm transition-colors duration-300';
+
+  const movieBtnClass = buttonClass + (currentType === MOVIES ? 'text-white' : 'text-zinc-500 hover:text-zinc-300');
+  const tvBtnClass = buttonClass + (currentType === SERIES ? 'text-white' : 'text-zinc-500 hover:text-zinc-300');
+
+  const sliderClass = 'absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-indigo-600 rounded-lg transition-transform duration-150 ease-in-out shadow-lg ' + (currentType === MOVIES ? 'translate-x-0' : 'translate-x-full');
+
   return (
-    <DropdownMenu
-      className="bg-transparent text-stone-400 font-semibold rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide hover:text-white focus:ring-slate-600"
-      containerClass='max-w-34'
-      text={MEDIA_TYPES_LABELS[currentType]}
-      options={mediaTypes}
-      onUpdate={handleUpdateType}
-    />
+    <div className="relative flex bg-zinc-900 p-1 rounded-xl w-60 h-12 border border-zinc-800 shadow-2xl">
+
+      <div className={sliderClass} />
+
+      <button onClick={() => handleUpdateType(MOVIES)} className={movieBtnClass}>
+        Movies
+      </button>
+
+      <button onClick={() => handleUpdateType(SERIES)} className={tvBtnClass}>
+        TV Shows
+      </button>
+    </div>
   );
 }
