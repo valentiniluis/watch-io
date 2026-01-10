@@ -1,13 +1,13 @@
+import ScrollContainer from "react-indiana-drag-scroll";
 import ErrorSection from "../UI/ErrorSection";
 import EpisodeCard from './EpisodeCard';
 
 export default function EpisodeList({ episodes }) {
-
-  if (!episodes.length) return <ErrorSection message="No episodes available!" />
+  if (!episodes?.length) return <ErrorSection message="No episodes available!" />
 
   return (
-    <div id="episodes-container">
-      {episodes.map(episode => <EpisodeCard episode={episode} />)}
-    </div>
+    <ScrollContainer className="episode-list">
+      {episodes.map(episode => <EpisodeCard key={episode.id} episode={episode} />)}
+    </ScrollContainer>
   );
 }

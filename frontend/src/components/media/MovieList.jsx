@@ -29,7 +29,7 @@ export default function MovieList({ title, titleClass='', movies, fallback }) {
   return (
     <section className='relative my-6 md:my-10 lg:my-12'>
       {title && <h3 className={titleClassName}>{title}</h3>}
-      <ScrollContainer className="movie-list" horizontal vertical={false} innerRef={recommendationsRef}  >
+      <ScrollContainer className="movie-list" horizontal vertical={false} innerRef={recommendationsRef}>
         <button
           className={scrollBtnClass + ' left-0 -translate-x-full'}
           onClick={() => handleScroll('left')}

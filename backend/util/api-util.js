@@ -1,12 +1,12 @@
 import tmdbAPI from '../api/tmdb-api.js';
 import omdbAPI from '../api/omdb-api.js';
 import { getReleaseYear } from './util-functions.js';
-import { MEDIA_TYPES, SERIES, URL_SEGMENTS } from './constants.js';
+import { URL_SEGMENTS } from './constants.js';
 
 const TMDB_IMAGE_PATH = 'https://image.tmdb.org/t/p';
 
-export function getFullPosterPath(posterPath) {
-  return (posterPath && posterPath.length > 0) ? `${TMDB_IMAGE_PATH}/w500${posterPath}` : null;
+export function getFullPosterPath(posterPath, width='500') {
+  return (posterPath && posterPath.length > 0) ? `${TMDB_IMAGE_PATH}/w${width}${posterPath}` : null;
 }
 
 
@@ -50,6 +50,7 @@ export async function fetchAndSanitizeMovies(url) {
 
 export function getRuntimeString(totalMinutes) {
   if (!totalMinutes) return 'N/A';
+  if (totalMinutes < 60) return `${totalMinutes}min`;
   const runtimeHours = Math.floor(totalMinutes / 60);
   const runtimeMinutes = totalMinutes % 60;
   return `${runtimeHours}h${runtimeMinutes}min`
@@ -81,9 +82,9 @@ export function sanitizeMedia(data, country) {
   if (typeof data !== 'object') throw new Error('Invalid argument. Data must be an object.');
 
   const {
-    genres, id, original_language, overview, poster_path, 
-    release_date, runtime, tagline, vote_average, credits, 
-    keywords: keys, external_ids, vote_count
+    genres, id, original_language, overview, poster_path,
+    release_date, runtime, tagline, vote_average, credits,
+    keywords: keys, external_ids, vote_count, number_of_seasons
   } = data;
 
   const title = data.title || data.name;
@@ -99,7 +100,7 @@ export function sanitizeMedia(data, country) {
     available = providers.results[country];
     fillAllLogoPaths(available);
   }
-  
+
   return {
     id,
     imdb_id,
@@ -117,7 +118,8 @@ export function sanitizeMedia(data, country) {
     cast,
     crew,
     keywords,
-    available
+    available,
+    number_of_seasons
   };
 }
 
@@ -125,7 +127,7 @@ export function sanitizeMedia(data, country) {
 export async function getAPIMediaData(type, mediaId, country) {
   const urlSegment = getTMDbUrlSegment(type);
   const urlTMDB = `/${urlSegment}/${mediaId}?append_to_response=watch/providers,external_ids`;
-  
+
   const responseTMDB = await tmdbAPI.get(urlTMDB);
   const dataTMDB = sanitizeMedia(responseTMDB.data, country);
 
@@ -145,6 +147,31 @@ export async function getAPIMediaData(type, mediaId, country) {
 
 function getTMDbUrlSegment(type) {
   return URL_SEGMENTS[type];
+}
+
+
+export function sanitizeSeasonData(data) {
+  const { air_date, id, name, overview, poster_path, season_number, vote_average } = data;
+
+  let { episodes } = data;
+  if (episodes) episodes = episodes.map(episode => ({ 
+    ...episode, 
+    runtime: getRuntimeString(episode.runtime), 
+    still_path: getFullPosterPath(episode.still_path) 
+  }));
+
+  const finalData = {
+    id,
+    name,
+    air_date,
+    episodes,
+    overview,
+    poster_path: getFullPosterPath(poster_path),
+    season_number,
+    tmdb_rating: vote_average
+  };
+
+  return finalData;
 }
 
 

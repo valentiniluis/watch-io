@@ -14,7 +14,8 @@ export default function MovieRecommendations() {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: [mediaType, { mediaId }],
-    queryFn: loadRecommendations
+    queryFn: loadRecommendations,
+    enabled: !!mediaId && !!mediaType
   });
 
   let content;

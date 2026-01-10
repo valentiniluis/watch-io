@@ -85,6 +85,14 @@ body {
     }
   }
 
+  .episode-list {
+    @apply flex overflow-y-visible overflow-x-hidden w-full whitespace-nowrap gap-3 md:gap-3.5 lg:gap-5 py-3 md:py-4 xl:py-5 px-3;
+
+    & li {
+      @apply h-auto w-full min-w-[180px] sm:min-w-[220px] md:min-w-[260px] lg:min-w-[290px] xl:min-w-[320px];
+    }
+  }
+
   .movie-info-container {
     @apply flex flex-col items-center justify-center xl:flex-row xl:items-stretch;
 

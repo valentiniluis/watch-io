@@ -33,6 +33,13 @@ export default function SelectedMoviePage() {
     }
   }, [mediaType, navigate]);
 
+  useEffect(() => {
+    if (data) {
+      const media = data[mediaType];
+      dispatch(mediaActions.setMediaData(media));
+    }
+  }, [data, dispatch, mediaType]);
+
   let content;
   if (isLoading) {
     content = <Spinner text="Loading Movie Data..." />;
@@ -42,13 +49,12 @@ export default function SelectedMoviePage() {
   }
   else if (data) {
     const media = data[mediaType];
-    dispatch(mediaActions.setMediaData(media));
     // recomendações são extraídas apenas após os dados do filme
     content = (
       <>
         <MovieInfo movie={media} />
+        {mediaType === SERIES && <TvShowSeasons numberOfSeasons={media.number_of_seasons} />}
         <MovieRecommendations />
-        {mediaType === SERIES && <TvShowSeasons numberOfSeasons={1} />}
       </>
     );
   }
