@@ -24,5 +24,8 @@ router.get('/:mediaId', mapMediaType, optionallyAuthenticateJWT, mediaController
 // get recommendations based on a particular movie
 router.get('/:mediaId/recommendations', mapMediaType, optionallyAuthenticateJWT, mediaControllers.getMediaRecommendations);
 
+// exclusive route for tv shows - validation inside controller
+router.get('/:mediaId/seasons/:season', mapMediaType, mediaControllers.getSeasonDetails);
+
 
 export default router;

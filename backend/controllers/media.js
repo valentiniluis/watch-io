@@ -1,7 +1,7 @@
 import pool from '../model/postgres.js';
-import { getAPIMediaData } from '../util/api-util.js';
+import { getAPIMediaData, getFullPosterPath } from '../util/api-util.js';
 import { throwError, validatePage } from '../util/util-functions.js';
-import { LIKE } from '../util/constants.js';
+import { LIKE, SERIES, URL_SEGMENTS } from '../util/constants.js';
 import { 
   genreIdValidation, 
   orderByValidation, 
@@ -21,6 +21,8 @@ import {
   getMediaBasedRecommendationQuery,
   getUserBasedRecommendationQuery
 } from '../util/db-util.js';
+import tmdbApi from '../api/tmdb-api.js';
+import omdbApi from '../api/omdb-api.js';
 
 
 export const getSearchedMedia = async (req, res, next) => {
@@ -204,6 +206,45 @@ export const getMediaByGenre = async (req, res, next) => {
     const finalData = getPagesAndClearData(results, limit, mediaString);
     return res.status(200).json({ success: true, ...finalData });
   } catch (err) {
+    if (!err.statusCode) err.statusCode = 500;
+    next(err);
+  }
+}
+
+
+export const getSeasonDetails = async (req, res, next) => {
+  try {
+    const { mediaType } = req;
+
+    if (mediaType !== SERIES) throwError(400, `Invalid media type. Only '${URL_SEGMENTS[SERIES]}' is allowed.`);
+
+    const { value: mediaId, error: movieErr } = mediaIdValidation.validate(req.params.mediaId);
+    if (movieErr) throwError(400, "Invalid movie: " + movieErr.message);
+
+    const { value: season, error: seasonErr } = intValidation.required().validate(req.params.season);
+    if (seasonErr) throwError(400, `Invalid season parameter: ${seasonErr.message}`);
+    
+    const response = await tmdbApi.get(`/tv/${mediaId}/season/${season}`);
+    const data = response.data;
+
+    if (!data.success) throwError(response.status || 500, 'An error occurred: ' + data.message);
+
+    const { air_date, episodes, id, name, overview, poster_path, season_number, vote_average } = data;
+    const finalData = {
+      id,
+      name,
+      air_date,
+      episodes,
+      overview,
+      poster_path: getFullPosterPath(poster_path),
+      season_number,
+      tmdb_rating: vote_average
+    };
+
+    // const OMDbResponse = await omdbApi.get(`?i=${imdbId}&Season=${season}`);
+
+    res.status(200).json({ success: true, message: 'Retrieved season details successfully.', season: finalData });
+  } catch(err) {
     if (!err.statusCode) err.statusCode = 500;
     next(err);
   }

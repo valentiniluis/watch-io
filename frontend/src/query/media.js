@@ -15,7 +15,7 @@ export async function fetchMedia({ queryKey }) {
 export const loadMediaData = async ({ queryKey }) => {
   const [mediaType, params] = queryKey;
   const { mediaId } = params;
-  const response = await api.get(`/${mediaType}/${mediaId}`);
+  const response = await api.get(`/${mediaType}/${mediaId}?country=BR`);
   const data = response.data;
   if (!data.success) throw new Error(data.status_message);
   return data;
