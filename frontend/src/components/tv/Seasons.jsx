@@ -36,6 +36,7 @@ export default function TvShowSeasons({ numberOfSeasons }) {
   }
   else if (data) {
     const { season } = data;
+    console.log(season);
     const { episodes } = season;
     content = <EpisodeList episodes={episodes} />
   }
@@ -44,10 +45,8 @@ export default function TvShowSeasons({ numberOfSeasons }) {
 
   return (
     <div id="season-container" className="mt-10">
-
       <h2 className="section-title">Seasons & Episodes</h2>
-
-      <div className="flex justify-center">
+      <div className="flex justify-center my-2">
         <DropdownMenu
           className="bg-blue-600 text-white font-semibold rounded-lg text-sm md:text-[.92rem] lg:text-base md:tracking-wide hover:bg-blue-700 focus:ring-blue-800"
           containerClass="max-w-40"
@@ -57,7 +56,6 @@ export default function TvShowSeasons({ numberOfSeasons }) {
           options={seasonsArray}
           key={showId}
         />
-
       </div>
       {content}
     </div>
