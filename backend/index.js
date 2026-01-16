@@ -7,6 +7,7 @@ import 'dotenv/config';
 import { exit } from 'process';
 import errorHandler from './controllers/error.js';
 import scheduleJobs from './tasks/ingestion.js';
+import { getRouterPath } from './util/util-functions.js';
 
 
 const PORT = +process.env.PORT || 3000;
@@ -35,8 +36,8 @@ async function setupRoutes() {
       }
 
       const [filename] = file.split('.');
-      // use the filename as route path and imported router
-      app.use(`/${filename}`, fileRouter);
+      const routerPath = getRouterPath(filename);      
+      app.use(routerPath, fileRouter);
     }
   } catch (err) {
     console.log("Failed to load routes dinamically.");

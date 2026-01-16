@@ -1,9 +1,9 @@
 import { useState } from "react";
 
 
-export default function DropdownMenu({ label, className, text, options, onUpdate }) {
+export default function DropdownMenu({ label, className, text, options, onUpdate, containerClass='max-w-3xs mb-16' }) {
   const [isOpen, setIsOpen] = useState(false);
-  let baseClass =  "w-full px-2 md:px-3 lg:px-5 py-2.5 text-center flex justify-center items-center focus:ring-3 focus:outline-none";
+  let baseClass = "w-full px-2 md:px-3 lg:px-5 py-2.5 text-center flex justify-center items-center focus:ring-3 focus:outline-none";
   if (className) baseClass += " " + className;
  
   function handleToggleOpen() {
@@ -11,14 +11,18 @@ export default function DropdownMenu({ label, className, text, options, onUpdate
   }
 
   function handleSelect(event) {
-    setIsOpen(false);
+    handleClose();
     onUpdate(event);
   }
 
+  function handleClose() {
+    setIsOpen(false);
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center max-w-3xs w-full gap-2">
+    <div className={`flex flex-col items-center justify-center w-full gap-2 ${containerClass}`} onMouseLeave={handleClose}>
       <h3 className="text-xs sm:text-[.8rem] lg:text-sm uppercase font-medium tracking-wider text-stone-200">{label}</h3>
-      <div className="w-full relative mb-16">
+      <div className="w-full relative">
         <button
           id="dropdownDefaultButton"
           className={baseClass}

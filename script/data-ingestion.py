@@ -7,6 +7,7 @@ import math
 load_dotenv()
 
 
+BASE_URL = 'https://api.themoviedb.org/3'
 HEADERS = {
   'Authorization': 'Bearer ' + os.getenv('TMDB_API_ACCESS_TOKEN'),
   'accept': 'application/json'
@@ -16,6 +17,9 @@ REQUEST_LIMIT = { 'PERIOD': 1, 'LIMIT': 50 }
 MIN_VOTES = 300
 MIN_VOTE_AVG = 5
 MIN_POPULARITY = 0.5
+SERIES = 'TV_SERIES'
+MOVIES = 'MOVIE'
+MEDIA_TYPES = [SERIES, MOVIES]
 
 
 def connectDB(retries=3):
@@ -40,61 +44,100 @@ def connectDB(retries=3):
 
 
 def getGenreId(genre, genres):
-  genresArray = genres['genres']
-  filtered = [gen for gen in genresArray if gen['name'] == genre]
+  filtered = [gen for gen in genres if gen['name'] == genre]
   return 0 if len(filtered) != 1 else filtered[0]['id']
 
 
 def makeRequest(endpoint, page=None):
   url = endpoint
-  if page:
+  hasQueryParam = url.find('?') != -1
+  if page and hasQueryParam:
     url = f'{endpoint}&page={page}'
+  elif page:
+    url = f'{endpoint}?page={page}'
   response = requests.get(url, headers=HEADERS)
   data = response.json()
   return data
 
 
-def getReleaseYear(releaseDate):
-  return int(releaseDate.split('-')[0]) if releaseDate and len(releaseDate) > 0 else 'N/A'
+def getReleaseYear(data):
+  release = data.get('release_date', None) or data.get('first_air_date', None)
+  return int(release.split('-')[0]) if release and len(release) > 0 else 'N/A'
 
 
-def requestAndStoreMovieDetails(movieId, cursor, conn):
-  MOVIE_URL = f"https://api.themoviedb.org/3/movie/{movieId}?append_to_response=credits,keywords"
+def sanitizeTvShow(data):
+  # transform tv show data so that every field name is the same as the in the movie data objects
+  data['title'] = data['name']
+  del data['name']
+  data['original_title'] = data['original_name']
+  del data['original_name']
+  data['keywords']['keywords'] = data['keywords']['results']
+  del data['keywords']['results']
+  data['release_date'] = data['first_air_date']
+  del data['first_air_date']
+  return data
+
+
+def requestAndStoreMediaDetails(TMDbId, mediaType, cursor, conn):
+  if mediaType not in MEDIA_TYPES:
+    raise Exception('Invalid media type.')
+  
+  dynamicSegment = getURLSegment(mediaType)
+  MEDIA_URL = f"https://api.themoviedb.org/3/{dynamicSegment}/{TMDbId}?append_to_response=credits,keywords"
   BASE_IMAGE_PATH = "https://image.tmdb.org/t/p/w500"
 
   try:
-    movieData = makeRequest(MOVIE_URL)
-    # insert essential movie information
-    statement = "INSERT INTO movie (id, title, original_title, original_language, poster_path, release_year, tmdb_rating) VALUES (%s, %s, %s, %s, %s, %s, %s);"
-    data = (movieData['id'], 
-            movieData['title'], 
-            movieData['original_title'],
-            movieData['original_language'],
-            f'{BASE_IMAGE_PATH}{movieData["poster_path"]}', 
-            getReleaseYear(movieData['release_date']), 
-            movieData['vote_average'])
+    mediaData = makeRequest(MEDIA_URL)
+    if mediaType == SERIES:
+      mediaData = sanitizeTvShow(mediaData)
+    # insert essential movie/tv show information
+    statement = """
+      INSERT INTO 
+      media 
+      (tmdb_id, type_id, title, original_title, original_language, poster_path, release_year, tmdb_rating, seasons) 
+      VALUES (%s, (SELECT id FROM media_type WHERE media_name = %s), %s, %s, %s, %s, %s, %s, %s)
+      RETURNING id;
+    """
+    data = (
+      mediaData['id'],
+      mediaType,
+      mediaData['title'],
+      mediaData['original_title'],
+      mediaData['original_language'],
+      f'{BASE_IMAGE_PATH}{mediaData["poster_path"]}', 
+      getReleaseYear(mediaData),
+      mediaData['vote_average'],
+      mediaData.get('number_of_seasons', None)
+    )
     cursor.execute(statement, data)
+    mediaId = cursor.fetchone()[0]
 
     # insert movie genres
-    statement = "INSERT INTO movie_genre (movie_id, genre_id) VALUES (%s, %s);"
-    data = [(movieId, genreId['id']) for genreId in movieData['genres']]
+    statement = """
+      INSERT INTO 
+      media_genre 
+      (media_id, media_type_id, genre_id) 
+      VALUES 
+      (%s, (SELECT id FROM media_type WHERE media_name = %s), %s);
+    """
+    data = [(mediaId, mediaType, genre['id']) for genre in mediaData['genres']]
     cursor.executemany(statement, data)
 
     # include movie keywords to the database
     statement = "INSERT INTO keyword (id, keyword) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING;"
-    data = [(keyword['id'], keyword['name']) for keyword in movieData['keywords']['keywords']]
+    data = [(keyword['id'], keyword['name']) for keyword in mediaData['keywords']['keywords']]
     cursor.executemany(statement, data)
     
     # associate keywords to the movie
-    statement = "INSERT INTO movie_keyword (movie_id, keyword_id) VALUES (%s, %s);"
-    data = [(movieId, keyword['id']) for keyword in movieData['keywords']['keywords']]
+    statement = "INSERT INTO media_keyword (media_id, keyword_id) VALUES (%s, %s);"
+    data = [(mediaId, keyword['id']) for keyword in mediaData['keywords']['keywords']]
     cursor.executemany(statement, data)
 
     def filterArtist(person):
       return person['popularity'] > MIN_POPULARITY or person.get('job') == 'Director'
     
-    cast = list(filter(filterArtist, movieData['credits']['cast']))
-    crew = list(filter(filterArtist, movieData['credits']['crew']))
+    cast = list(filter(filterArtist, mediaData['credits']['cast']))
+    crew = list(filter(filterArtist, mediaData['credits']['crew']))
     artists = cast + crew
 
     # add artists (actors/movie-makers) to the database
@@ -107,52 +150,60 @@ def requestAndStoreMovieDetails(movieId, cursor, conn):
     cursor.executemany(statement, data)
 
     # associate actors to movie
-    statement = "INSERT INTO movie_cast (movie_id, artist_id, credit_id, character_name) VALUES (%s, %s, %s, %s);"
-    data = [(movieId, actor['id'], actor['credit_id'], actor['character']) for actor in cast]
+    statement = "INSERT INTO media_cast (media_id, artist_id, credit_id, character_name) VALUES (%s, %s, %s, %s);"
+    data = [(mediaId, actor['id'], actor['credit_id'], actor.get('character', None)) for actor in cast]
     cursor.executemany(statement, data)
 
     # associate crew (director, writers, producers) to the movie
-    statement = "INSERT INTO crew (movie_id, artist_id, credit_id, department, job) VALUES (%s, %s, %s, %s, %s);"
-    data = [(movieId, member['id'], member['credit_id'], member['department'], member['job']) for member in crew]
+    statement = "INSERT INTO crew (media_id, artist_id, credit_id, department, job) VALUES (%s, %s, %s, %s, %s);"
+    data = [(mediaId, member['id'], member['credit_id'], member['department'], member['job']) for member in crew]
     cursor.executemany(statement, data)
 
     conn.commit()
   except Exception as e:
     conn.rollback()
-    print(f"Failed to store movie of id {movieId}")
+    print(f"Failed to store media of type '{mediaType}' of id {TMDbId}.")
     print(e)
 
 
-def storeMovies(data, cursor, connection):
-  def filterMovie(movie):
-    return (movie['release_date'] and 
-            len(movie['release_date']) and 
-            type(movie['vote_average']) in [int, float] and 
-            movie['poster_path'] and 
-            len(movie['poster_path']))
+def storeMedia(data, mediaType, cursor, connection):
+  def filterMedia(media):
+    return (
+        getReleaseYear(media) != 'N/A' and 
+        type(media['vote_average']) in [int, float] and 
+        media['poster_path'] and 
+        len(media['poster_path'])
+      )
 
-  movies = list(filter(filterMovie, data['results']))
-  for movie in movies:
-    requestAndStoreMovieDetails(movie['id'], cursor, connection)
+  allMedia = list(filter(filterMedia, data['results']))
+  for media in allMedia:
+    requestAndStoreMediaDetails(media['id'], mediaType, cursor, connection)
 
 
 def storeGenres(data, cursor, connection):
-  try:
-    genres = data['genres']
-    insert_query = """
-    INSERT INTO genre(id, genre_name)
-    VALUES (%s, %s);
+  for mediaKey, genres in data.items():
+    statement = """
+      INSERT INTO genre(id, genre_name)
+      VALUES (%s, %s)
+      ON CONFLICT (id) DO NOTHING;
     """
-    data = [
-      (genre['id'], genre['name'])
-      for genre in genres
-    ]
-    cursor.executemany(insert_query, data)
+    arguments = [(genre['id'], genre['name']) for genre in genres]
+    cursor.executemany(statement, arguments)
+
+    statement = """
+      INSERT INTO
+      media_type_genre(media_type_id, genre_id)
+      VALUES ((SELECT id FROM media_type AS mt WHERE mt.media_name = %s), %s);
+    """
+    arguments = [(mediaKey, genre['id']) for genre in genres]
+    cursor.executemany(statement, arguments)
+
     connection.commit()
-  except Exception as e:
-    print(e)
-    connection.rollback()
-    exit(1)
+
+
+def getURLSegment(mediaType):
+  segments = { MOVIES: 'movie', SERIES: 'tv' }
+  return segments.get(mediaType, None)
 
 
 def testIfInitialized(cursor):
@@ -199,50 +250,59 @@ def markAsInitialized(cursor, conn, retries=3):
 
 
 if __name__ == '__main__':
-  BASE_URL = 'https://api.themoviedb.org/3'
   connection = connectDB()
   cursor = connection.cursor()
 
   isInit = testIfInitialized(cursor)
-
   if (isInit):
-    print("Movies already in the local database. Exiting successfully.")
+    print("Database already initialized, exiting successfully...")
+    cursor.close()
+    connection.close()
     exit(0)
 
-  genres = None
   try:
-    GENRES_URL = f'{BASE_URL}/genre/movie/list'
-    genres = makeRequest(GENRES_URL)
+    genres = {}
+    documentaryId = None
+    for mediaType in MEDIA_TYPES:
+      segment = getURLSegment(mediaType)
+      GENRES_URL = f'{BASE_URL}/genre/{segment}/list'
+      loadedGenres = makeRequest(GENRES_URL)['genres']
+      if (mediaType == MOVIES):
+        documentaryId = getGenreId('Documentary', loadedGenres)
+      loadedGenres = list(filter(lambda x: x.get('name') != 'Documentary'))
+      genres[mediaType] = loadedGenres
+
     storeGenres(genres, cursor, connection)
-    print('Stored movie genres successfully.')
+    print(f'Stored genres successfully.')
   except Exception as err:
     print("Fatal error - exiting...")
-    print('Failed to request and store genres: ' + err)
+    print('Failed to request and store genres.')
+    print(err)
     exit(1)
 
-  documentaryId = getGenreId('Documentary', genres)
-  MOVIES_ENDPOINT = f'{BASE_URL}/discover/movie?sort_by=vote_average.desc&vote_average.gte={MIN_VOTE_AVG}&vote_count.gte={MIN_VOTES}&without_genres={99}'
+  for mediaType in MEDIA_TYPES:
+    segment = getURLSegment(mediaType)
+    ENDPOINT = f'{BASE_URL}/discover/{segment}?sort_by=vote_average.desc&vote_average.gte={MIN_VOTE_AVG}&vote_count.gte={MIN_VOTES}&without_genres={documentaryId}'
+    sample = makeRequest(ENDPOINT)
+    pagesToRequest = min(500, sample['total_pages'])
+    tenPercent = math.floor(pagesToRequest / 10)
+    print(f'Ingesting media type "{mediaType}" - {pagesToRequest} API data pages to request...')
 
-  sample = makeRequest(MOVIES_ENDPOINT)
-  pagesToRequest = min(500, sample['total_pages'])
-  tenPercent = math.floor(pagesToRequest / 10)
-  print(f'Requesting {pagesToRequest} API data pages...')
-
-  requestCount = 0
-  for i in range(pagesToRequest):
-    try:
-      page = i + 1
-      data = makeRequest(MOVIES_ENDPOINT, page)
-      storeMovies(data, cursor, connection)
-      requestCount += 1
-      if (requestCount == REQUEST_LIMIT['LIMIT']):
-        time.sleep(REQUEST_LIMIT['PERIOD'])
-        requestCount = 0
-      if page % tenPercent == 0:
-        print(f"Progress: {page / pagesToRequest * 100}% of pages requested and stored. {pagesToRequest - page} pages left.")
-    except Exception as error:
-      print(f"Failed to fetch or store page of movies #{page}. Error:")
-      print(error)
+    requestCount = 0
+    for i in range(pagesToRequest):
+      try:
+        page = i + 1
+        data = makeRequest(ENDPOINT, page)
+        storeMedia(data, mediaType, cursor, connection)
+        requestCount += 1
+        if (requestCount == REQUEST_LIMIT['LIMIT']):
+          time.sleep(REQUEST_LIMIT['PERIOD'])
+          requestCount = 0
+        if page % tenPercent == 0:
+          print(f"Progress: {page / pagesToRequest * 100:.2f}% of pages requested and stored. {pagesToRequest - page} page(s) left.")
+      except Exception as error:
+        print(f'Failed to fetch or store page #{page} of media type "{mediaType}". Error:')
+        print(error)
   
   markAsInitialized(cursor, connection)
   cursor.close()

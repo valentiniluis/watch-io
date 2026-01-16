@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { loadRecommendations } from '../../util/movie-query';
+import { loadRecommendations } from '../../query/media';
 import Spinner from "../UI/Spinner";
 import ErrorSection from '../UI/ErrorSection';
 import MovieList from "./MovieList";
@@ -7,11 +7,15 @@ import { useSelector } from "react-redux";
 
 
 export default function MovieRecommendations() {
-  const movie = useSelector(state => state.movie);
+  const media = useSelector(state => state.media);
+
+  const mediaType = media.type;
+  const mediaId = media.data.id;
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['movie-recommendations', { movieId: movie.id }],
-    queryFn: loadRecommendations
+    queryKey: [mediaType, { mediaId }],
+    queryFn: loadRecommendations,
+    enabled: !!mediaId && !!mediaType
   });
 
   let content;

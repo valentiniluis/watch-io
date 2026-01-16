@@ -11,8 +11,7 @@ export const authenticateJWT = (req, res, next) => {
     decodedToken = jwt.verify(token, process.env.JWT_SECRET);
     if (!decodedToken) throw new Error('Invalid Credentials');
   } catch (err) {
-    err.statusCode = 401;
-    return next(err);
+    return res.status(401).json({ success: false, message: `Failed to log in: ${err.message}` });
   }
 
   let userData = { ...decodedToken, id: decodedToken.sub };

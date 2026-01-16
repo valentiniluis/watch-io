@@ -1,16 +1,17 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { createPortal } from "react-dom";
 import { useMutation } from "@tanstack/react-query";
-import queryClient from '../../util/query';
+import queryClient from '../../query/client';
 import Input from "../UI/Input";
-import { mutateRating } from "../../util/movie-query";
+import { mutateRating } from "../../query/rating";
 import Modal from "../layout/Modal";
 import RatingInput from './RatingInput';
 import { toastActions } from '../../store/toast';
 
 
 export default function RatingModal({ ref, editMode, data }) {
-  const { id: movieId, title, release_year } = useSelector(state => state.movie);
+  const { data: media, type: mediaType }  = useSelector(state => state.media);
+  const { id: mediaId, title, release_year } = media;
   const dispatch = useDispatch();
 
   function handleClose() {
@@ -20,10 +21,10 @@ export default function RatingModal({ ref, editMode, data }) {
 
   const { mutate } = useMutation({
     mutationFn: mutateRating,
-    onSuccess: () => {
+    onSuccess: async () => {
       const successMessage = (editMode ? "Edited" : "Added") + " rating successfully!";
       dispatch(toastActions.setSuccessToast(successMessage));
-      queryClient.invalidateQueries({ queryKey: ['ratings'] });
+      await queryClient.invalidateQueries({ queryKey: ['rating'] });
     },
     onError: (ctx) => dispatch(toastActions.setErrorToast(`Failed to rate movie: ${ctx?.response?.data?.message || ctx.message}`))
   });
@@ -37,7 +38,8 @@ export default function RatingModal({ ref, editMode, data }) {
       score: +rating.score,
       note: rating.note.length > 0 ? rating.note : undefined
     };
-    mutate({ rating, movieId, method: (editMode === true) ? "PUT" : "POST" });
+    const method = (editMode === true) ? "PUT" : "POST";
+    mutate({ rating, mediaId, mediaType, method });
     event.target.reset();
     handleClose();
   }

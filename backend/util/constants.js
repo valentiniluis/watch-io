@@ -19,14 +19,23 @@ export const JWT_EXPIRY_HOURS = 6;
 
 // constant strings to avoid typos in other files
 export const SERIES = 'TV_SERIES';
-export const MOVIES = 'MOVIES';
+export const MOVIES = 'MOVIE';
+export const MEDIA_TYPES = [MOVIES, SERIES];
 export const WATCHLIST = 'WATCHLIST';
 export const NOT_INTERESTED = 'NOT_INTERESTED';
 export const LIKE = 'LIKE';
+const MOVIE_URL_SEGMENT = 'movie';
+const SERIES_URL_SEGMENT = 'tv';
+
 
 export const URL_SEGMENTS = {
-  [MOVIES]: 'movie',
-  [SERIES]: 'tv'
+  [MOVIES]: MOVIE_URL_SEGMENT,
+  [SERIES]: SERIES_URL_SEGMENT
+};
+
+export const URL_SEGMENT_TO_CONSTANT_MAPPING = {
+  [MOVIE_URL_SEGMENT]: MOVIES,
+  [SERIES_URL_SEGMENT]: SERIES
 };
 
 export const POST_INTERACTION_MESSAGE = {

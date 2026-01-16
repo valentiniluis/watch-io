@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { MIN_RATING, MIN_VOTES } from '../util/constants.js';
 import tmdbAPI from '../api/tmdb-api.js';
-import { fetchAndSanitizeMovies, fetchMovie, sanitizeMovie } from '../util/api-util.js';
+import { fetchAndSanitizeMovies, fetchMovie, sanitizeMedia } from '../util/api-util.js';
 import { insertMovie } from '../util/db-util.js';
 
 
@@ -39,7 +39,7 @@ async function ingestRecentMovies() {
       
       movies.forEach(async (movie) => {
         const data = await fetchMovie(movie.id);
-        const sanitizedMovie = sanitizeMovie(data);
+        const sanitizedMovie = sanitizeMedia(data);
         const error = await insertMovie(sanitizedMovie);
         if (!error) successCount++;
         else console.log(`Failed to insert movie of id ${movie.id}: ${error.message}`);

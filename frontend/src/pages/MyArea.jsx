@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import Spinner from "../components/UI/Spinner";
-import MovieCatalog from "../components/movie/MovieCatalog";
+import MovieCatalog from "../components/media/MovieCatalog";
 import ErrorSection from "../components/UI/ErrorSection";
 import Ratings from "../components/rating/Ratings";
 import DropdownMenu from '../components/UI/DropdownMenu';
 import { getMyAreaEmptyMessage, getMyAreaLoadingMessage } from "../util/functions";
-import { getRatings, getInteractedMovies } from "../util/movie-query";
+import { getMyAreaContent } from "../query/user";
 import { myAreaCategories, RATINGS } from "../util/constants";
 
 const initialState = {
@@ -17,14 +17,17 @@ const initialState = {
 
 export default function MyArea() {
   const { isLoggedIn } = useSelector(state => state.auth);
+  const mediaType = useSelector(state => state.media.type);
+
   const [contentType, setContentType] = useState(initialState);
   const [page, setPage] = useState(1);
 
   const { category, label } = contentType;
+  const mainQueryKey = (category === RATINGS) ? 'rating' : 'interaction';
 
   const { data, isPending, isError, error } = useQuery({
-    queryFn: (category === RATINGS) ? getRatings : getInteractedMovies,
-    queryKey: (category === RATINGS) ? ['ratings', { page }] : ['interactions', { interactionType: category, page }],
+    queryFn: getMyAreaContent,
+    queryKey: [mainQueryKey, { interactionType: category, page, mediaType }],
     retry: false
   });
 

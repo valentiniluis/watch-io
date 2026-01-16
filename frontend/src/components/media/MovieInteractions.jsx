@@ -1,28 +1,32 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { addInteraction, getInteractions, removeInteraction } from "../../util/movie-query";
-import ToggleInteraction from './ToggleInteraction';
-import queryClient from '../../util/query';
-import Spinner from "../UI/Spinner";
 import { useDispatch, useSelector } from "react-redux";
+import { addInteraction, getInteraction, removeInteraction } from "../../query/interaction";
+import ToggleInteraction from './ToggleInteraction';
+import queryClient from '../../query/client';
+import Spinner from "../UI/Spinner";
 import { interactionTypes } from "../../util/constants";
 import { toastActions } from '../../store/toast';
 import ErrorSection from "../UI/ErrorSection";
 
 export default function MovieInteractions() {
-  const movie = useSelector(state => state.movie);
+  const media = useSelector(state => state.media);
   const dispatch = useDispatch();
-  const { id: movieId } = movie;
+
+  const mediaId = media.data.id;
+  const mediaType = media.type;
+
+  const queryKey = ['interaction', { mediaId, mediaType }];
 
   const { data, isPending, isError } = useQuery({
-    queryKey: ['interaction', { movieId }],
-    queryFn: getInteractions
+    queryKey,
+    queryFn: getInteraction
   });
 
   const { mutate: add } = useMutation({
     mutationFn: addInteraction,
     onSuccess: async ({ message }) => {
       dispatch(toastActions.setSuccessToast(message || "Interaction added successfully!"));
-      await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] });
+      await queryClient.invalidateQueries({ queryKey });
     },
     onError: (ctx) => dispatch(toastActions.setErrorToast(`Failed to add interaction: ${ctx?.response?.data?.message || ctx.message}`))
   });
@@ -31,17 +35,17 @@ export default function MovieInteractions() {
     mutationFn: removeInteraction,
     onSuccess: async ({ message }) => {
       dispatch(toastActions.setSuccessToast(message || "Interaction removed successfully!"));
-      await queryClient.invalidateQueries({ queryKey: ['interaction', { movieId }] });
+      await queryClient.invalidateQueries({ queryKey: ['interaction', { mediaId }] });
     },
     onError: (ctx) => dispatch(toastActions.setErrorToast(`Failed to remove interaction: ${ctx?.response?.data?.message || ctx.message}`))
   });
 
   function handleAddInteraction(type) {
-    add({ type, movieId });
+    add({ type, mediaId, mediaType });
   }
 
   function handleRemoveInteraction() {
-    remove({ type: data?.type, movieId });
+    remove({ mediaType, mediaId });
   }
 
   let content;
@@ -64,7 +68,7 @@ export default function MovieInteractions() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 md:gap-10 md:flex-row justify-center flex-wrap">
+    <div className="flex flex-col items-center gap-4 md:gap-10 md:flex-row justify-center flex-wrap mt-4">
       {content}
     </div>
   );

@@ -1,13 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { loadUserRecommendations } from "../../util/movie-query";
+import { loadUserRecommendations } from "../../query/media";
+import { useSelector } from "react-redux";
 import Spinner from "../UI/Spinner";
 import ErrorSection from "../UI/ErrorSection";
 import MovieList from "./MovieList";
 
 
 export default function RecommendationsSection() {
+  const mediaType = useSelector(state => state.media.type);
+
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['user-recommendations'],
+    queryKey: [mediaType, 'user-recommendations'],
     queryFn: loadUserRecommendations
   });
 
@@ -20,12 +23,11 @@ export default function RecommendationsSection() {
   }
   else if (data) {
     const { recommendations } = data;
-    content = <MovieList movies={recommendations} />
+    content = <MovieList title="Our Recommendations For You" titleClass="text-center" movies={recommendations} />
   }
 
   return (
-    <section className="my-20" id='recommendations-section'>
-      <h1 className='text-center text-2xl font-bold'>Our Recommendations For You</h1>
+    <section className="min-w-20" id='recommendations-section'>
       {content}
     </section>
   );

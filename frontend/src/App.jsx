@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { RouterProvider, createBrowserRouter, redirect } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import store from './store/store.js';
-import queryClient from './util/query.js';
+import queryClient from './query/client.js';
 import RootLayout from './components/layout/RootLayout.jsx';
 import LoadingOverlay from './components/layout/LoadingOverlay.jsx';
 
@@ -34,7 +34,7 @@ const router = createBrowserRouter([
             )
           },
           {
-            path: ':movieId',
+            path: ':mediaId',
             element: (
               <Suspense fallback={<LoadingOverlay text="Loading content..." />}>
                 <SelectedMovie />
