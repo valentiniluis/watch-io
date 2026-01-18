@@ -269,7 +269,7 @@ if __name__ == '__main__':
       loadedGenres = makeRequest(GENRES_URL)['genres']
       if (mediaType == MOVIES):
         documentaryId = getGenreId('Documentary', loadedGenres)
-      loadedGenres = list(filter(lambda x: x.get('name') != 'Documentary'))
+      loadedGenres = list(filter(lambda x: x.get('name') != 'Documentary'), loadedGenres)
       genres[mediaType] = loadedGenres
 
     storeGenres(genres, cursor, connection)
