@@ -24,25 +24,22 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 # BUILD - Compilação para prod
 FROM base AS build
 
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
 COPY . .
-
 ARG VITE_BACKEND_BASE
-
 ARG VITE_GOOGLE_CLIENT_ID
-
 ENV VITE_BACKEND_BASE=$VITE_BACKEND_BASE
-
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
-
 RUN npm run build
 
-# PROD - Nginx servindo arquivos estáticos
 FROM nginx:stable-alpine AS production
+
+RUN rm /etc/nginx/conf.d/default.conf && rm /etc/nginx/nginx.conf
+
+COPY nginx.conf /etc/nginx/nginx.conf
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
-COPY nginx.conf /etc/nginx/templates/default.conf.template
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]  
+CMD ["/bin/sh", "-c", "sed -i \"s/\\${PORT}/$PORT/g\" /etc/nginx/nginx.conf && nginx -g \"daemon off;\""]
