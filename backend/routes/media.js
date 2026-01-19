@@ -6,7 +6,7 @@ import { mapMediaType } from '../middleware/validation.js';
 const router = Router({ mergeParams: true });
 
 
-// search/discover movies
+// search/discover media
 router.get('/search', mapMediaType, optionallyAuthenticateJWT, mediaControllers.getSearchedMedia);
 
 // get all possible genres
@@ -15,13 +15,13 @@ router.get('/genres', mapMediaType, mediaControllers.getMediaGenres);
 // get recommendations based on user profile
 router.get('/user-recommendations', mapMediaType, optionallyAuthenticateJWT, mediaControllers.getUserRecommendations);
 
-// get only movies of a certain genre
+// get only media of a certain genre
 router.get('/genre/:genreId', mapMediaType, optionallyAuthenticateJWT, mediaControllers.getMediaByGenre);
 
-// get data for a particular movie
+// get data for a particular media
 router.get('/:mediaId', mapMediaType, optionallyAuthenticateJWT, mediaControllers.getMediaData);
 
-// get recommendations based on a particular movie
+// get recommendations based on a particular media
 router.get('/:mediaId/recommendations', mapMediaType, optionallyAuthenticateJWT, mediaControllers.getMediaRecommendations);
 
 // exclusive route for tv shows - validation inside controller

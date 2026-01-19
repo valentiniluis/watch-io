@@ -74,7 +74,7 @@ export const getSingleRating = async (req, res, next) => {
     const { rows } = await pool.query(query, queryArgs);
 
     const finalData = {};
-    let message = 'User has not rated this movie.';
+    let message = 'User has not rated this media.';
     if (rows.length > 0) {
       message = 'Rating retrieved successfully.';
       const [rating] = rows;
@@ -114,7 +114,7 @@ export const postRating = async (req, res, next) => {
     return res.status(201).json({ success: true, message: "Movie rated successfully!" });
   } catch (err) {
     if (err.code === PG_UNIQUE_ERR) {
-      err.message = "Cannot create rating for movie because it already exists. Try editing instead.";
+      err.message = "Cannot create rating for media because it already exists. Try editing instead.";
       err.statusCode = 400;
     }
     next(err);
@@ -171,7 +171,7 @@ export const deleteRating = async (req, res, next) => {
       [mediaId, mediaType, user.id]
     );
 
-    if (rowCount === 0) throwError(401, `User has not rated this movie.`);
+    if (rowCount === 0) throwError(401, 'User has not rated this media.');
 
     return res.status(200).json({ success: true, message: "Rating deleted successfully." });
   } catch (err) {

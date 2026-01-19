@@ -33,7 +33,7 @@ create table
 		release_year integer null,
 		tmdb_rating numeric(4, 3) null,
 		seasons integer null,
-		constraint pk_movie primary key (id),
+		constraint pk_media primary key (id),
 		constraint media_unique_tmdb_id_type_id unique (tmdb_id, type_id),
 		constraint fk_media_media_type foreign key (type_id) references media_type (id)
 	);

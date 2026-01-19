@@ -1,6 +1,6 @@
 export const PG_UNIQUE_ERR = '23505';
 
-// minimum parameters for movies from the API
+// minimum parameters for media from the API
 export const MIN_RATING = 5;
 
 export const MIN_VOTES = 300;
@@ -38,10 +38,10 @@ export const URL_SEGMENT_TO_CONSTANT_MAPPING = {
   [SERIES_URL_SEGMENT]: SERIES
 };
 
-export const POST_INTERACTION_MESSAGE = {
-  [WATCHLIST]: "Movie added to watchlist successfully!",
-  [NOT_INTERESTED]: "Movie added to not interested list. This movie won't be recommended to you anymore.",
-  [LIKE]: "Movie added to likes!"
+export const CREATE_INTERACTION_MESSAGE = {
+  [WATCHLIST]: (label) => `${label} added to watchlist successfully!`,
+  [NOT_INTERESTED]: (label) => `${label} added to not interested list. It won't be recommended to you anymore.`,
+  [LIKE]: (label) => `${label} added to likes!`
 };
 
 export const DELETE_INTERACTION_MESSAGE = {

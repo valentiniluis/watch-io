@@ -51,7 +51,7 @@ export const getInteractions = async (req, res, next) => {
   }
 }
 
-// create interaction between user and movie
+// create interaction between user and media
 export const postInteraction = async (req, res, next) => {
   try {
     const { user, mediaType } = req;
@@ -73,18 +73,18 @@ export const postInteraction = async (req, res, next) => {
       [mediaType, mediaId, user.id, interactionType]
     );
 
-    const message = postInteractionMessage(interactionType);
+    const message = postInteractionMessage(interactionType, mediaType);
     res.status(201).json({ success: true, message });
   } catch (err) {
     if (err.code === PG_UNIQUE_ERR) {
-      err.message = "User has already interacted with this movie.";
+      err.message = "User has already interacted with this media.";
       err.statusCode = 400;
     }
     next(err);
   }
 }
 
-// check if user has interaction with particular movie
+// check if user has interaction with particular media
 export const hasInteraction = async (req, res, next) => {
   try {
     const { user, mediaType } = req;

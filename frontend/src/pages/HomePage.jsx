@@ -23,8 +23,9 @@ export default function Homepage() {
     content = <ErrorSection message={error.message} />
   }
   else if (data) {
+    console.log(data);
     const { genres } = data;
-    content = <HomepageContent genres={genres} key={mediaType} />
+    content = <HomepageContent genres={genres || []} key={mediaType} />
   }
 
   return content;

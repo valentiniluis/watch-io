@@ -4,15 +4,16 @@ import tmdbAPI from '../api/tmdb-api.js';
 import { fetchAndSanitizeMovies, fetchMovie, sanitizeMedia } from '../util/api-util.js';
 import { insertMovie } from '../util/db-util.js';
 
+// IMPL - fix logic for ingesting series as well
 
-// inserting newly released movies to the database. shouldn't take longer than a few seconds
+// inserting newly released media to the database. shouldn't take longer than a few seconds
 async function ingestRecentMovies() {
   const now = new Date();
   console.log(now.toISOString() + " - [ingestion task]: Starting task.");
 
   now.setMonth(now.getMonth() - 3);
   const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  // try to get movies that meet the requirements from the last 3 months
+  // try to get media that meet the requirements from the last 3 months
   const url = `/discover/movie?include_adult=false&language=en-US&vote_count.gte=${MIN_VOTES}&vote_average.gte=${MIN_RATING}&primary_release_date.gte=${dateStr}`;
 
   async function getPages() {

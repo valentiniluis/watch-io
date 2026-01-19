@@ -81,8 +81,8 @@ export const getMediaRecommendations = async (req, res, next) => {
     const { user, mediaType } = req;
     const userId = user?.id;
 
-    const { value: mediaId, error: movieErr } = mediaIdValidation.validate(req.params.mediaId);
-    if (movieErr) throwError(400, "Invalid Movie: " + movieErr.message);
+    const { value: mediaId, error: mediaErr } = mediaIdValidation.validate(req.params.mediaId);
+    if (mediaErr) throwError(400, "Invalid media: " + mediaErr.message);
 
     const { value: limit, limitErr } = limitValidation.validate(req.query.limit);
     if (limitErr) throwError(400, `Invalid limit: ${limitErr.message}`);
@@ -106,8 +106,8 @@ export const getUserRecommendations = async (req, res, next) => {
     const { value: limit, error } = limitValidation.validate(req.query.limit);
     if (error) throwError(400, `Invalid limit: ${error.message}`);
 
-    // fallback query will be used if the user's not logged in or has no liked/well-rated movies
-    // take 250 best rated movies and use random sample
+    // fallback query will be used if the user's not logged in or has no liked/well-rated media
+    // take 250 best rated media and use random sample
     const fallbackArgs = [mediaType, limit];
     const fallbackQuery = `
       WITH best_rated AS (
@@ -217,8 +217,8 @@ export const getSeasonDetails = async (req, res, next) => {
 
     if (mediaType !== SERIES) throwError(400, `Invalid media type. Only '${URL_SEGMENTS[SERIES]}' is allowed.`);
 
-    const { value: mediaId, error: movieErr } = mediaIdValidation.validate(req.params.mediaId);
-    if (movieErr) throwError(400, "Invalid movie: " + movieErr.message);
+    const { value: mediaId, error: mediaErr } = mediaIdValidation.validate(req.params.mediaId);
+    if (mediaErr) throwError(400, "Invalid TV Show: " + mediaErr.message);
 
     const { value: season, error: seasonErr } = intValidation.required().validate(req.params.season);
     if (seasonErr) throwError(400, `Invalid season parameter: ${seasonErr.message}`);
@@ -226,8 +226,6 @@ export const getSeasonDetails = async (req, res, next) => {
     const response = await tmdbApi.get(`/tv/${mediaId}/season/${season}`);
     const data = response.data;
     const finalData = sanitizeSeasonData(data);
-
-    // const OMDbResponse = await omdbApi.get(`?i=${imdbId}&Season=${season}`);
 
     res.status(200).json({ success: true, message: 'Retrieved season details successfully.', season: finalData });
   } catch(err) {

@@ -1,5 +1,5 @@
 import { pageValidation, limitValidation } from './validationSchemas.js';
-import { DELETE_INTERACTION_MESSAGE, LIKE, MEDIA_TYPES, MOVIES, NOT_INTERESTED, POST_INTERACTION_MESSAGE, RECOMMENDATION_WEIGHTS, URL_SEGMENT_TO_CONSTANT_MAPPING, URL_SEGMENTS } from './constants.js';
+import { DELETE_INTERACTION_MESSAGE, MOVIES, CREATE_INTERACTION_MESSAGE, SERIES, URL_SEGMENT_TO_CONSTANT_MAPPING, URL_SEGMENTS } from './constants.js';
 import pool from '../model/postgres.js';
 
 
@@ -40,8 +40,10 @@ export function calculateOffset(page, limit) {
 }
 
 
-export function postInteractionMessage(type) {
-  return POST_INTERACTION_MESSAGE[type];
+export function postInteractionMessage(interactType, mediaType) {
+  const label = (mediaType === MOVIES) ? 'Movie' : (mediaType === SERIES) ? 'TV Show' : 'Media';
+  const templateFn = CREATE_INTERACTION_MESSAGE[interactType];
+  return templateFn(label);
 }
 
 

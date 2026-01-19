@@ -20,6 +20,7 @@ MIN_POPULARITY = 0.5
 SERIES = 'TV_SERIES'
 MOVIES = 'MOVIE'
 MEDIA_TYPES = [SERIES, MOVIES]
+PG_UNIQUE_VIOLATION = '23505'
 
 
 def connectDB(retries=3):
@@ -112,7 +113,7 @@ def requestAndStoreMediaDetails(TMDbId, mediaType, cursor, conn):
     cursor.execute(statement, data)
     mediaId = cursor.fetchone()[0]
 
-    # insert movie genres
+    # insert genres
     statement = """
       INSERT INTO 
       media_genre 
@@ -123,12 +124,12 @@ def requestAndStoreMediaDetails(TMDbId, mediaType, cursor, conn):
     data = [(mediaId, mediaType, genre['id']) for genre in mediaData['genres']]
     cursor.executemany(statement, data)
 
-    # include movie keywords to the database
+    # include keywords to the database
     statement = "INSERT INTO keyword (id, keyword) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING;"
     data = [(keyword['id'], keyword['name']) for keyword in mediaData['keywords']['keywords']]
     cursor.executemany(statement, data)
     
-    # associate keywords to the movie
+    # associate keywords to the respective media
     statement = "INSERT INTO media_keyword (media_id, keyword_id) VALUES (%s, %s);"
     data = [(mediaId, keyword['id']) for keyword in mediaData['keywords']['keywords']]
     cursor.executemany(statement, data)
@@ -140,7 +141,7 @@ def requestAndStoreMediaDetails(TMDbId, mediaType, cursor, conn):
     crew = list(filter(filterArtist, mediaData['credits']['crew']))
     artists = cast + crew
 
-    # add artists (actors/movie-makers) to the database
+    # add artists (actors/makers) to the database
     statement = "INSERT INTO artist (id, artist_name, original_name, known_for, popularity) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (id) DO NOTHING;"
     data = [(artist['id'], 
              artist['name'], 
@@ -149,12 +150,12 @@ def requestAndStoreMediaDetails(TMDbId, mediaType, cursor, conn):
              artist['popularity']) for artist in artists]
     cursor.executemany(statement, data)
 
-    # associate actors to movie
+    # associate actors to media
     statement = "INSERT INTO media_cast (media_id, artist_id, credit_id, character_name) VALUES (%s, %s, %s, %s);"
     data = [(mediaId, actor['id'], actor['credit_id'], actor.get('character', None)) for actor in cast]
     cursor.executemany(statement, data)
 
-    # associate crew (director, writers, producers) to the movie
+    # associate crew (director, writers, producers) to the media
     statement = "INSERT INTO crew (media_id, artist_id, credit_id, department, job) VALUES (%s, %s, %s, %s, %s);"
     data = [(mediaId, member['id'], member['credit_id'], member['department'], member['job']) for member in crew]
     cursor.executemany(statement, data)
@@ -162,8 +163,9 @@ def requestAndStoreMediaDetails(TMDbId, mediaType, cursor, conn):
     conn.commit()
   except Exception as e:
     conn.rollback()
-    print(f"Failed to store media of type '{mediaType}' of id {TMDbId}.")
-    print(e)
+    if e.pgcode != PG_UNIQUE_VIOLATION:
+      print(f"Failed to store media of type '{mediaType}' of id {TMDbId}.")
+      print(e)
 
 
 def storeMedia(data, mediaType, cursor, connection):
@@ -193,7 +195,8 @@ def storeGenres(data, cursor, connection):
     statement = """
       INSERT INTO
       media_type_genre(media_type_id, genre_id)
-      VALUES ((SELECT id FROM media_type AS mt WHERE mt.media_name = %s), %s);
+      VALUES ((SELECT id FROM media_type AS mt WHERE mt.media_name = %s), %s)
+      ON CONFLICT (media_type_id, genre_id) DO NOTHING;
     """
     arguments = [(mediaKey, genre['id']) for genre in genres]
     cursor.executemany(statement, arguments)

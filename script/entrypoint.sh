@@ -5,7 +5,7 @@ until nc -z $PG_HOST $PG_PORT; do
 done
 
 echo "--------------------------------------------------------"
-echo "Starting movie ingestion script..."
+echo "Starting media ingestion script..."
 echo "--------------------------------------------------------"
 
 python3 data-ingestion.py
