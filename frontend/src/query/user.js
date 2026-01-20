@@ -26,8 +26,9 @@ export async function fetchUser() {
 
 
 export async function authUser({ credentials }) {
-  const backend_base_url = import.meta.env.VITE_BACKEND_BASE;
-  const { data } = await api.post(backend_base_url + '/auth/google', credentials);
+  const url = '/auth/google';
+  const response = await api.post(url, credentials);
+  const data = response.data;
   const { user, tokenExpire } = data;
   localStorage.setItem('WATCHIO_JWT_EXPIRY', tokenExpire);
   return user;

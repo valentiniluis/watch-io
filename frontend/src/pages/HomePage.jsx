@@ -19,13 +19,12 @@ export default function Homepage() {
   if (isPending) {
     content = <Spinner text="Loading genres..." />
   }
-  else if (isError) {
-    content = <ErrorSection message={error.message} />
+  else if (isError || data?.genres?.length === 0) {
+    content = <ErrorSection message={error.message || 'Failed to load genres.'} />
   }
   else if (data) {
-    console.log(data);
     const { genres } = data;
-    content = <HomepageContent genres={genres || []} key={mediaType} />
+    content = <HomepageContent genres={genres} key={mediaType} />
   }
 
   return content;
