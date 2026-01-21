@@ -21,7 +21,9 @@ export default function SelectedMoviePage() {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: [mediaType, { mediaId }],
-    queryFn: loadMediaData
+    queryFn: loadMediaData,
+    // only enable queries if the global mediaType state remains unchanged
+    enabled: (mediaType === prevMediaType.current) || !prevMediaType.current
   });
 
   // if media type changes, redirect user to homepage. else, some random tv show/movie will be shown

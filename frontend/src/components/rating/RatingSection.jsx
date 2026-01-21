@@ -8,13 +8,14 @@ import Spinner from "../UI/Spinner";
 import RatingPreview from "./RatingPreview";
 
 
-export default function RatingSection() {
-  const { data: media, type: mediaType } = useSelector(state => state.media);
+export default function RatingSection({ mediaId }) {
+  const { type: mediaType } = useSelector(state => state.media);
   const modalRef = useRef();
 
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['rating', { mediaId: media.id, mediaType }],
-    queryFn: getRating
+    queryKey: ['rating', { mediaId, mediaType }],
+    queryFn: getRating,
+    enabled: !!mediaId && !!mediaType
   });
 
   function openModal() {

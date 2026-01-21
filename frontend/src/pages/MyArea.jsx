@@ -42,7 +42,7 @@ export default function MyArea() {
     content = <ErrorSection message={error.response?.data?.message || 'Failed to load data.'} />;
   }
   else if (data?.interactions?.length === 0 || data?.ratings?.length === 0) {
-    const message = getMyAreaEmptyMessage(category);
+    const message = getMyAreaEmptyMessage(category, mediaType);
     content = <ErrorSection message={message} />;
   }
   else if (category === RATINGS) {

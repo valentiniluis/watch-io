@@ -23,16 +23,16 @@ export const RATINGS = 'RATINGS';
 export const interactionTypes = [WATCHLIST, NOT_INTERESTED, LIKE];
 
 export const EMPTY_MY_AREA_MESSAGE = {
-  [WATCHLIST]: 'Your watchlist is empty.',
-  [LIKE]: 'You have no liked movies yet.',
-  [NOT_INTERESTED]: 'No movies added to the "Not Interested" list yet.',
-  [RATINGS]: "You haven't rated any movies yet!"
+  [WATCHLIST]: (label) => `You have no ${label} in your Watchlist.`,
+  [LIKE]: (label) => `You have no liked ${label} yet.`,
+  [NOT_INTERESTED]: (label) => `No ${label} have been added to the "Not Interested" list yet.`,
+  [RATINGS]: (label) => `You haven't rated any ${label} yet!`
 }
 
 export const LOADING_MY_AREA_MESSAGE = {
   [WATCHLIST]: 'Loading your Watchlist...',
   [NOT_INTERESTED]: 'Loading "Not Interested" list...',
-  [LIKE]: "Loading movies you've liked...",
+  [LIKE]: "Loading your likes...",
   [RATINGS]: "Loading your ratings..."
 }
 
@@ -45,9 +45,9 @@ export const myAreaCategories = [
 
 const ACTIVE = true;
 const INACTIVE = false;
-const WATCHLIST_BTN_STYLE = 'border-1 border-stone-400 bg-transparent text-stone-200 hover:bg-stone-700';
-const LIKE_BTN_STYLE = 'bg-gradient-to-r from-violet-800 to-violet-600 hover:from-violet-700 hover:to-violet-500';
-const NOT_INTERESTED_BTN_STYLE = 'bg-red-600 text-white hover:bg-red-700';
+const WATCHLIST_BTN_STYLE = 'border-1 border-stone-400 bg-transparent text-stone-200 hover:bg-stone-700 disabled:opacity-50 disabled:border-stone-600 disabled:text-stone-500 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors';
+const LIKE_BTN_STYLE = 'bg-gradient-to-r from-violet-800 to-violet-600 hover:from-violet-700 hover:to-violet-500 disabled:from-stone-600 disabled:to-stone-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all';
+const NOT_INTERESTED_BTN_STYLE = 'bg-red-600 text-white hover:bg-red-700 disabled:bg-red-900/40 disabled:text-stone-500 disabled:hover:bg-red-900/40 disabled:cursor-not-allowed transition-colors';
 // object containt button text, icon and tailwindcss style depending whether the interaction type and activity
 export const INTERACTION_BTN_CONTENT = {
   [WATCHLIST]: {

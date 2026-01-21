@@ -20,7 +20,7 @@ export default function MovieDetailsSection({ movie }) {
         </div>
         <div className='w-full lg:w-1/2'>
           {isLoggedIn
-            ? <RatingSection movieId={id} />
+            ? <RatingSection mediaId={id} />
             : (
               <div className='flex justify-center'>
                 <p className='regular-text px-4 py-2 m-0 bg-blue-700 rounded-lg w-max'>Log in to rate this movie!</p>

@@ -4,10 +4,6 @@ export const authenticateJWT = (req, res, next) => {
   const cookies = req.cookies;
   const token = cookies.WATCHIO_JWT;
 
-  console.log(cookies);
-  console.log(token);
-  console.log(req.headers.cookie);
-
   if (!token) return res.status(401).json({ success: false, message: 'Credentials Not Provided' });
 
   let decodedToken;

@@ -22,7 +22,7 @@ export default function MovieInteractions() {
     queryFn: getInteraction
   });
 
-  const { mutate: add } = useMutation({
+  const { mutate: add, isPending: isAddPending } = useMutation({
     mutationFn: addInteraction,
     onSuccess: async ({ message }) => {
       dispatch(toastActions.setSuccessToast(message || "Interaction added successfully!"));
@@ -31,7 +31,7 @@ export default function MovieInteractions() {
     onError: (ctx) => dispatch(toastActions.setErrorToast(`Failed to add interaction: ${ctx?.response?.data?.message || ctx.message}`))
   });
 
-  const { mutate: remove } = useMutation({
+  const { mutate: remove, isPending: isRemovePending } = useMutation({
     mutationFn: removeInteraction,
     onSuccess: async ({ message }) => {
       dispatch(toastActions.setSuccessToast(message || "Interaction removed successfully!"));
@@ -56,12 +56,24 @@ export default function MovieInteractions() {
     content = <ErrorSection message="Failed to load interactions." />
   }
   else if (data?.hasInteraction) {
-    content = <ToggleInteraction active={true} type={data.type} onClick={handleRemoveInteraction} />
+    content = (
+      <ToggleInteraction 
+        active={true} 
+        disabled={isRemovePending} 
+        type={data.type} 
+        onClick={handleRemoveInteraction} 
+      />
+    );
   } else {
     content = (
       <>
         {interactionTypes.map(type => (
-          <ToggleInteraction key={type} type={type} onClick={() => handleAddInteraction(type)} />
+          <ToggleInteraction 
+            disabled={isAddPending} 
+            key={type} 
+            type={type} 
+            onClick={() => handleAddInteraction(type)} 
+          />
         ))}
       </>
     );

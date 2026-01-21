@@ -4,7 +4,7 @@ import Pagination from '../UI/Pagination';
 
 
 export default function MovieCatalog({ movies, currentPage, maxPages, setPage }) {
-  if (movies?.length === 0) return <ErrorSection message="No movies available" />
+  if (movies?.length === 0) return <ErrorSection message="No results." />
 
   return (
     <>

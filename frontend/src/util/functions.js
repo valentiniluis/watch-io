@@ -1,4 +1,4 @@
-import { EMPTY_MY_AREA_MESSAGE, INTERACTION_BTN_CONTENT, LOADING_MY_AREA_MESSAGE } from "./constants";
+import { EMPTY_MY_AREA_MESSAGE, INTERACTION_BTN_CONTENT, LOADING_MY_AREA_MESSAGE, MOVIES, SERIES } from "./constants";
 
 export function formatDate(dateString) {
   const date = new Date(dateString);
@@ -16,8 +16,10 @@ export function getMyAreaLoadingMessage(contentType) {
 }
 
 
-export function getMyAreaEmptyMessage(contentType) {
-  return EMPTY_MY_AREA_MESSAGE[contentType];
+export function getMyAreaEmptyMessage(contentType, mediaType) {
+  const label = (mediaType === MOVIES) ? 'Movies' : (mediaType === SERIES) ? 'TV Shows' : 'Media';
+  const templateFn = EMPTY_MY_AREA_MESSAGE[contentType];
+  return templateFn(label);
 }
 
 export function getInteractionBtnContent(type, isActive) {
