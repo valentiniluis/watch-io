@@ -9,6 +9,10 @@ import { JWT_EXPIRY_HOURS } from '../util/constants.js';
 export const postLogin = async (req, res, next) => {
   try {
     const loginData = { credential: req.body.credential, clientId: req.body.clientId };
+   
+    // TEST
+    console.log(loginData);
+
     const { value, error } = loginSchema.validate(loginData);
     if (error) throwError(400, `Invalid Input: ${error.message}`);
 

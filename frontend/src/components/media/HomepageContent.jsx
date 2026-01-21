@@ -6,6 +6,7 @@ import Spinner from '../UI/Spinner.jsx';
 import ErrorSection from '../UI/ErrorSection';
 import MovieList from './MovieList.jsx';
 import RecommendationsSection from './RecommendationsSection.jsx';
+import { SERIES } from '../../util/constants.js';
 
 
 export default function HomepageContent({ genres }) {
@@ -54,13 +55,15 @@ export default function HomepageContent({ genres }) {
     return () => observers.forEach(observer => observer.disconnect());
   }, [enabledQueries, genres.length]);
 
+  const mediaLabel = (mediaType === SERIES) ? 'TV Shows' : 'Movies';
+  
   const content = results.map((result, i) => {
     if (!enabledQueries[i]) return null;
     const { data, isPending, isError, error } = result;
 
     return (
       <Fragment key={i}>
-        {isPending && <div className='py-40'><Spinner text={`Loading ${genres[i].name} movies...`} /></div>}
+        {isPending && <div className='py-40'><Spinner text={`Loading ${genres[i].genre_name} ${mediaLabel}...`} /></div>}
         {isError && <ErrorSection message={error.message} />}
         {data && <MovieList movies={data[mediaType]} fallback="No movies found" title={genres[i].genre_name} />}
 
