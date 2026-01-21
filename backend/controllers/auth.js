@@ -10,9 +10,6 @@ export const postLogin = async (req, res, next) => {
   try {
     const loginData = { credential: req.body.credential, clientId: req.body.clientId };
    
-    // TEST
-    console.log(loginData);
-
     const { value, error } = loginSchema.validate(loginData);
     if (error) throwError(400, `Invalid Input: ${error.message}`);
 
@@ -49,7 +46,7 @@ export const postLogin = async (req, res, next) => {
     expireTime.setHours(expireTime.getHours() + JWT_EXPIRY_HOURS);
     const tokenExpire = expireTime.getTime();
 
-    res.cookie('WATCHIO_JWT', token, { httpOnly: true });
+    res.cookie('WATCHIO_JWT', token, { httpOnly: true, secure: true, sameSite: 'none', path: '/' });
     res.status(200).json({ success: true, message: 'Authentication successful', token, user: payload, tokenExpire });
   } catch (err) {
     next(err);

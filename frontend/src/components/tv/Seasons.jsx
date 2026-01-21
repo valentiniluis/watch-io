@@ -36,7 +36,6 @@ export default function TvShowSeasons({ numberOfSeasons }) {
   }
   else if (data) {
     const { season } = data;
-    console.log(season);
     const { episodes } = season;
     content = <EpisodeList episodes={episodes} />
   }

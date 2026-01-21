@@ -13,7 +13,6 @@ export default function AuthButton() {
     mutationFn: authUser,
     // invalidate all cached data once authetication succeeds (refetch everything)
     onSuccess: async () => {
-      console.log('success');
       await queryClient.invalidateQueries();
       dispatch(toastActions.setSuccessToast("Authenticated successfully!"));
     },
@@ -21,7 +20,6 @@ export default function AuthButton() {
   });
 
   async function handleLogin(response) {
-    console.log(response);
     mutate({ credentials: response });
   }
 
