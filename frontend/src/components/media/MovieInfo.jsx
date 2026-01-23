@@ -9,8 +9,11 @@ import Overview from '../UI/Overview.jsx';
 export default function MovieInfo({ movie }) {
   const { isLoggedIn } = useSelector(state => state.auth);
 
-  const { title, poster_path, tagline, release_year, runtime, genres, overview, ratings } = movie;
+  const { title, poster_path, tagline, release_year, runtime, genres, overview, ratings, tmdb_rating } = movie;
   const poster = poster_path || noPoster;
+
+  const tmdbRating = { Source: 'TMDb', Value: `${+tmdb_rating.toFixed(1)}/10` };
+  const allRatings = [tmdbRating, ...ratings];
 
   return (
     <>
@@ -29,7 +32,7 @@ export default function MovieInfo({ movie }) {
         <div className='text-container'>
           <h1 className='movie-name hidden xl:inline-block'>{title}</h1>
           {tagline && <h4 className='tagline hidden xl:inline-block'>{tagline}</h4>}
-          {movie.ratings && <MovieRatings ratings={ratings} />}
+          <MovieRatings ratings={allRatings} />
           <Overview overviewText={overview} />
           <div className='additional-info mt-8'>
             <p>{genres.map(genre => genre.name).join(', ')}</p>

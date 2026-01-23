@@ -19,17 +19,19 @@ export default function RatingModal({ ref, editMode, data }) {
     ref.current?.close();
   }
 
-  const { mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: mutateRating,
     onSuccess: async () => {
       const successMessage = (editMode ? "Edited" : "Added") + " rating successfully!";
       dispatch(toastActions.setSuccessToast(successMessage));
       await queryClient.invalidateQueries({ queryKey: ['rating'] });
     },
-    onError: (ctx) => dispatch(toastActions.setErrorToast(`Failed to rate movie: ${ctx?.response?.data?.message || ctx.message}`))
+    onError: (ctx) => dispatch(toastActions.setErrorToast(`Failed to rate movie: ${ctx?.response?.data?.message || ctx.message}`)),
+    // executes both for success and error
+    onSettled: handleClose,
   });
 
-  async function submitAndClose(event) {
+  async function submitRating(event) {
     event.preventDefault();
     const formData = new FormData(event.target);
     let rating = Object.fromEntries(formData.entries());
@@ -40,13 +42,11 @@ export default function RatingModal({ ref, editMode, data }) {
     };
     const method = (editMode === true) ? "PUT" : "POST";
     mutate({ rating, mediaId, mediaType, method });
-    event.target.reset();
-    handleClose();
   }
 
   return createPortal(
     <Modal ref={ref} handleClose={handleClose}>
-      <form onSubmit={submitAndClose} className='flex flex-col'>
+      <form onSubmit={submitRating} className='flex flex-col'>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h4 className="text-stone-700 m-0 text-sm">{editMode ? "Editing rating" : "Rating movie"}</h4>
@@ -62,17 +62,20 @@ export default function RatingModal({ ref, editMode, data }) {
           </button>
         </div>
         <RatingInput id="score" name="score" margin="mb-4" defaultValue={editMode ? data.score : ""} required />
-        <Input id='headline' name='headline' label="Headline*" maxLength="255" className="font-medium text-[1.05rem]" defaultValue={editMode ? data.headline : undefined} required />
-        <Input type="textarea" id="description" name="note" label="Description" maxLength="511" className="text-stone-600 text-sm" defaultValue={editMode ? data?.note : undefined} />
+        <Input id='headline' name='headline' label="Headline*" maxLength="255" className="font-medium text-[1.05rem]" value={editMode ? data.headline : undefined} required />
+        <Input type="textarea" id="description" name="note" label="Description" maxLength="511" className="text-stone-600 text-sm" value={editMode ? data?.note : undefined} />
         <div className="flex justify-end gap-3 mt-6">
           <button
             type="reset"
             onClick={handleClose}
-            className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+            disabled={isPending}
+            className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
-          <button className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors">
+          <button 
+            disabled={isPending}
+            className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-blue-400">
             Confirm
           </button>
         </div>

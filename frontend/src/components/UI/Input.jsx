@@ -32,18 +32,18 @@ function DefaultInput({ id, name, label, type, ...props }) {
 }
 
 
-function LimitedInput({ maxLength, ...props }) {
-  const [inputLen, setInputLen] = useState(0);
+function LimitedInput({ maxLength, value, ...props }) {
+  const [inputText, setInputText] = useState(value || '');
 
   function handleChange(event) {
     const value = event.target.value;
-    setInputLen(value.length);
+    setInputText(value);
   }
 
   return (
     <>
-      <DefaultInput maxLength={maxLength} {...props} onChange={handleChange} />
-      <p className="text-right text-xs text-stone-600">{inputLen}/{maxLength}</p>
+      <DefaultInput maxLength={maxLength} {...props} value={inputText} onChange={handleChange} />
+      <p className="text-right text-xs text-stone-600">{inputText.length}/{maxLength}</p>
     </>
   );
 }

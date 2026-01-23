@@ -5,7 +5,8 @@ export default function MovieRatings({ ratings }) {
   if (len === 0) return <p className='text-center small-text'>No ratings available.</p>
   if (len === 1) gridCols = 'grid-cols-1';
   else if (len === 2) gridCols = 'grid-cols-2';
-  else gridCols = 'grid-cols-3';
+  else if (len === 3) gridCols = 'grid-cols-3';
+  else gridCols = 'grid-cols-4';
 
   return (
     <section className={'grid gap-5 text-center mb-4 mt-3 ' + gridCols}>

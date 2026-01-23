@@ -1,3 +1,5 @@
+import NoPoster from '/no-poster.png';
+
 
 export default function EpisodeCard({ episode }) {
 
@@ -8,11 +10,12 @@ export default function EpisodeCard({ episode }) {
 
       <div className="relative w-full overflow-hidden rounded-lg">
         <img
-          src={still_path}
+          src={still_path || NoPoster}
           alt={`Episode ${episode_number}: ${name}`}
           className="w-full h-full object-cover"
           onError={(e) => {
-            e.target.src = "https://via.placeholder.com/800x450?text=No+Image+Available";
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = NoPoster;
           }}
         />
       </div>

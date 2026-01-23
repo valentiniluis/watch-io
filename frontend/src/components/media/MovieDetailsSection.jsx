@@ -8,6 +8,8 @@ export default function MovieDetailsSection({ movie }) {
   const { isLoggedIn } = useSelector(state => state.auth);
   const { id, actors, director, awards, rated, available } = movie;
 
+  const hasRating = rated != 'N/A' && rated != 'Not Rated';
+
   return (
     <>
       <section className='my-8 flex flex-col-reverse lg:flex-row w-full gap-12 sm:gap-16 lg:gap-8'>
@@ -16,7 +18,7 @@ export default function MovieDetailsSection({ movie }) {
           {actors != 'N/A' && <HighlightedText regularText="Starring " highlighted={actors} />}
           {director != 'N/A' && <HighlightedText regularText="Directed by " highlighted={director} />}
           {awards != 'N/A' && <HighlightedText highlighted={awards} />}
-          {rated?.length > 0 && <HighlightedText regularText="Rated " highlighted={rated} />}
+          {hasRating && <HighlightedText regularText="Rated " highlighted={rated} />}
         </div>
         <div className='w-full lg:w-1/2'>
           {isLoggedIn

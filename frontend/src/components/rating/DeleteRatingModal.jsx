@@ -11,35 +11,51 @@ export default function DeleteRatingModal({ ref }) {
   const { data: media, type: mediaType } = useSelector(state => state.media);
   const { id, release_year, title } = media;
 
-  const { mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: deleteRating,
     onSuccess: () => {
       dispatch(toastActions.setSuccessToast("Removed rating successfully!"));
       queryClient.invalidateQueries({ queryKey: ['rating'] });
     },
-    onError: ctx => dispatch(toastActions.setErrorToast(`Failed to delete rating: ${ctx?.response?.data?.message || ctx.message}`))
+    onError: ctx => dispatch(toastActions.setErrorToast(`Failed to delete rating: ${ctx?.response?.data?.message || ctx.message}`)),
+    onSettled: handleClose
   });
 
   function handleClose() {
     ref.current?.close();
   }
 
-  function handleDelete() {
+  function handleSubmit(event) {
+    event.preventDefault();
     mutate({ mediaId: id, mediaType });
   }
 
   return (
     <Modal ref={ref} handleClose={handleClose}>
-      <p className="text-sm text-stone-500">Deleting movie rating</p>
-      <h2 className="text-semibold text-xl flex items-center gap-2 mb-4">
-        {title}{" "}
-        <span className="text-sm text-stone-600">({release_year})</span>
-      </h2>
-      <p className="text-gray-600 mb-4">Are you sure?</p>
-      <div className="flex justify-end gap-2">
-        <button onClick={handleClose} className="px-4 py-2 rounded-lg bg-gray-500 text-white hover:bg-gray-400">Cancel</button>
-        <button onClick={handleDelete} className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-500">Delete</button>
-      </div>
+      <form onSubmit={handleSubmit}>
+        <p className="text-sm text-stone-500">Deleting movie rating</p>
+        <h2 className="text-semibold text-xl flex items-center gap-2 mb-4">
+          {title}{" "}
+          <span className="text-sm text-stone-600">({release_year})</span>
+        </h2>
+        <p className="text-gray-600 mb-4">Are you sure?</p>
+        <div className="flex justify-end gap-2">
+          <button
+            disabled={isPending}
+            onClick={handleClose}
+            type="button"
+            className="px-4 py-2 rounded-lg bg-gray-500 text-white hover:bg-gray-400 transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:hover:bg-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={isPending}
+            className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors disabled:bg-red-300 disabled:cursor-not-allowed disabled:hover:bg-red-300"
+          >
+            Delete
+          </button>
+        </div>
+      </form>
     </Modal>
   );
 }
