@@ -41,22 +41,44 @@ export default function MovieCard({ movie, linkTo }) {
         onMouseMove={handleMouseMove}
         onClick={handleClick}
       >
-        <img src={posterImage} alt={title + " Movie Poster"} />
+        {/* Imagem do poster */}
+        <div className="relative overflow-hidden rounded-t-xl">
+          <img 
+            src={posterImage} 
+            alt={title + " Movie Poster"}
+            className="w-full h-auto"
+          />
+          
+          {/* Overlay gradiente sutil no hover */}
+          <div className="poster-overlay" />
+        </div>
+
+        {/* Informações do card */}
         <div className="card-text-wrapper">
           <h3 className="card-title">{title}</h3>
           <div className="card-info">
 
+            {/* Rating com ícone de estrela */}
             <div className="rating">
-              <img src={star} className='size-3 md:size-3.5 lg:size-4' alt="Start Icon" />
+              <img 
+                src={star} 
+                className='size-3 md:size-3.5 lg:size-4 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' 
+                alt="Star Icon" 
+              />
               <p>{tmdb_rating}</p>
             </div>
             
-            <span className="text-xs text-stone-300">•</span>
+            {/* Separador */}
+            <span className="card-separator">•</span>
 
+            {/* Ano de lançamento */}
             <p className='secondary'>{release_year}</p>
 
           </div>
         </div>
+
+        {/* Indicador visual de hover (linha no topo) */}
+        <div className="hover-line" />
       </Link>
     </li>
   );

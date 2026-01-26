@@ -23,7 +23,7 @@ export default function RecommendationsSection() {
   }
   else if (data) {
     const { recommendations } = data;
-    content = <MovieList title="Our Recommendations For You" titleClass="text-center" movies={recommendations} />
+    content = <MovieList title="Recommendations For You" titleClass="text-center" movies={recommendations} />
   }
 
   return (
