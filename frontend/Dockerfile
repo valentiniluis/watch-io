@@ -42,4 +42,4 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
-CMD ["/bin/sh", "-c", "sed -i 's/${PORT}/'\"$PORT\"'/g' /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
+CMD ["nginx", "-g", "daemon off;"]

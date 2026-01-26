@@ -43,7 +43,7 @@ export default function HorizontalScrollContainer({ className, children }) {
           </svg>
           
           {/* Glow effect no hover */}
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none" />
+          <div className="absolute inset-0 bg-linear-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none" />
         </div>
       </button>
 
@@ -71,7 +71,7 @@ export default function HorizontalScrollContainer({ className, children }) {
           </svg>
           
           {/* Glow effect no hover */}
-          <div className="absolute inset-0 bg-gradient-to-l from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none" />
+          <div className="absolute inset-0 bg-linear-to-l from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none" />
         </div>
       </button>
 
