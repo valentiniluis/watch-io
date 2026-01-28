@@ -1,23 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import useExpandableContainer from "../../hooks/useExpandableContainer";
 
 
 export default function DropdownMenu({ label, className, text, options, onUpdate, containerClass='max-w-3xs mb-16' }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    }
-
-    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
+  const {
+    isOpen,
+    setIsOpen,
+    ref: dropdownRef
+  } = useExpandableContainer();
 
   function handleToggleOpen() {
     setIsOpen(prev => !prev);

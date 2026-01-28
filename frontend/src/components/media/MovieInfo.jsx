@@ -34,10 +34,10 @@ export default function MovieInfo({ movie }) {
           {tagline && <h4 className='tagline hidden xl:inline-block'>{tagline}</h4>}
           <MovieRatings ratings={allRatings} />
           <Overview overviewText={overview} />
-          <div className='additional-info mt-8'>
+          <div className='additional-info'>
             <p>{genres.map(genre => genre.name).join(', ')}</p>
-            {release_year != 'N/A' && <p className='tracking-wide'>{release_year}</p>}
-            {runtime != 'N/A' && <p className='tracking-wider'>{runtime}</p>}
+            {release_year != 'N/A' && <p>{release_year}</p>}
+            {runtime != 'N/A' && <p>{runtime}</p>}
           </div>
         </div>
       </div>

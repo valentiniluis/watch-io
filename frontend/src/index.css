@@ -27,10 +27,9 @@ body {
     @apply grid gap-14 grid-flow-row xl:grid-cols-4 lg:grid-cols-3 sm:grid-cols-2;
   }
 
-  /* CARDS MODERNIZADOS COM EFEITO TECH */
   .movie-card {
     @apply relative max-w-[min(80vw,220px)] sm:max-w-60 lg:max-w-76 w-auto m-auto rounded-xl overflow-hidden;
-    @apply bg-gradient-to-br from-zinc-900/90 via-zinc-900/50 to-zinc-950/90;
+    @apply bg-linear-to-br from-zinc-900/90 via-zinc-900/50 to-zinc-950/90;
     @apply backdrop-blur-sm;
     @apply border border-zinc-800/50;
     @apply transition-all duration-500 ease-out;
@@ -41,7 +40,7 @@ body {
     &::before {
       content: '';
       @apply absolute inset-0 opacity-0 transition-opacity duration-500;
-      @apply bg-gradient-to-br from-cyan-500/5 via-purple-500/5 to-pink-500/5;
+      @apply bg-linear-to-br from-cyan-500/5 via-purple-500/5 to-pink-500/5;
       pointer-events: none;
     }
 
@@ -53,7 +52,7 @@ body {
     &::after {
       content: '';
       @apply absolute inset-0 opacity-0 transition-opacity duration-500;
-      @apply bg-gradient-to-br from-cyan-500/20 via-purple-500/20 to-pink-500/20;
+      @apply bg-linear-to-br from-cyan-500/20 via-purple-500/20 to-pink-500/20;
       @apply blur-xl;
       pointer-events: none;
       z-index: -1;
@@ -101,7 +100,7 @@ body {
 
     & .rating p {
       @apply font-bold;
-      @apply bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent;
+      @apply bg-linear-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent;
     }
 
     & .secondary {
@@ -122,7 +121,7 @@ body {
     }
 
     & .hover-line {
-      @apply absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-0 transition-opacity duration-500;
+      @apply absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-0 transition-opacity duration-500;
     }
 
     &:hover .hover-line {
@@ -130,7 +129,7 @@ body {
     }
 
     & .poster-overlay {
-      @apply absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-500;
+      @apply absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-500;
     }
 
     &:hover .poster-overlay {
@@ -187,25 +186,25 @@ body {
 
     & .movie-name {
       @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl text-center font-semibold tracking-wide mb-4 sm:mb-6 lg:mb-8 xl:my-0;
-      @apply bg-gradient-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent;
+      @apply bg-linear-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent;
     }
 
     & .tagline {
-      @apply text-center font-medium mt-2 text-[1rem] text-stone-300 mb-5 md:mb-8 lg:mb-10 xl:mb-0 text-base sm:text-lg md:text-xl;
+      @apply text-center font-medium mt-2 text-[1rem] text-stone-400 italic mb-5 md:mb-8 lg:mb-10 xl:mb-0 text-sm sm:text-base md:text-lg;
     }
 
     & .additional-info {
-      @apply flex gap-6 justify-center mb-8 xl:mb-0 flex-wrap;
+      @apply flex gap-6 justify-center mb-8 xl:mb-0 flex-wrap mt-8;
     }
 
     & .additional-info p {
-      @apply text-sm md:text-[.9rem] font-medium text-stone-300;
+      @apply text-[.8rem] md:text-sm text-stone-300 font-semibold italic;
     }
   }
 
   .section-title {
     @apply text-lg text-center md:text-left sm:text-xl md:text-2xl lg:text-3xl font-semibold;
-    @apply bg-gradient-to-r from-white to-cyan-100 bg-clip-text text-transparent;
+    @apply bg-linear-to-r from-white to-cyan-100 bg-clip-text text-transparent;
   }
 
   .small-text {

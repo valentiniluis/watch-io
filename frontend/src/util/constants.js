@@ -4,7 +4,9 @@ import LikeIcon from '/like.svg';
 import UnlikeIcon from '/unlike.svg';
 import BlockIcon from '/block.svg';
 
+
 export const HOMEPAGE_GENRES_NUMBER = 7;
+
 
 export const sortOptions = [
   { id: 'title.asc', name: "Title (↑)", 'data-attribute': 'title.asc', 'data-label': 'Title ↑' },
@@ -15,10 +17,15 @@ export const sortOptions = [
   { id: 'release_year.desc', name: "Year (↓)", 'data-attribute': 'release_year.desc', 'data-label': "Year ↓" },
 ];
 
+
 export const WATCHLIST = 'WATCHLIST';
+
 export const NOT_INTERESTED = 'NOT_INTERESTED';
+
 export const LIKE = 'LIKE';
+
 export const RATINGS = 'RATINGS';
+
 
 export const interactionTypes = [WATCHLIST, NOT_INTERESTED, LIKE];
 
@@ -43,11 +50,18 @@ export const myAreaCategories = [
   { id: RATINGS, name: 'Ratings', 'data-label': 'Ratings', 'data-category': RATINGS },
 ];
 
+
 const ACTIVE = true;
+
 const INACTIVE = false;
-const WATCHLIST_BTN_STYLE = 'border-1 border-stone-400 bg-transparent text-stone-200 hover:bg-stone-700 disabled:opacity-50 disabled:border-stone-600 disabled:text-stone-500 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors';
-const LIKE_BTN_STYLE = 'bg-gradient-to-r from-violet-800 to-violet-600 hover:from-violet-700 hover:to-violet-500 disabled:from-stone-600 disabled:to-stone-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all';
-const NOT_INTERESTED_BTN_STYLE = 'bg-red-600 text-white hover:bg-red-700 disabled:bg-red-900/40 disabled:text-stone-500 disabled:hover:bg-red-900/40 disabled:cursor-not-allowed transition-colors';
+
+const WATCHLIST_BTN_STYLE = 'border-stone-600/40 bg-stone-800/40 backdrop-blur-md text-stone-200 hover:bg-stone-700/60 hover:border-stone-500/60 hover:text-white group disabled:opacity-30 disabled:hover:bg-stone-800/40 disabled:cursor-not-allowed transition-all duration-300';
+
+const LIKE_BTN_STYLE = 'bg-gradient-to-br from-violet-600 to-purple-700 text-white shadow-md hover:shadow-violet-900/60 hover:shadow-xl hover:brightness-110 disabled:from-stone-600 disabled:to-stone-700 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200';
+
+const NOT_INTERESTED_BTN_STYLE = 'bg-gradient-to-br from-red-600 to-red-700 text-white font-medium shadow-md shadow-red-900/40 hover:shadow-lg hover:shadow-red-800/50 hover:from-red-500 hover:to-red-600 active:scale-95 disabled:from-stone-700 disabled:to-stone-600 disabled:opacity-40 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200';
+
+
 // object containt button text, icon and tailwindcss style depending whether the interaction type and activity
 export const INTERACTION_BTN_CONTENT = {
   [WATCHLIST]: {
@@ -73,9 +87,13 @@ export const INTERACTION_BTN_CONTENT = {
   }
 };
 
+
 export const SERIES = 'tv';
+
 export const MOVIES = 'movie';
+
 export const MEDIA_TYPES = [MOVIES, SERIES];
+
 export const MEDIA_TYPES_LABELS = {
   [SERIES]: "TV Shows",
   [MOVIES]: "Movies"

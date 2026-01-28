@@ -33,3 +33,12 @@ export function getInteractionBtnContent(type, isActive) {
 }
 
 export const capitalize = str => (!str.length) ? "" : str.charAt(0).toUpperCase() + str.slice(1);
+
+
+export function getSourceColor(source) {
+  if (source === 'Internet Movie Database') return 'text-amber-400';
+  else if (source === 'Rotten Tomatoes') return 'text-red-400';
+  else if (source === 'Metacritic') return 'text-green-400';
+  else if (source === 'TMDb') return 'text-violet-400';
+  else return 'text-cyan-400';
+};

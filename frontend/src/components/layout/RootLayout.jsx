@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchUser } from '../../query/user.js';
 import { useDispatch, useSelector } from "react-redux";
 import Toast from "../UI/Toast.jsx";
-import useJwtTimer from "../../hooks/jwtTimer.js";
+import useJwtTimer from "../../hooks/useJwtTimer.js";
 import { useEffect } from "react";
 import { authActions } from "../../store/auth.js";
 import { toastActions } from "../../store/toast.js";
